@@ -86,7 +86,6 @@ if(isset($_POST['login'])){
                 <div class="input-group">
                     <input type="submit" class="btn" name="login" value="Login" />
                 </div>
-
                 <div class="input-group">
                     <a href="register.php"><button type="button" class="btn" name="button">Register</button> </a>
                 </div>
