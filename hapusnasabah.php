@@ -3,18 +3,18 @@ require 'fungsi.php';
 
 $id = $_GET["id"];
 
-if (hapusMonitoring($id) > 0) {
+if (hapusNasabah($id) > 0) {
     echo "
             <script>
                 alert('Data Berhasil Dihapus');
-                document.location.href='monitoring.php';
+                document.location.href='nasabah.php';
                 </script>
             ";
 } else {
     echo "
                 <script>
                 alert('Data Berhasil Dihapus');
-                document.location.href='monitoring.php';
+                document.location.href='nasabah.php';
                 </script>
                 ";
 }

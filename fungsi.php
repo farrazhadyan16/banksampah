@@ -148,6 +148,14 @@ function hapusMonitoring($id)
     mysqli_query($conn, "DELETE FROM sampah WHERE id = '$id'");
     return mysqli_affected_rows($conn);
 }
+
+function hapusNasabah($id)
+{
+    global $conn;
+    mysqli_query($conn, "DELETE FROM user WHERE id = '$id'");
+    return mysqli_affected_rows($conn);
+}
+
 function updateDesign($data)
 {
     global $conn;

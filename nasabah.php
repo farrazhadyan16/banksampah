@@ -2,7 +2,7 @@
 include 'header.php';
 include 'fungsi.php';
 
-$query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED)");
+$query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
 
 ?>
 
@@ -23,7 +23,6 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
     <!-- Ini Sidebar -->
     <?php include("sidebar.php") ?>
     <!-- Batas Akhir Sidebar -->
-
 
     <!-- Ini Main-Content -->
     <div class="main--content">
@@ -70,12 +69,15 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>kategori</th>
-                                <th>Jenis</th>
-                                <th>Harga Pengepul</th>
-                                <th>Harga Nasabah</th>
-                                <th>Jumalah (KG)</th>
-                                <th>AKSI</th>
+                                <th>Username</th>
+                                <th>Nama</th>
+                                <th>Email</th>
+                                <th>No Telp</th>
+                                <th>NIK</th>
+                                <th>Alamat</th>
+                                <th>Tanggal Lahir</th>
+                                <th>Jenis Kelamin</th>
+                                <th>Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,20 +89,30 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
                                         <?= $row["id"]; ?>
                                     </td>
                                     <td>
-                                        <?= $row["jenis"]; ?>
+                                        <?= $row["username"]; ?>
                                     </td>
                                     <td>
-                                        <?= $row["jenis"]; ?>
+                                        <?= $row["nama"]; ?>
                                     </td>
                                     <td>
-                                        <?= $row["harga"]; ?>
+                                        <?= $row["email"]; ?>
                                     </td>
                                     <td>
-                                        <?= $row["harga_pusat"]; ?>
+                                        <?= $row["notelp"]; ?>
                                     </td>
                                     <td>
-                                        Rp. <?= $row["jumlah"]; ?>
+                                        Rp. <?= $row["nik"]; ?>
                                     </td>
+                                    <td>
+                                        <?= $row["alamat"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["tgl_lahir"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["kelamin"]; ?>
+                                    </td>
+
 
                                     <td>
                                         <li class="liaksi">
@@ -110,7 +122,7 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
                                         </li>
                                         <li class="liaksi">
                                             <button type="submit" name="submit"><a
-                                                    href="hapusmonitoring.php?id=<?= $row["id"]; ?>"
+                                                    href="hapusnasabah.php?id=<?= $row["id"]; ?>"
                                                     class="inputbtn7">Hapus</a></button>
                                         </li>
                                     </td>
