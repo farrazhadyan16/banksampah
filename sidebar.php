@@ -22,7 +22,7 @@
                 </a>
             </li>
             <li>
-                <a href="monitoring.php">
+                <a href="sampah.php">
                     <i class="fa-solid fa-desktop"></i>
                     <span>Sampah</span>
                 </a>

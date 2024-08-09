@@ -70,7 +70,7 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>kategori</th>
+                                <th>id_kategori</th>
                                 <th>Jenis</th>
                                 <th>Harga Pengepul</th>
                                 <th>Harga Nasabah</th>
@@ -87,7 +87,7 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
                                     <?= $row["id"]; ?>
                                 </td>
                                 <td>
-                                    <?= $row["jenis"]; ?>
+                                    <?= $row["id_kategori"]; ?>
                                 </td>
                                 <td>
                                     <?= $row["jenis"]; ?>

@@ -35,11 +35,19 @@ function hapusMonitoring($id)
     return mysqli_affected_rows($conn);
 }
 
-//hapusnasabah
+//hapus nasabah/admin
 function hapusNasabah($id)
 {
     global $conn;
     mysqli_query($conn, "DELETE FROM user WHERE id = '$id'");
+    return mysqli_affected_rows($conn);
+}
+
+//hapus sampah
+function hapusSampah($id)
+{
+    global $conn;
+    mysqli_query($conn, "DELETE FROM sampah WHERE id = '$id'");
     return mysqli_affected_rows($conn);
 }
 
@@ -144,7 +152,7 @@ function inputdatakonsesi($data)
     return mysqli_affected_rows($conn);
 }
 
-//edit data nasabah
+//edit data nasabah/admin
 function updatedatanasabah($data)
 {
     global $conn;
@@ -159,6 +167,22 @@ function updatedatanasabah($data)
     $kelamin = htmlspecialchars($data["kelamin"]);
 
     $query = "UPDATE user SET username='$username',nama='$nama',email='$email',notelp='$notelp',nik='$nik',alamat='$alamat',tgl_lahir='$tgl_lahir',kelamin='$kelamin' WHERE id='$id'";
+    mysqli_query($conn, $query);
+    return mysqli_affected_rows($conn);
+}
+
+//edit sampah
+function updatedatasampah($data)
+{
+    global $conn;
+    $id = htmlspecialchars($data["id"]);
+    $id_kategori = htmlspecialchars($data["id_kategori"]);
+    $jenis = htmlspecialchars($data["jenis"]);
+    $harga = htmlspecialchars($data["harga"]);
+    $harga_pusat = htmlspecialchars($data["harga_pusat"]);
+    $jumlah = htmlspecialchars($data["jumlah"]);
+    
+    $query = "UPDATE sampah SET id_kategori='$id_kategori',jenis='$jenis',harga='$harga',harga_pusat='$harga_pusat',jumlah='$jumlah' WHERE id='$id'";
     mysqli_query($conn, $query);
     return mysqli_affected_rows($conn);
 }
@@ -268,7 +292,6 @@ function updateChecker($data)
     mysqli_query($conn, $query);
     return mysqli_affected_rows($conn);
 }
-
 
 // Function Baca Data Konsesi
 function bacaKonsesi($id)
