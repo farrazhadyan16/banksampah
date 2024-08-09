@@ -13,7 +13,7 @@ if (hapusNasabah($id) > 0) {
 } else {
     echo "
                 <script>
-                alert('Data Berhasil Dihapus');
+                alert('Data Berhasil Gagal Dihapus');
                 document.location.href='nasabah.php';
                 </script>
                 ";

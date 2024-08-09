@@ -1,7 +1,6 @@
 <?php
 $conn = mysqli_connect("localhost", "root", "", "db_pm_old");
 
-
 function query($query)
 {
     global $conn;
@@ -13,7 +12,46 @@ function query($query)
     return $rows;
 }
 
+function getProjectIds()
+{
+    global $conn;
 
+    $query = "SELECT id FROM sampah"; // Replace 'your_project_table' with the actual table name
+    $result = mysqli_query($conn, $query);
+
+    $projectIds = [];
+    while ($row = mysqli_fetch_assoc($result)) {
+        $projectIds[] = $row['id'];
+    }
+
+    return $projectIds;
+}
+
+//hapusMonitoring
+function hapusMonitoring($id)
+{
+    global $conn;
+    mysqli_query($conn, "DELETE FROM sampah WHERE id = '$id'");
+    return mysqli_affected_rows($conn);
+}
+
+//hapusnasabah
+function hapusNasabah($id)
+{
+    global $conn;
+    mysqli_query($conn, "DELETE FROM user WHERE id = '$id'");
+    return mysqli_affected_rows($conn);
+}
+
+// Function Hapus Data Konsesi
+function hapusKonsesi($id)
+{
+    global $conn;
+    mysqli_query($conn, "DELETE FROM konsesi WHERE id_konsesi = '$id'");
+    return mysqli_affected_rows($conn);
+}
+
+//input data monitoring
 function inputdata($data)
 {
     global $conn;
@@ -75,22 +113,57 @@ function inputdata($data)
     return mysqli_affected_rows($conn);
 }
 
-function getProjectIds()
+//input data konsesi
+function inputdatakonsesi($data)
 {
     global $conn;
+    $idkonsesi = htmlspecialchars($data["id_konsesi"]);
+    $jo = htmlspecialchars($data["jo"]);
+    $wo = htmlspecialchars($data["wo"]);
+    $nameproject = htmlspecialchars($data["nama_project"]);
+    $namepanel = htmlspecialchars($data["nama_panel"]);
+    $unit = htmlspecialchars($data["unit"]);
+    $jenis = htmlspecialchars($data["jenis"]);
+    $no_rpb = htmlspecialchars($data["no_rpb"]);
+    $no_po = htmlspecialchars($data["no_po"]);
+    $kode_material = htmlspecialchars($data["kode_material"]);
+    $konsesi = htmlspecialchars($data["konsesi"]);
+    $jumlah = htmlspecialchars($data["jumlah"]);
+    $nolkpj = htmlspecialchars($data["no_lkpj"]);
+    $status = htmlspecialchars($data["status"]);
+    $tglmatrial = htmlspecialchars($data["tgl_matrial_dtg"]);
+    $tglpasang = htmlspecialchars($data["tgl_pasang"]);
+    $keterangan = htmlspecialchars($data["keterangan"]);
 
-    $query = "SELECT id FROM sampah"; // Replace 'your_project_table' with the actual table name
-    $result = mysqli_query($conn, $query);
-
-    $projectIds = [];
-    while ($row = mysqli_fetch_assoc($result)) {
-        $projectIds[] = $row['id'];
-    }
-
-    return $projectIds;
+    $query = "INSERT INTO konsesi
+                (id_konsesi,jo,wo,nama_project,nama_panel,unit,jenis,no_rpb,no_po,kode_material,konsesi,jumlah,no_lkpj,status,tgl_matrial_dtg,tgl_pasang,keterangan)
+                VALUES
+                ('$idkonsesi', '$jo', '$wo', '$nameproject', '$namepanel', '$unit', '$jenis','$no_rpb', '$no_po','$kode_material','$konsesi', '$jumlah',
+                '$nolkpj', '$status', '$tglmatrial', '$tglpasang', '$keterangan')";
+    mysqli_query($conn, $query);
+    return mysqli_affected_rows($conn);
 }
 
+//edit data nasabah
+function updatedatanasabah($data)
+{
+    global $conn;
+    $id = htmlspecialchars($data["id"]);
+    $username = htmlspecialchars($data["username"]);
+    $nama = htmlspecialchars($data["nama"]);
+    $email = htmlspecialchars($data["email"]);
+    $notelp = htmlspecialchars($data["notelp"]);
+    $nik = htmlspecialchars($data["nik"]);
+    $alamat = htmlspecialchars($data["alamat"]);
+    $tgl_lahir = htmlspecialchars($data["tgl_lahir"]);
+    $kelamin = htmlspecialchars($data["kelamin"]);
 
+    $query = "UPDATE user SET username='$username',nama='$nama',email='$email',notelp='$notelp',nik='$nik',alamat='$alamat',tgl_lahir='$tgl_lahir',kelamin='$kelamin' WHERE id='$id'";
+    mysqli_query($conn, $query);
+    return mysqli_affected_rows($conn);
+}
+
+//edit data monitoring
 function updatedatamonitoring($data)
 {
     global $conn;
@@ -140,22 +213,7 @@ function updatedatamonitoring($data)
     return mysqli_affected_rows($conn);
 }
 
-
-
-function hapusMonitoring($id)
-{
-    global $conn;
-    mysqli_query($conn, "DELETE FROM sampah WHERE id = '$id'");
-    return mysqli_affected_rows($conn);
-}
-
-function hapusNasabah($id)
-{
-    global $conn;
-    mysqli_query($conn, "DELETE FROM user WHERE id = '$id'");
-    return mysqli_affected_rows($conn);
-}
-
+// edit design
 function updateDesign($data)
 {
     global $conn;
@@ -169,6 +227,7 @@ function updateDesign($data)
     return mysqli_affected_rows($conn);
 }
 
+//edit nesting
 function updateNesting($data)
 {
     global $conn;
@@ -182,6 +241,7 @@ function updateNesting($data)
     return mysqli_affected_rows($conn);
 }
 
+//edit program
 function updateProgram($data)
 {
     global $conn;
@@ -195,6 +255,7 @@ function updateProgram($data)
     return mysqli_affected_rows($conn);
 }
 
+//edit checker
 function updateChecker($data)
 {
     global $conn;
@@ -208,35 +269,6 @@ function updateChecker($data)
     return mysqli_affected_rows($conn);
 }
 
-function inputdatakonsesi($data)
-{
-    global $conn;
-    $idkonsesi = htmlspecialchars($data["id_konsesi"]);
-    $jo = htmlspecialchars($data["jo"]);
-    $wo = htmlspecialchars($data["wo"]);
-    $nameproject = htmlspecialchars($data["nama_project"]);
-    $namepanel = htmlspecialchars($data["nama_panel"]);
-    $unit = htmlspecialchars($data["unit"]);
-    $jenis = htmlspecialchars($data["jenis"]);
-    $no_rpb = htmlspecialchars($data["no_rpb"]);
-    $no_po = htmlspecialchars($data["no_po"]);
-    $kode_material = htmlspecialchars($data["kode_material"]);
-    $konsesi = htmlspecialchars($data["konsesi"]);
-    $jumlah = htmlspecialchars($data["jumlah"]);
-    $nolkpj = htmlspecialchars($data["no_lkpj"]);
-    $status = htmlspecialchars($data["status"]);
-    $tglmatrial = htmlspecialchars($data["tgl_matrial_dtg"]);
-    $tglpasang = htmlspecialchars($data["tgl_pasang"]);
-    $keterangan = htmlspecialchars($data["keterangan"]);
-
-    $query = "INSERT INTO konsesi
-                (id_konsesi,jo,wo,nama_project,nama_panel,unit,jenis,no_rpb,no_po,kode_material,konsesi,jumlah,no_lkpj,status,tgl_matrial_dtg,tgl_pasang,keterangan)
-                VALUES
-                ('$idkonsesi', '$jo', '$wo', '$nameproject', '$namepanel', '$unit', '$jenis','$no_rpb', '$no_po','$kode_material','$konsesi', '$jumlah',
-                '$nolkpj', '$status', '$tglmatrial', '$tglpasang', '$keterangan')";
-    mysqli_query($conn, $query);
-    return mysqli_affected_rows($conn);
-}
 
 // Function Baca Data Konsesi
 function bacaKonsesi($id)
@@ -247,14 +279,7 @@ function bacaKonsesi($id)
     return mysqli_fetch_assoc($result);
 }
 
-// Function Hapus Data Konsesi
-function hapusKonsesi($id)
-{
-    global $conn;
-    mysqli_query($conn, "DELETE FROM konsesi WHERE id_konsesi = '$id'");
-    return mysqli_affected_rows($conn);
-}
-
+//edit konsesi
 function updatedatakonsesi($data)
 {
     global $conn;

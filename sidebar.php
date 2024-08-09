@@ -34,7 +34,7 @@
                 </a>
             </li>
             <li>
-                <a href="monitoring.php">
+                <a href="admin.php">
                     <i class="fa-solid fa-desktop"></i>
                     <span>Admin</span>
                 </a>

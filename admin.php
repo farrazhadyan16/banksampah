@@ -2,7 +2,7 @@
 include 'header.php';
 include 'fungsi.php';
 
-$query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
+$query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
 
 ?>
 
