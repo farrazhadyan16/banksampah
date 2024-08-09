@@ -82,40 +82,40 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
                             <?php $i = 1; ?>
                             <?php foreach ($query_all as $row): ?>
 
-                                <tr>
-                                    <td>
-                                        <?= $row["id"]; ?>
-                                    </td>
-                                    <td>
-                                        <?= $row["jenis"]; ?>
-                                    </td>
-                                    <td>
-                                        <?= $row["jenis"]; ?>
-                                    </td>
-                                    <td>
-                                        <?= $row["harga"]; ?>
-                                    </td>
-                                    <td>
-                                        <?= $row["harga_pusat"]; ?>
-                                    </td>
-                                    <td>
-                                        Rp. <?= $row["jumlah"]; ?>
-                                    </td>
+                            <tr>
+                                <td>
+                                    <?= $row["id"]; ?>
+                                </td>
+                                <td>
+                                    <?= $row["jenis"]; ?>
+                                </td>
+                                <td>
+                                    <?= $row["jenis"]; ?>
+                                </td>
+                                <td>
+                                    <?= $row["harga"]; ?>
+                                </td>
+                                <td>
+                                    <?= $row["harga_pusat"]; ?>
+                                </td>
+                                <td>
+                                    Rp. <?= $row["jumlah"]; ?>
+                                </td>
 
-                                    <td>
-                                        <li class="liaksi">
-                                            <button type="submit" name="submit"><a
-                                                    href="editmonitoring.php?id=<?= $row["id"]; ?>"
-                                                    class="inputbtn2">Ubah</a></button>
-                                        </li>
-                                        <li class="liaksi">
-                                            <button type="submit" name="submit"><a
-                                                    href="hapusmonitoring.php?id=<?= $row["id"]; ?>"
-                                                    class="inputbtn3">Hapus</a></button>
-                                        </li>
-                                    </td>
-                                </tr>
-                                <?php $i++; ?>
+                                <td>
+                                    <li class="liaksi">
+                                        <button type="submit" name="submit"><a
+                                                href="editmonitoring.php?id=<?= $row["id"]; ?>"
+                                                class="inputbtn6">Ubah</a></button>
+                                    </li>
+                                    <li class="liaksi">
+                                        <button type="submit" name="submit"><a
+                                                href="hapusmonitoring.php?id=<?= $row["id"]; ?>"
+                                                class="inputbtn7">Hapus</a></button>
+                                    </li>
+                                </td>
+                            </tr>
+                            <?php $i++; ?>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
