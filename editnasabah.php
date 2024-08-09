@@ -5,7 +5,7 @@ require 'fungsi.php';
 
 $id = $_GET['id'];
 
-$user = query("SELECT * FROM user WHERE id='$id'")[0];
+$user = query("SELECT * FROM user WHERE id=$id")[0];
 
 if (isset($_POST["submit"])) {
 

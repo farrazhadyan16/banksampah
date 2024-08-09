@@ -5,7 +5,7 @@ require 'fungsi.php';
 
 $id = $_GET['id'];
 
-$sampah = query("SELECT * FROM sampah WHERE id=$id")[0];
+$sampah = query("SELECT * FROM sampah WHERE id='$id'")[0];
 
 if (isset($_POST["submit"])) {
 
@@ -73,7 +73,7 @@ if (isset($_POST["submit"])) {
 
                     <label for="">ID Kategori</label><br>
                     <input type="text" placeholder="Masukkan Nomor JO" name="id_kategori"
-                        value="<?= $sampah["id_kategoti"] ?>"><br><br>
+                        value="<?= $sampah["id_kategori"] ?>"><br><br>
 
                     <label for="">Jenis</label><br>
                     <input type="text" placeholder="Masukan Tgl JO" name="jenis"
