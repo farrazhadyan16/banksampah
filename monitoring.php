@@ -36,26 +36,16 @@ $query_all = query("SELECT * from data_monitoring ORDER BY LENGTH(id),CAST(id AS
                     <h2>Sampah</h2>
                 </div>
                 <div class="user--info">
-                    <?php if (in_array("admin",$_SESSION['admin_akses'])) { ?>
                     <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
                             Project</button></a>
-                    <?php } ?>
-                    <?php if (in_array("design",$_SESSION['admin_akses'])) { ?>
                     <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Input
                             Design</button></a>
-                    <?php } ?>
-                    <?php if (in_array("nesting",$_SESSION['admin_akses'])) { ?>
                     <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Input
                             Nesting</button></a>
-                    <?php } ?>
-                    <?php if (in_array("program",$_SESSION['admin_akses'])) { ?>
                     <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Input
                             Program</button></a>
-                    <?php } ?>
-                    <?php if (in_array("checker",$_SESSION['admin_akses'])) { ?>
                     <a href="inputchecker.php"><button type="button" name="button" class="inputbtn">Input
                             Checker</button></a>
-                    <?php } ?>
                     <a href="exportmonitoring.php"><button type="button" name="button"
                             class="inputbtn">Export</button></a>
                     <img src="./img/logoPM_high.png" alt="logo">
