@@ -12,7 +12,7 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMElectric | Monitoring</title>
+    <title>Bank Sampah | Sampah</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->

@@ -28,7 +28,7 @@
                 </a>
             </li>
             <li>
-                <a href="monitoring.php">
+                <a href="transaksi.php">
                     <i class="fa-solid fa-desktop"></i>
                     <span>Transaksi</span>
                 </a>

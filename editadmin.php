@@ -34,7 +34,7 @@ if (isset($_POST["submit"])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMElectric | Edit Monitoring</title>
+    <title>Bank Sampah | Edit Admin</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/pm.ico">
     <!-- Font Awesome Cdn link -->
@@ -50,8 +50,8 @@ if (isset($_POST["submit"])) {
     <div class="main--content">
         <div class="header--wrapper">
             <div class="header--title">
-                <span>Input Data</span>
-                <h2>Edit Monitoring</h2>
+                <span>Edit Data</span>
+                <h2>Edit Admin</h2>
             </div>
             <div class="user--info">
                 <img src="./img/logoPM.png" alt="logo">

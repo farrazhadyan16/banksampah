@@ -81,7 +81,7 @@ function togglePassword() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Login</title>
+    <title>Bank Sampah | Register</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="./img/">
     <!-- Font Awesome Cdn link -->

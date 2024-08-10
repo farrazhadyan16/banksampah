@@ -12,7 +12,7 @@ $query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PMElectric | Monitoring</title>
+    <title>Bank Sampah | Nasabah</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->
@@ -32,7 +32,7 @@ $query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id
             <div class="header--wrapper">
                 <div class="header--title">
                     <span>Halaman</span>
-                    <h2>Sampah</h2>
+                    <h2>Nasabah</h2>
                 </div>
                 <div class="user--info">
                     <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
