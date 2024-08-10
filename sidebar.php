@@ -31,6 +31,12 @@
                 <span>Nasabah</span>
             </a>
         </li>
+        <li class="">
+            <a href="detail_user.php">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Detail User</span>
+            </a>
+        </li>
         <li class="logout">
             <a href="logout.php">
                 <i class="fa-solid fa-right-from-bracket"></i>
