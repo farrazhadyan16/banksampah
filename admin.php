@@ -12,7 +12,7 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Sampah</title>
+    <title>Bank Sampah | Admin</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->
@@ -32,7 +32,7 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
             <div class="header--wrapper">
                 <div class="header--title">
                     <span>Halaman</span>
-                    <h2>Sampah</h2>
+                    <h2>Admin</h2>
                 </div>
                 <div class="user--info">
                     <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
@@ -51,13 +51,15 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                 </div>
             </div>
 
-            <!-- Ini card-container -->
-            <!-- <?php include("card-containe.php") ?> -->
-            <!-- Batas Akhir card-container -->
-
             <!-- Ini Tabel -->
             <div class="tabular--wrapper">
-                <h3 class="main--title">Data Project</h3>
+                <div class="row align-items-start">
+                    <div class="user--info">
+                        <h3 class="main--title">Data Project</h3>
+                        <a href="register.php"><button type="button" name="button"
+                                class="inputbtn .border-right">Tambah</button></a>
+                    </div>
+                </div>
                 <?php
                 if (isset($_SESSION['message'])) {
                     echo "<h4>" . $_SESSION['message'] . "</h4>";
@@ -117,12 +119,12 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                                 <td>
                                     <li class="liaksi">
                                         <button type="submit" name="submit"><a
-                                                href="editnasabah.php?id=<?= $row["id"]; ?>"
+                                                href="edit-nasabah.php?id=<?= $row["id"]; ?>"
                                                 class="inputbtn6">Ubah</a></button>
                                     </li>
                                     <li class="liaksi">
                                         <button type="submit" name="submit"><a
-                                                href="hapusnasabah.php?id=<?= $row["id"]; ?>"
+                                                href="hapus-nasabah.php?id=<?= $row["id"]; ?>"
                                                 class="inputbtn7">Hapus</a></button>
                                     </li>
                                 </td>

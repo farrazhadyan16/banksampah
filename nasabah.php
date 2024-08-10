@@ -51,13 +51,15 @@ $query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id
                 </div>
             </div>
 
-            <!-- Ini card-container -->
-            <!-- <?php include("card-containe.php") ?> -->
-            <!-- Batas Akhir card-container -->
-
             <!-- Ini Tabel -->
             <div class="tabular--wrapper">
-                <h3 class="main--title">Data Project</h3>
+                <div class="row align-items-start">
+                    <div class="user--info">
+                        <h3 class="main--title">Data Project</h3>
+                        <a href="register.php"><button type="button" name="button"
+                                class="inputbtn .border-right">Tambah</button></a>
+                    </div>
+                </div>
                 <?php
                 if (isset($_SESSION['message'])) {
                     echo "<h4>" . $_SESSION['message'] . "</h4>";
@@ -117,12 +119,12 @@ $query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id
                                 <td>
                                     <li class="liaksi">
                                         <button type="submit" name="submit"><a
-                                                href="editnasabah.php?id=<?= $row["id"]; ?>"
+                                                href="edit_nasabah.php?id=<?= $row["id"]; ?>"
                                                 class="inputbtn6">Ubah</a></button>
                                     </li>
                                     <li class="liaksi">
                                         <button type="submit" name="submit"><a
-                                                href="hapusnasabah.php?id=<?= $row["id"]; ?>"
+                                                href="hapus_nasabah.php?id=<?= $row["id"]; ?>"
                                                 class="inputbtn7">Hapus</a></button>
                                     </li>
                                 </td>
