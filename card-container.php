@@ -16,17 +16,54 @@
     <div class="card--container">
         <h3 class="main--title">Halaman Web</h3>
         <div class="card--wrapper">
-            <a href="monitoring.php" class="payment--card light-red no-underline">
+            <a href="sampah.php" class="payment--card light-red no-underline">
                 <div class="card--header">
                     <div class="amount">
                         <span class="title">
                             Halaman
                         </span>
-                        <span class="amount-value">Monitoring</span>
+                        <span class="amount-value">Sampah</span>
                     </div>
                     <i class="fa-solid fa-desktop icon"></i>
                 </div>
             </a>
+
+            <a href="transaksi.php" class="payment--card light-red no-underline">
+                <div class="card--header">
+                    <div class="amount">
+                        <span class="title">
+                            Halaman
+                        </span>
+                        <span class="amount-value">Transaksi</span>
+                    </div>
+                    <i class="fa-solid fa-desktop icon"></i>
+                </div>
+            </a>
+
+            <a href="admin.php" class="payment--card light-red no-underline">
+                <div class="card--header">
+                    <div class="amount">
+                        <span class="title">
+                            Halaman
+                        </span>
+                        <span class="amount-value">Admin</span>
+                    </div>
+                    <i class="fa-solid fa-desktop icon"></i>
+                </div>
+            </a>
+
+            <a href="nasabah.php" class="payment--card light-red no-underline">
+                <div class="card--header">
+                    <div class="amount">
+                        <span class="title">
+                            Halaman
+                        </span>
+                        <span class="amount-value">Nasabah</span>
+                    </div>
+                    <i class="fa-solid fa-desktop icon"></i>
+                </div>
+            </a>
+
             <!-- <?php if (in_array("admin",$_SESSION['admin_akses'])) { ?>
             <a href="importdata.php" class="payment--card light-purple no-underline">
                 <div class="card--header">
