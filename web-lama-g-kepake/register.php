@@ -1,21 +1,13 @@
 <?php
-session_start();
+// session_start();
+// if (isset($_SESSION['admin_username'])) {
+//     header("location:main_admin.php");
+// }
 require_once 'koneksi.php';
 
-// Ambil data role dari session jika pengguna login
-$loggedInRole = isset($_SESSION['role']) ? $_SESSION['role'] : null;
-
-// Tentukan pilihan role yang bisa diakses
-$roles = [];
-if ($loggedInRole === 'superadmin') {
-    $roles = ['superadmin', 'admin', 'nasabah'];
-} elseif ($loggedInRole === 'admin') {
-    $roles = ['admin', 'nasabah'];
-} else {
-    // Jika tidak login, role otomatis di-set sebagai 'Nasabah'
-    $roles = ['nasabah'];
-    $autoRole = 'nasabah';
-}
+// Ambil data role dari database
+$query = "SELECT DISTINCT role FROM user"; // Ubah query sesuai struktur tabel Anda
+$result = mysqli_query($koneksi, $query);
 
 // Inisialisasi variabel error
 $err = '';
@@ -25,20 +17,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
     $nama = $_POST['nama'];
-    
-    // Jika pengguna tidak login, role otomatis adalah Nasabah
-    if (!isset($loggedInRole)) {
-        $role = 'nasabah';
-    } else {
-        $role = $_POST['role'];
-    }
+    $role = $_POST['role'];
 
     // Validasi input
     if (empty($username) || empty($password) || empty($nama) || empty($role)) {
         $err = "Semua bidang harus diisi!";
-    } elseif (isset($loggedInRole) && !in_array($role, $roles)) {
-        // Validasi tambahan untuk memastikan user tidak bisa memasukkan role yang tidak sesuai dengan hak aksesnya
-        $err = "Role tidak valid!";
     } else {
         // Check if username already exists
         $check_query = "SELECT username FROM user WHERE username = ?";
@@ -72,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 ?>
-
 <script>
 function validateForm() {
     var password = document.getElementById("password").value;
@@ -110,10 +92,8 @@ function togglePassword() {
     <div id="app">
 
         <div class="container">
-            <p class="login-text" style="font-size: 2rem; font-weight: 800;">
-                <img src="" alt="logo" width="225" height="46.5">
-            </p>
-            <br />
+            <p class="login-text" style="font-size: 2rem; font-weight: 800;"><img src="" alt="logo" width="225"
+                    height="46.5"></p> <br />
 
             <form method="POST" action="">
                 <div class="input-group">
@@ -133,7 +113,6 @@ function togglePassword() {
                     <input type="text" class="form-control" placeholder="Masukkan Nama" name="nama" required>
                 </div>
 
-                <?php if (isset($loggedInRole)): ?>
                 <div class="input-group">
                     <div class="col-sm-8">
                         <label class="control-label col-sm-4" for="role">Role</label>
@@ -141,25 +120,26 @@ function togglePassword() {
                         <select name="role" id="role" class="input-group" required>
                             <option value=''>Pilih</option>
                             <?php
-                            // Loop through each allowed role and create an option element
-                            foreach ($roles as $roleOption) {
-                                echo "<option value='$roleOption'>$roleOption</option>";
+                            // Loop through each role and create an option element
+                            while ($row = mysqli_fetch_assoc($result)) {
+                            echo "<option value='{$row['role']}'>{$row['role']}</option>";
                             }
+                            // Free result set
+                            mysqli_free_result($result);
                             ?>
                         </select>
                     </div>
                 </div>
-                <?php endif; ?>
-
                 <div class="input-group">
                     <button type="submit" name="submit" class="btn">Daftar</button>
                 </div>
             </form>
 
+
             <?php
              if ($err) {
-                echo "<h style='color: red; text-align: center;'>$err</h>";
-             }
+            echo "<h style='color: red; text-align: center;'>$err</h>";
+               }
             ?>
 
         </div>

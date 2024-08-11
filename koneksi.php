@@ -7,7 +7,7 @@ $db_name="db_pm_old";
 $koneksi = mysqli_connect($db_host, $db_user, $db_pass, $db_name);
 
 if(!$koneksi){
-    die("Koneksi Gagal");
+    die("Koneksi Gagal:" . mysqli_connect_error());
 }
 
 ?>

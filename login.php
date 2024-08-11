@@ -86,7 +86,7 @@ if(isset($_POST['login'])){
                 </div>
 
                 <div class="input-group">
-                    <a href="register_nasabah.php"><button type="button" class="btn" name="button">Register</button>
+                    <a href="register.php"><button type="button" class="btn" name="button">Register</button>
                     </a>
                 </div>
             </form>

@@ -2,11 +2,19 @@
 session_start();
 require_once 'koneksi.php';
 
-// Cek apakah pengguna sudah login
-$logged_in_role = isset($_SESSION['logged_in_role']) ? $_SESSION['logged_in_role'] : null;
+// Ambil data role dari session jika pengguna login
+$loggedInRole = isset($_SESSION['role']) ? $_SESSION['role'] : null;
 
-$query = "SELECT DISTINCT role FROM user"; // Ubah query sesuai struktur tabel Anda
-$result = mysqli_query($koneksi, $query);
+// Tentukan pilihan role yang bisa diakses
+$roles = [];
+if ($loggedInRole === 'superadmin') {
+    $roles = ['superadmin', 'admin', 'nasabah'];
+} elseif ($loggedInRole === 'admin') {
+    $roles = ['admin', 'nasabah'];
+} else {
+    // Jika tidak login, hanya bisa daftar Nasabah
+    $roles = ['nasabah'];
+}
 
 // Inisialisasi variabel error
 $err = '';
@@ -21,6 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validasi input
     if (empty($username) || empty($password) || empty($nama) || empty($role)) {
         $err = "Semua bidang harus diisi!";
+    } elseif (!in_array($role, $roles)) {
+        // Validasi tambahan untuk memastikan user tidak bisa memasukkan role yang tidak sesuai dengan hak aksesnya
+        $err = "Role tidak valid!";
     } else {
         // Check if username already exists
         $check_query = "SELECT username FROM user WHERE username = ?";
@@ -55,6 +66,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 
+<script>
+function validateForm() {
+    var password = document.getElementById("password").value;
+    if (password.length < 8) {
+        alert("Password harus terdiri dari minimal 8 karakter.");
+        return false;
+    }
+    return true;
+}
+
+function togglePassword() {
+    var passwordField = document.getElementById("password");
+    if (passwordField.type === "password") {
+        passwordField.type = "text";
+    } else {
+        passwordField.type = "password";
+    }
+}
+</script>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -70,53 +101,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <body>
     <div id="app">
+
         <div class="container">
-            <p class="login-text" style="font-size: 2rem; font-weight: 800;">Daftar Pengguna</p> <br />
+            <p class="login-text" style="font-size: 2rem; font-weight: 800;">
+                <img src="" alt="logo" width="225" height="46.5">
+            </p>
+            <br />
+
             <form method="POST" action="">
                 <div class="input-group">
-                    <label>Username</label>
+                    <label class="control-label col-sm-4">Username</label>
                     <br>
                     <input type="text" class="input" placeholder="Masukkan Username" name="username" required>
                 </div>
                 <div class="input-group">
-                    <label>Password</label>
+                    <label class="control-label col-sm-4">Password</label>
                     <br>
-                    <input type="password" id="password" class="form-control" placeholder="Masukkan Password"
-                        name="password" required>
+                    <input type="password" class="form-control" placeholder="Masukkan Password" name="password"
+                        required>
                 </div>
                 <div class="input-group">
-                    <label>Nama</label>
+                    <label class="control-label col-sm-4">Nama</label>
                     <br>
                     <input type="text" class="form-control" placeholder="Masukkan Nama" name="nama" required>
                 </div>
 
                 <div class="input-group">
-                    <label>Role</label>
-                    <br>
-                    <select name="role" id="role" class="input-group" required>
-                        <option value=''>Pilih</option>
-                        <?php
-                        if ($logged_in_role === 'superadmin') {
-                            echo "<option value='nasabah'>Nasabah</option>";
-                            echo "<option value='admin'>Admin</option>";
-                            echo "<option value='superadmin'>Super Admin</option>";
-                        } elseif ($logged_in_role === 'admin') {
-                            echo "<option value='nasabah'>Nasabah</option>";
-                            echo "<option value='admin'>Admin</option>";
-                        } else {
-                            // Jika pengguna belum login, hanya tampilkan pilihan Nasabah
-                            echo "<option value='nasabah'>Nasabah</option>";
-                        }
-                        ?>
-                    </select>
+                    <div class="col-sm-8">
+                        <label class="control-label col-sm-4" for="role">Role</label>
+                        <br>
+                        <select name="role" id="role" class="input-group" required>
+                            <option value=''>Pilih</option>
+                            <?php
+                            // Loop through each allowed role and create an option element
+                            foreach ($roles as $role) {
+                                echo "<option value='$role'>$role</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
                 </div>
-
                 <div class="input-group">
                     <button type="submit" name="submit" class="btn">Daftar</button>
                 </div>
             </form>
 
-            <?php if ($err) { echo "<h style='color: red; text-align: center;'>$err</h>"; } ?>
+            <?php
+             if ($err) {
+                echo "<h style='color: red; text-align: center;'>$err</h>";
+             }
+            ?>
+
         </div>
     </div>
 
