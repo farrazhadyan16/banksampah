@@ -119,7 +119,7 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                                 <td>
                                     <li class="liaksi">
                                         <button type="submit" name="submit"><a
-                                                href="edit-nasabah.php?id=<?= $row["id"]; ?>"
+                                                href="edit_nasabah.php?id=<?= $row["id"]; ?>"
                                                 class="inputbtn6">Ubah</a></button>
                                     </li>
                                     <li class="liaksi">
