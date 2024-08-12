@@ -27,6 +27,31 @@ function getProjectIds()
     return $projectIds;
 }
 
+
+//tesss kategori
+function addCategory($name) {
+    global $koneksi;
+    $query = "INSERT INTO kategori_sampah (name, created_at) VALUES (?, NOW())";
+    $stmt = mysqli_prepare($koneksi, $query);
+    mysqli_stmt_bind_param($stmt, "s", $name);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_affected_rows($stmt);
+}
+
+function deleteCategory($id) {
+    global $koneksi;
+    $query = "DELETE FROM kategori_sampah WHERE id = ?";
+    $stmt = mysqli_prepare($koneksi, $query);
+    mysqli_stmt_bind_param($stmt, "i", $id);
+    mysqli_stmt_execute($stmt);
+    return mysqli_stmt_affected_rows($stmt);
+}
+
+
+
+
+
+
 //hapus nasabah/admin
 function hapusNasabah($id)
 {

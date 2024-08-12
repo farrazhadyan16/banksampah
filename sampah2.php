@@ -19,7 +19,6 @@ $query_all = query("
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +28,6 @@ $query_all = query("
     <!-- Font Awesome Cdn link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
-
 <body>
     <!-- Ini Sidebar -->
     <?php include("sidebar.php") ?>
@@ -50,8 +48,7 @@ $query_all = query("
                 <div class="row align-items-start">
                     <div class="user--info">
                         <h3 class="main--title">Data Sampah</h3>
-                        <a href="tambahsampah.php"><button type="button" name="button"
-                                class="inputbtn .border-right">Tambah</button></a>
+                        <a href="tambahsampah.php"><button type="button" name="button" class="inputbtn .border-right">Tambah</button></a>
                     </div>
                 </div>
                 <?php
@@ -109,5 +106,4 @@ $query_all = query("
     </div>
     <!-- Batas Akhir Main-Content -->
 </body>
-
 </html>
