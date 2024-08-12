@@ -29,23 +29,25 @@ function getProjectIds()
 
 
 //tesss kategori
-function addCategory($name) {
-    global $koneksi;
-    $query = "INSERT INTO kategori_sampah (name, created_at) VALUES (?, NOW())";
-    $stmt = mysqli_prepare($koneksi, $query);
-    mysqli_stmt_bind_param($stmt, "s", $name);
-    mysqli_stmt_execute($stmt);
-    return mysqli_stmt_affected_rows($stmt);
-}
+// function addCategory($name)
+// {
+//     global $koneksi;
+//     $query = "INSERT INTO kategori_sampah (name, created_at) VALUES (?, NOW())";
+//     $stmt = mysqli_prepare($koneksi, $query);
+//     mysqli_stmt_bind_param($stmt, "s", $name);
+//     mysqli_stmt_execute($stmt);
+//     return mysqli_stmt_affected_rows($stmt);
+// }
 
-function deleteCategory($id) {
-    global $koneksi;
-    $query = "DELETE FROM kategori_sampah WHERE id = ?";
-    $stmt = mysqli_prepare($koneksi, $query);
-    mysqli_stmt_bind_param($stmt, "i", $id);
-    mysqli_stmt_execute($stmt);
-    return mysqli_stmt_affected_rows($stmt);
-}
+// function deleteCategory($id)
+// {
+//     global $koneksi;
+//     $query = "DELETE FROM kategori_sampah WHERE id = ?";
+//     $stmt = mysqli_prepare($koneksi, $query);
+//     mysqli_stmt_bind_param($stmt, "i", $id);
+//     mysqli_stmt_execute($stmt);
+//     return mysqli_stmt_affected_rows($stmt);
+// }
 
 
 
@@ -191,8 +193,34 @@ function updatedatasampah($data)
     $harga = htmlspecialchars($data["harga"]);
     $harga_pusat = htmlspecialchars($data["harga_pusat"]);
     $jumlah = htmlspecialchars($data["jumlah"]);
-    
+
     $query = "UPDATE sampah SET id_kategori='$id_kategori',jenis='$jenis',harga='$harga',harga_pusat='$harga_pusat',jumlah='$jumlah' WHERE id='$id'";
     mysqli_query($conn, $query);
+    return mysqli_affected_rows($conn);
+}
+
+function addCategory($name)
+{
+    global $conn;
+
+    // Query untuk mendapatkan ID terakhir yang dimulai dengan 'KS'
+    $lastId = query("SELECT id FROM kategori_sampah WHERE id LIKE 'KS%' ORDER BY id DESC LIMIT 1");
+    if ($lastId) {
+        // Ambil angka dari ID terakhir, tambahkan 1, dan format ulang ID baru
+        $newId = 'KS' . str_pad((int) substr($lastId[0]['id'], 2) + 1, 2, '0', STR_PAD_LEFT);
+    } else {
+        // Jika tidak ada ID sebelumnya, mulai dengan KS01
+        $newId = 'KS01';
+    }
+
+    $query = "INSERT INTO kategori_sampah (id, name) VALUES ('$newId', '$name')";
+    mysqli_query($conn, $query);
+    return mysqli_affected_rows($conn);
+}
+
+function deleteCategory($id)
+{
+    global $conn;
+    mysqli_query($conn, "DELETE FROM kategori_sampah WHERE id = '$id'");
     return mysqli_affected_rows($conn);
 }

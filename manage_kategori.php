@@ -5,7 +5,7 @@ require 'fungsi.php';
 // Handle Add Category
 if (isset($_POST["add_category"])) {
     $name = $_POST['name'];
-    
+
     if (addCategory($name) > 0) {
         echo "<script>
                 alert('Kategori berhasil ditambahkan');
@@ -21,7 +21,7 @@ if (isset($_POST["add_category"])) {
 // Handle Delete Category
 if (isset($_POST["delete_category"])) {
     $id = $_POST['id'];
-    
+
     if (deleteCategory($id) > 0) {
         echo "<script>
                 alert('Kategori berhasil dihapus');
@@ -35,7 +35,7 @@ if (isset($_POST["delete_category"])) {
 }
 
 // Fetch all categories
-$categories = query("SELECT * FROM kategori_sampah ORDER BY id DESC");
+$categories = query("SELECT * FROM kategori_sampah ORDER BY id ASC");
 ?>
 
 <!DOCTYPE html>
@@ -88,23 +88,21 @@ $categories = query("SELECT * FROM kategori_sampah ORDER BY id DESC");
                         <tr>
                             <th>ID</th>
                             <th>Nama Kategori</th>
-                            <th>Created At</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($categories as $category): ?>
-                        <tr>
-                            <td><?= $category["id"]; ?></td>
-                            <td><?= $category["name"]; ?></td>
-                            <td><?= $category["created_at"]; ?></td>
-                            <td>
-                                <form method="POST" action="" style="display:inline;">
-                                    <input type="hidden" name="id" value="<?= $category["id"]; ?>">
-                                    <button type="submit" name="delete_category" class="inputbtn7">Hapus</button>
-                                </form>
-                            </td>
-                        </tr>
+                            <tr>
+                                <td><?= $category["id"]; ?></td>
+                                <td><?= $category["name"]; ?></td>
+                                <td>
+                                    <form method="POST" action="" style="display:inline;">
+                                        <input type="hidden" name="id" value="<?= $category["id"]; ?>">
+                                        <button type="submit" name="delete_category" class="inputbtn7">Hapus</button>
+                                    </form>
+                                </td>
+                            </tr>
                         <?php endforeach; ?>
                     </tbody>
                 </table>

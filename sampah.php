@@ -50,8 +50,10 @@ $query_all = query("
                 <div class="row align-items-start">
                     <div class="user--info">
                         <h3 class="main--title">Data Sampah</h3>
-                        <a href="tambahsampah.php"><button type="button" name="button"
+                        <a href="tambah_sampah.php"><button type="button" name="button"
                                 class="inputbtn .border-right">Tambah</button></a>
+                        <a href="manage_kategori.php"><button type="button" name="button"
+                                class="inputbtn .border-right">Manage Kategori</button></a>
                     </div>
                 </div>
                 <?php
@@ -67,8 +69,8 @@ $query_all = query("
                                 <th>ID</th>
                                 <th>Kategori</th>
                                 <th>Jenis</th>
-                                <th>Harga Pengepul</th>
                                 <th>Harga Nasabah</th>
+                                <th>Harga Pengepul</th>
                                 <th>Jumlah (KG)</th>
                                 <th>Aksi</th>
                             </tr>
@@ -76,27 +78,27 @@ $query_all = query("
                         <tbody>
                             <?php $i = 1; ?>
                             <?php foreach ($query_all as $row): ?>
-                            <tr>
-                                <td><?= $row["id"]; ?></td>
-                                <td><?= $row["kategori_name"]; ?></td>
-                                <td><?= $row["jenis"]; ?></td>
-                                <td>Rp. <?= number_format($row["harga"], 0, ',', '.'); ?></td>
-                                <td>Rp. <?= number_format($row["harga_pusat"], 0, ',', '.'); ?></td>
-                                <td><?= $row["jumlah"]; ?> KG</td>
-                                <td>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit">
-                                            <a href="edit_sampah.php?id=<?= $row["id"]; ?>" class="inputbtn6">Ubah</a>
-                                        </button>
-                                    </li>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit">
-                                            <a href="hapus_sampah.php?id=<?= $row["id"]; ?>" class="inputbtn7">Hapus</a>
-                                        </button>
-                                    </li>
-                                </td>
-                            </tr>
-                            <?php $i++; ?>
+                                <tr>
+                                    <td><?= $row["id"]; ?></td>
+                                    <td><?= $row["kategori_name"]; ?></td>
+                                    <td><?= $row["jenis"]; ?></td>
+                                    <td>Rp. <?= number_format($row["harga"], 0, ',', '.'); ?></td>
+                                    <td>Rp. <?= number_format($row["harga_pusat"], 0, ',', '.'); ?></td>
+                                    <td><?= $row["jumlah"]; ?> KG</td>
+                                    <td>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit">
+                                                <a href="edit_sampah.php?id=<?= $row["id"]; ?>" class="inputbtn6">Ubah</a>
+                                            </button>
+                                        </li>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit">
+                                                <a href="hapus_sampah.php?id=<?= $row["id"]; ?>" class="inputbtn7">Hapus</a>
+                                            </button>
+                                        </li>
+                                    </td>
+                                </tr>
+                                <?php $i++; ?>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
