@@ -2,6 +2,30 @@
 include 'header.php';
 require 'fungsi.php';
 
+// Fetch all categories from the database
+$categories = query("SELECT * FROM kategori_sampah ORDER BY name ASC");
+
+if (isset($_POST["submit"])) {
+    $jenis = $_POST['jenis'];
+    $harga_pengepul = $_POST['harga_pengepul'];
+    $harga_nasabah = $_POST['harga_nasabah'];
+    $kategori = $_POST['kategori'];
+
+    // Insert the data into the database
+    $query = "INSERT INTO sampah (jenis, harga, harga_pusat, id_kategori) 
+              VALUES ('$jenis', '$harga_pengepul', '$harga_nasabah', '$kategori')";
+
+    if (mysqli_query($koneksi, $query)) {
+        echo "<script>
+                alert('Data berhasil ditambahkan');
+                document.location.href = 'sampah.php';
+              </script>";
+    } else {
+        echo "<script>
+                alert('Data gagal ditambahkan');
+              </script>";
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -10,7 +34,7 @@ require 'fungsi.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Edit Sampah</title>
+    <title>Bank Sampah | Tambah Sampah</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/pm.ico">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -41,29 +65,20 @@ require 'fungsi.php';
                 <div class="container">
                     <hr>
 
-                    <input type="hidden" name="page" value="design">
+                    <label for="jenis">Jenis</label><br>
+                    <input type="text" placeholder="Masukkan Jenis Sampah" name="jenis" required><br><br>
 
-                    <!-- Tambahkan input hidden untuk menandai halaman -->
+                    <label for="harga_pengepul">Harga Pengepul</label><br>
+                    <input type="text" placeholder="Masukkan Harga Pengepul" name="harga_pengepul" required><br><br>
 
-                    <label for="">Jenis</label><br>
-                    <input type="text" placeholder="Masukan Jenis Sampah" name=""
-                        value=""><br><br>
-
-                    <label for="">Harga Pengepul</label><br>
-                    <input type="text" placeholder="Masukan Harga Pengepul" name=""
-                        value=""><br><br>
-
-                    <label for="">Harga Nasabah</label><br>
-                    <input type="text" placeholder="Masukan Harga Nasabah" name=""
-                        value=""><br><br>
+                    <label for="harga_nasabah">Harga Nasabah</label><br>
+                    <input type="text" placeholder="Masukkan Harga Nasabah" name="harga_nasabah" required><br><br>
 
                     <label for="kategori">Kategori</label><br>
-                    <select class="form-control" id="kategori" name="kategori">
-                        <option value="plastik">Plastik</option>
-                        <option value="kertas">Kertas</option>
-                        <option value="logam">Logam</option>
-                        <option value="kaca">Kaca</option>
-                        <option value="organik">Organik</option>
+                    <select class="form-control" id="kategori" name="kategori" required>
+                        <?php foreach ($categories as $category): ?>
+                        <option value="<?= $category['id']; ?>"><?= $category['name']; ?></option>
+                        <?php endforeach; ?>
                     </select><br><br>
 
                     <hr>
