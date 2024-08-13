@@ -8,13 +8,17 @@ $message = "";
 // Jika tombol CHECK ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $search_value = $_POST['search_value'];
-    $user_query = "SELECT * FROM user WHERE nik LIKE '%$search_value%' AND role = 'Nasabah'";
-    $user_result = $conn->query($user_query);
-
-    if ($user_result->num_rows > 0) {
-        $user_data = $user_result->fetch_assoc();
+    if (empty($search_value)) {
+        $message = "NIK tidak boleh kosong.";
     } else {
-        $message = "User dengan role 'Nasabah' tidak ditemukan.";
+        $user_query = "SELECT * FROM user WHERE nik LIKE '%$search_value%' AND role = 'Nasabah'";
+        $user_result = $conn->query($user_query);
+
+        if ($user_result->num_rows > 0) {
+            $user_data = $user_result->fetch_assoc();
+        } else {
+            $message = "User dengan role 'Nasabah' tidak ditemukan.";
+        }
     }
 }
 
@@ -162,6 +166,15 @@ if ($jenis_result->num_rows > 0) {
             row.parentNode.removeChild(row);
             updateTotalHarga();
         }
+
+        function validateSearchForm() {
+            var searchValue = document.getElementById('search_value').value;
+            if (searchValue.trim() === '') {
+                alert('NIK tidak boleh kosong.');
+                return false; // Mencegah form dikirim
+            }
+            return true; // Memungkinkan form dikirim
+        }
     </script>
 </head>
 
@@ -183,10 +196,10 @@ if ($jenis_result->num_rows > 0) {
             <!-- Start of Form Section -->
             <div class="tabular--wrapper">
                 <!-- Search Section -->
-                <form method="POST" action="">
+                <form method="POST" action="" onsubmit="return validateSearchForm()">
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <input type="text" name="search_value" class="form-control" placeholder="Search by NIK" value="<?php echo isset($search_value) ? $search_value : ''; ?>">
+                            <input type="text" name="search_value" id="search_value" class="form-control" placeholder="Search by NIK" value="<?php echo isset($search_value) ? $search_value : ''; ?>">
                         </div>
                         <div class="col-md-2">
                             <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
