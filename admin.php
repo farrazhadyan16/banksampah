@@ -20,56 +20,58 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
 </head>
 
 <body>
-    <!-- Ini Sidebar -->
-    <?php include("sidebar.php") ?>
-    <!-- Batas Akhir Sidebar -->
+    <div id="wrapper">
 
-    <!-- Ini Main-Content -->
-    <div class="main--content">
+        <!-- Ini Sidebar -->
+        <?php include("sidebar.php") ?>
+        <!-- Batas Akhir Sidebar -->
 
-        <div class="main--content--monitoring">
+        <!-- Ini Main-Content -->
+        <div class="main--content">
 
-            <div class="header--wrapper">
-                <div class="header--title">
-                    <span>Halaman</span>
-                    <h2>Admin</h2>
-                </div>
+            <div class="main--content--monitoring">
 
-            </div>
-
-            <!-- Ini Tabel -->
-            <div class="tabular--wrapper">
-                <div class="row align-items-start">
-                    <div class="user--info">
-                        <h3 class="main--title">Data Project</h3>
-                        <a href="register.php"><button type="button" name="button"
-                                class="inputbtn .border-right">Tambah</button></a>
+                <div class="header--wrapper">
+                    <div class="header--title">
+                        <span>Halaman</span>
+                        <h2>Admin</h2>
                     </div>
+
                 </div>
-                <?php
+
+                <!-- Ini Tabel -->
+                <div class="tabular--wrapper">
+                    <div class="row align-items-start">
+                        <div class="user--info">
+                            <h3 class="main--title">Data Project</h3>
+                            <a href="register.php"><button type="button" name="button"
+                                    class="inputbtn .border-right">Tambah</button></a>
+                        </div>
+                    </div>
+                    <?php
                 if (isset($_SESSION['message'])) {
                     echo "<h4>" . $_SESSION['message'] . "</h4>";
                     unset($_SESSION['message']);
                 }
                 ?>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Username</th>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>No Telp</th>
-                                <th>Alamat</th>
-                                <th>Tanggal Lahir</th>
-                                <th>Jenis Kelamin</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $i = 1; ?>
-                            <?php foreach ($query_all as $row): ?>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Username</th>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>No Telp</th>
+                                    <th>Alamat</th>
+                                    <th>Tanggal Lahir</th>
+                                    <th>Jenis Kelamin</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $i = 1; ?>
+                                <?php foreach ($query_all as $row): ?>
 
                                 <tr>
                                     <td>
@@ -112,21 +114,21 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                                     </td>
                                 </tr>
                                 <?php $i++; ?>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
 
-                        </tfoot>
-                    </table>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <!-- Batas Akhir Tabel -->
-            <!-- <form method="GET" action="tambah_pengguna.php">
+                <!-- Batas Akhir Tabel -->
+                <!-- <form method="GET" action="tambah_pengguna.php">
             <button type="submit" name="submit" class="inputbtn1">Tambah Data</button>
         </form> -->
+            </div>
+            <!-- Batas Akhir card-container -->
         </div>
-        <!-- Batas Akhir card-container -->
-    </div>
     </div>
     <!-- Batas Akhir Main-Content -->
 </body>

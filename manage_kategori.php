@@ -52,47 +52,49 @@ $categories = query("SELECT * FROM kategori_sampah ORDER BY id ASC");
 </head>
 
 <body>
-    <!-- Ini Sidebar -->
-    <?php include("sidebar.php") ?>
-    <!-- Batas Akhir Sidebar -->
+    <div id="wrapper">
 
-    <!-- Ini Main-Content -->
-    <div class="main--content">
-        <div class="header--wrapper">
-            <div class="header--title">
-                <span>Manage Data</span>
-                <h2>Manage Kategori</h2>
-            </div>
-            <div class="user--info">
-                <img src="./img/logoPM.png" alt="logo">
-            </div>
-        </div>
+        <!-- Ini Sidebar -->
+        <?php include("sidebar.php") ?>
+        <!-- Batas Akhir Sidebar -->
 
-        <!-- Ini card-container -->
-        <div class="card--container">
-            <h3 class="main--title">Tambah Kategori</h3>
-            <form method="POST" action="">
-                <div class="container">
-                    <hr>
-                    <label for="name">Nama Kategori</label><br>
-                    <input type="text" placeholder="Masukkan Nama Kategori" name="name" required><br><br>
-
-                    <button type="submit" name="add_category" class="inputbtn">Tambah</button>
+        <!-- Ini Main-Content -->
+        <div class="main--content">
+            <div class="header--wrapper">
+                <div class="header--title">
+                    <span>Manage Data</span>
+                    <h2>Manage Kategori</h2>
                 </div>
-            </form>
+                <div class="user--info">
+                    <img src="./img/logoPM.png" alt="logo">
+                </div>
+            </div>
 
-            <h3 class="main--title">Daftar Kategori</h3>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Nama Kategori</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($categories as $category): ?>
+            <!-- Ini card-container -->
+            <div class="card--container">
+                <h3 class="main--title">Tambah Kategori</h3>
+                <form method="POST" action="">
+                    <div class="container">
+                        <hr>
+                        <label for="name">Nama Kategori</label><br>
+                        <input type="text" placeholder="Masukkan Nama Kategori" name="name" required><br><br>
+
+                        <button type="submit" name="add_category" class="inputbtn">Tambah</button>
+                    </div>
+                </form>
+
+                <h3 class="main--title">Daftar Kategori</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nama Kategori</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($categories as $category): ?>
                             <tr>
                                 <td><?= $category["id"]; ?></td>
                                 <td><?= $category["name"]; ?></td>
@@ -103,9 +105,10 @@ $categories = query("SELECT * FROM kategori_sampah ORDER BY id ASC");
                                     </form>
                                 </td>
                             </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

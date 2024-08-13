@@ -39,103 +39,105 @@ if ($result) {
 </head>
 
 <body>
-    <!-- Ini Sidebar -->
-    <?php include("sidebar.php") ?>
-    <!-- Batas Akhir Sidebar -->
+    <div id="wrapper">
+
+        <!-- Ini Sidebar -->
+        <?php include("sidebar.php") ?>
+        <!-- Batas Akhir Sidebar -->
 
 
-    <div class="main--content">
+        <div class="main--content">
 
-        <div class="main--content--monitoring">
+            <div class="main--content--monitoring">
 
-            <div class="header--wrapper">
-                <div class="header--title">
-                    <span>Halaman</span>
-                    <h2>Sampah</h2>
-                </div>
-                <div class="user--info">
-                    <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
-                            Project</button></a>
-                    <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Input
-                            Design</button></a>
-                    <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Input
-                            Nesting</button></a>
-                    <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Input
-                            Program</button></a>
-                    <a href="inputchecker.php"><button type="button" name="button" class="inputbtn">Input
-                            Checker</button></a>
-                    <a href="exportmonitoring.php"><button type="button" name="button"
-                            class="inputbtn">Export</button></a>
-                    <img src="./img/logoPM_high.png" alt="logo">
-                </div>
-            </div>
-
-            <!-- Ini Tabel -->
-            <div class="tabular--wrapper">
-                <div class="row align-items-start">
+                <div class="header--wrapper">
+                    <div class="header--title">
+                        <span>Halaman</span>
+                        <h2>Sampah</h2>
+                    </div>
                     <div class="user--info">
-                        <h3 class="main--title">Data Project</h3>
-                        <a href="tambahsampah.php"><button type="button" name="button"
-                                class="inputbtn .border-right">Tambah</button></a>
+                        <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
+                                Project</button></a>
+                        <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Input
+                                Design</button></a>
+                        <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Input
+                                Nesting</button></a>
+                        <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Input
+                                Program</button></a>
+                        <a href="inputchecker.php"><button type="button" name="button" class="inputbtn">Input
+                                Checker</button></a>
+                        <a href="exportmonitoring.php"><button type="button" name="button"
+                                class="inputbtn">Export</button></a>
+                        <img src="./img/logoPM_high.png" alt="logo">
                     </div>
                 </div>
 
-                <!-- Page Heading -->
-                <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                    <h1 class="h3 mb-0 text-gray-800">Profile</h1>
-                </div>
+                <!-- Ini Tabel -->
+                <div class="tabular--wrapper">
+                    <div class="row align-items-start">
+                        <div class="user--info">
+                            <h3 class="main--title">Data Project</h3>
+                            <a href="tambahsampah.php"><button type="button" name="button"
+                                    class="inputbtn .border-right">Tambah</button></a>
+                        </div>
+                    </div>
 
-                <!-- Content Row -->
-                <div class="row">
+                    <!-- Page Heading -->
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Profile</h1>
+                    </div>
 
-                    <div class="container-xl px-4 mt-4">
-                        <div class="row">
+                    <!-- Content Row -->
+                    <div class="row">
 
-                            <div class="col">
-                                <!-- Account details card-->
-                                <div class="card mb-4">
-                                    <div class="card-header">Account Details</div>
-                                    <div class="card-body">
-                                        <?php
+                        <div class="container-xl px-4 mt-4">
+                            <div class="row">
+
+                                <div class="col">
+                                    <!-- Account details card-->
+                                    <div class="card mb-4">
+                                        <div class="card-header">Account Details</div>
+                                        <div class="card-body">
+                                            <?php
 
                                         ?>
-                                        <form>
-                                            <div class="mb-3">
-                                                <label class="small mb-1" for="inputUsername">Username</label>
-                                                <input class="form-control" id="inputUsername" type="text"
-                                                    value="<?php echo $data['username']; ?>" readonly>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="small mb-1" for="inputNama">Nama</label>
-                                                <input class="form-control" id="inputNama" type="text"
-                                                    value="<?php echo $data['nama']; ?>" readonly>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="small mb-1" for="inputRole">Role</label>
-                                                <input class="form-control" id="inputRole" type="text"
-                                                    value="<?php echo $data['role']; ?>" readonly>
-                                            </div>
-                                        </form>
+                                            <form>
+                                                <div class="mb-3">
+                                                    <label class="small mb-1" for="inputUsername">Username</label>
+                                                    <input class="form-control" id="inputUsername" type="text"
+                                                        value="<?php echo $data['username']; ?>" readonly>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="small mb-1" for="inputNama">Nama</label>
+                                                    <input class="form-control" id="inputNama" type="text"
+                                                        value="<?php echo $data['nama']; ?>" readonly>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="small mb-1" for="inputRole">Role</label>
+                                                    <input class="form-control" id="inputRole" type="text"
+                                                        value="<?php echo $data['role']; ?>" readonly>
+                                                </div>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+
                 </div>
 
-            </div>
+                <!-- Content Row -->
 
-            <!-- Content Row -->
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <?php include("footer.php") ?>
+            <!-- End of Footer -->
 
         </div>
-        <!-- End of Main Content -->
-
-        <!-- Footer -->
-        <?php include("footer.php") ?>
-        <!-- End of Footer -->
-
-    </div>
-    <!-- End of Content Wrapper -->
+        <!-- End of Content Wrapper -->
 
     </div>
     <!-- End of Page Wrapper -->

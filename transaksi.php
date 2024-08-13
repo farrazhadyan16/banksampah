@@ -85,59 +85,59 @@ if ($jenis_result->num_rows > 0) {
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script>
-        var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
+    var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
-        function updateHarga(index) {
-            var jenisId = document.getElementById('jenis_id_' + index).value;
-            var jumlah = document.getElementById('jumlah_' + index).value;
-            var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
-            var totalHarga = jumlah * harga;
+    function updateHarga(index) {
+        var jenisId = document.getElementById('jenis_id_' + index).value;
+        var jumlah = document.getElementById('jumlah_' + index).value;
+        var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
+        var totalHarga = jumlah * harga;
 
-            document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-            updateTotalHarga();
-        }
+        document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+        updateTotalHarga();
+    }
 
-        function updateTotalHarga() {
-            var totalHarga = 0;
-            var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
+    function updateTotalHarga() {
+        var totalHarga = 0;
+        var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
 
-            hargaInputs.forEach(function(hargaInput) {
-                var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
-                totalHarga += harga;
-            });
+        hargaInputs.forEach(function(hargaInput) {
+            var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
+            totalHarga += harga;
+        });
 
-            document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-        }
+        document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+    }
 
-        function updateJenis(index) {
-            var kategoriSelect = document.getElementById('kategori_id_' + index);
-            var jenisSelect = document.getElementById('jenis_id_' + index);
-            var selectedKategori = kategoriSelect.value;
+    function updateJenis(index) {
+        var kategoriSelect = document.getElementById('kategori_id_' + index);
+        var jenisSelect = document.getElementById('jenis_id_' + index);
+        var selectedKategori = kategoriSelect.value;
 
-            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
-            for (var id in jenisSampah) {
-                if (jenisSampah[id].id_kategori == selectedKategori) {
-                    var option = document.createElement('option');
-                    option.value = id;
-                    option.text = jenisSampah[id].jenis;
-                    jenisSelect.add(option);
-                }
+        jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
+        for (var id in jenisSampah) {
+            if (jenisSampah[id].id_kategori == selectedKategori) {
+                var option = document.createElement('option');
+                option.value = id;
+                option.text = jenisSampah[id].jenis;
+                jenisSelect.add(option);
             }
-            jenisSelect.value = "";
-            updateHarga(index);
         }
+        jenisSelect.value = "";
+        updateHarga(index);
+    }
 
-        function addRow() {
-            var table = document.getElementById('transaksiTable');
-            var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
-            var row = table.insertRow(rowCount);
+    function addRow() {
+        var table = document.getElementById('transaksiTable');
+        var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
+        var row = table.insertRow(rowCount);
 
-            row.innerHTML = `
+        row.innerHTML = `
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                 <td>${rowCount}</td>
                 <td>
                     <select name="kategori_id[]" id="kategori_id_${rowCount}" class="form-control" onchange="updateJenis(${rowCount})">
-                        <option value="">-- kategori sampah --</option>
+                        <option value="">-- kategorikk sampah --</option>
                         <?php
                         if ($kategori_result->num_rows > 0) {
                             while ($row = $kategori_result->fetch_assoc()) {
@@ -159,56 +159,62 @@ if ($jenis_result->num_rows > 0) {
                     <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
                 </td>
             `;
-        }
+    }
 
-        function removeRow(button) {
-            var row = button.parentNode.parentNode;
-            row.parentNode.removeChild(row);
-            updateTotalHarga();
-        }
+    function removeRow(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        updateTotalHarga();
+    }
 
-        function validateSearchForm() {
-            var searchValue = document.getElementById('search_value').value;
-            if (searchValue.trim() === '') {
-                alert('NIK tidak boleh kosong.');
-                return false; // Mencegah form dikirim
-            }
-            return true; // Memungkinkan form dikirim
+    function validateSearchForm() {
+        var searchValue = document.getElementById('search_value').value;
+        if (searchValue.trim() === '') {
+            alert('NIK tidak boleh kosong.');
+            return false; // Mencegah form dikirim
+        } else if (searchValue.length !== 16 || isNaN(searchValue)) {
+            alert('NIK harus berisi 16 digit angka.');
+            return false; // Mencegah form dikirim
         }
+        return true; // Memungkinkan form dikirim
+    }
     </script>
 </head>
 
 <body>
-    <!-- Ini Sidebar -->
-    <?php include("sidebar.php") ?>
-    <!-- Batas Akhir Sidebar -->
+    <div id="wrapper">
+        <!-- Ini Sidebar -->
+        <?php include("sidebar.php") ?>
+        <!-- Batas Akhir Sidebar -->
 
-    <!-- Ini Main-Content -->
-    <div class="main--content">
-        <div class="main--content--monitoring">
-            <div class="header--wrapper">
-                <div class="header--title">
-                    <span>Halaman</span>
-                    <h2>Transaksi</h2>
-                </div>
-            </div>
-
-            <!-- Start of Form Section -->
-            <div class="tabular--wrapper">
-                <!-- Search Section -->
-                <form method="POST" action="" onsubmit="return validateSearchForm()">
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <input type="text" name="search_value" id="search_value" class="form-control" placeholder="Search by NIK" value="<?php echo isset($search_value) ? $search_value : ''; ?>">
-                        </div>
-                        <div class="col-md-2">
-                            <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
-                        </div>
+        <!-- Ini Main-Content -->
+        <div class="main--content">
+            <div class="main--content--monitoring">
+                <div class="header--wrapper">
+                    <div class="header--title">
+                        <span>Halaman</span>
+                        <h2>Transaksi</h2>
                     </div>
-                </form>
+                </div>
 
-                <!-- User Information Section -->
-                <?php if (isset($user_data)) { ?>
+                <!-- Start of Form Section -->
+                <div class="tabular--wrapper">
+                    <!-- Search Section -->
+                    <form method="POST" action="" onsubmit="return validateSearchForm()">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <input type="text" name="search_value" id="search_value" class="form-control"
+                                    placeholder="Search by NIK" maxlength="16" oninput="validateNIK(this)"
+                                    value="<?php echo isset($search_value) ? $search_value : ''; ?>">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- User Information Section -->
+                    <?php if (isset($user_data)) { ?>
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
@@ -222,82 +228,88 @@ if ($jenis_result->num_rows > 0) {
                             <p><strong>Saldo Emas</strong> : 0.0000 g</p>
                         </div>
                     </div>
-                <?php } else { ?>
+                    <?php } else { ?>
                     <div class="row mb-4">
                         <div class="col-md-12">
                             <p class="text-danger"><?php echo $message; ?></p>
                         </div>
                     </div>
-                <?php } ?>
+                    <?php } ?>
 
-                <!-- Transaction Form Section -->
-                <form method="POST" action="">
-                    <input type="hidden" name="user_id" value="<?php echo isset($user_data) ? $user_data['id'] : ''; ?>">
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                    <!-- Transaction Form Section -->
+                    <form method="POST" action="">
+                        <input type="hidden" name="user_id"
+                            value="<?php echo isset($user_data) ? $user_data['id'] : ''; ?>">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <input type="date" name="tanggal" class="form-control"
+                                    value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>">
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>">
-                        </div>
-                    </div>
 
-                    <!-- Table Section -->
-                    <table class="table table-bordered" id="transaksiTable">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>No</th>
-                                <th>Kategori</th>
-                                <th>Jenis</th>
-                                <th>Jumlah(KG)</th>
-                                <th>Harga</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
-                                <td>1</td>
-                                <td>
-                                    <select name="kategori_id[]" id="kategori_id_1" class="form-control" onchange="updateJenis(1)">
-                                        <option value="">-- kategori sampah --</option>
-                                        <?php
+                        <!-- Table Section -->
+                        <table class="table table-bordered" id="transaksiTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>No</th>
+                                    <th>Kategori</th>
+                                    <th>Jenis</th>
+                                    <th>Jumlah(KG)</th>
+                                    <th>Harga</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
+                                    <td>1</td>
+                                    <td>
+                                        <select name="kategori_id[]" id="kategori_id_1" class="form-control"
+                                            onchange="updateJenis(1)">
+                                            <option value="">-- kategoriaaa sampah --</option>
+                                            <?php
                                         if ($kategori_result->num_rows > 0) {
                                             while ($row = $kategori_result->fetch_assoc()) {
                                                 echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
                                             }
                                         }
                                         ?>
-                                    </select>
-                                </td>
-                                <td>
-                                    <select name="jenis_id[]" id="jenis_id_1" class="form-control" onchange="updateHarga(1)">
-                                        <option value="">-- jenis sampah --</option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="number" name="jumlah[]" id="jumlah_1" class="form-control" placeholder="Jumlah" oninput="updateHarga(1)">
-                                </td>
-                                <td>
-                                    <input type="text" name="harga[]" id="harga_1" class="form-control" readonly>
-                                </td>
-                            </tr>
-                        </tbody>
-                        <tfoot>
-                            <tr>
-                                <th colspan="5" class="text-right">Total Harga:</th>
-                                <th id="totalHarga">Rp. 0</th>
-                            </tr>
-                        </tfoot>
-                    </table>
-                    <button type="button" class="btn btn-dark mb-3" onclick="addRow()">Tambah Baris</button>
-                    <button type="submit" name="submit" class="btn btn-primary mb-3">SUBMIT</button>
-                </form>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="jenis_id[]" id="jenis_id_1" class="form-control"
+                                            onchange="updateHarga(1)">
+                                            <option value="">-- jenis sampah --</option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="jumlah[]" id="jumlah_1" class="form-control"
+                                            placeholder="Jumlah" oninput="updateHarga(1)">
+                                    </td>
+                                    <td>
+                                        <input type="text" name="harga[]" id="harga_1" class="form-control" readonly>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="5" class="text-right">Total Harga:</th>
+                                    <th id="totalHarga">Rp. 0</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        <button type="button" class="btn btn-dark mb-3" onclick="addRow()">Tambah Baris</button>
+                        <button type="submit" name="submit" class="btn btn-primary mb-3">SUBMIT</button>
+                    </form>
+                </div>
+                <!-- End of Form Section -->
             </div>
-            <!-- End of Form Section -->
         </div>
+        <!-- Batas Akhir Main-Content -->
     </div>
-    <!-- Batas Akhir Main-Content -->
 </body>
 
 </html>

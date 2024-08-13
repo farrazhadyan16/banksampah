@@ -10,9 +10,12 @@
 }
 
 body {
-  display: flex;
+  height: 100%;
 }
 
+#wrapper {
+  display: flex;
+}
 .sidebar {
   position: sticky;
   top: 0;

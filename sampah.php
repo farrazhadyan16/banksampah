@@ -31,53 +31,54 @@ $query_all = query("
 </head>
 
 <body>
-    <!-- Ini Sidebar -->
-    <?php include("sidebar.php") ?>
-    <!-- Batas Akhir Sidebar -->
+    <div id="wrapper">
+        <!-- Ini Sidebar -->
+        <?php include("sidebar.php") ?>
+        <!-- Batas Akhir Sidebar -->
 
-    <!-- Ini Main-Content -->
-    <div class="main--content">
-        <div class="main--content--monitoring">
-            <div class="header--wrapper">
-                <div class="header--title">
-                    <span>Halaman</span>
-                    <h2>Sampah</h2>
-                </div>
-            </div>
-
-            <!-- Ini Tabel -->
-            <div class="tabular--wrapper">
-                <div class="row align-items-start">
-                    <div class="user--info">
-                        <h3 class="main--title">Data Sampah</h3>
-                        <a href="tambah_sampah.php"><button type="button" name="button"
-                                class="inputbtn .border-right">Tambah</button></a>
-                        <a href="manage_kategori.php"><button type="button" name="button"
-                                class="inputbtn .border-right">Manage Kategori</button></a>
+        <!-- Ini Main-Content -->
+        <div class="main--content">
+            <div class="main--content--monitoring">
+                <div class="header--wrapper">
+                    <div class="header--title">
+                        <span>Halaman</span>
+                        <h2>Sampah</h2>
                     </div>
                 </div>
-                <?php
+
+                <!-- Ini Tabel -->
+                <div class="tabular--wrapper">
+                    <div class="row align-items-start">
+                        <div class="user--info">
+                            <h3 class="main--title">Data Sampah</h3>
+                            <a href="tambah_sampah.php"><button type="button" name="button"
+                                    class="inputbtn .border-right">Tambah</button></a>
+                            <a href="manage_kategori.php"><button type="button" name="button"
+                                    class="inputbtn .border-right">Manage Kategori</button></a>
+                        </div>
+                    </div>
+                    <?php
                 if (isset($_SESSION['message'])) {
                     echo "<h4>" . $_SESSION['message'] . "</h4>";
                     unset($_SESSION['message']);
                 }
                 ?>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Kategori</th>
-                                <th>Jenis</th>
-                                <th>Harga Nasabah</th>
-                                <th>Harga Pengepul</th>
-                                <th>Jumlah (KG)</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $i = 1; ?>
-                            <?php foreach ($query_all as $row): ?>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Kategori</th>
+                                    <th>Jenis</th>
+                                    <th>Harga Nasabah</th>
+                                    <th>Harga Pengepul</th>
+                                    <th>Jumlah (KG)</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $i = 1; ?>
+                                <?php foreach ($query_all as $row): ?>
                                 <tr>
                                     <td><?= $row["id"]; ?></td>
                                     <td><?= $row["kategori_name"]; ?></td>
@@ -88,28 +89,31 @@ $query_all = query("
                                     <td>
                                         <li class="liaksi">
                                             <button type="submit" name="submit">
-                                                <a href="edit_sampah.php?id=<?= $row["id"]; ?>" class="inputbtn6">Ubah</a>
+                                                <a href="edit_sampah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn6">Ubah</a>
                                             </button>
                                         </li>
                                         <li class="liaksi">
                                             <button type="submit" name="submit">
-                                                <a href="hapus_sampah.php?id=<?= $row["id"]; ?>" class="inputbtn7">Hapus</a>
+                                                <a href="hapus_sampah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn7">Hapus</a>
                                             </button>
                                         </li>
                                     </td>
                                 </tr>
                                 <?php $i++; ?>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot>
-                        </tfoot>
-                    </table>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
+                <!-- Batas Akhir Tabel -->
             </div>
-            <!-- Batas Akhir Tabel -->
         </div>
+        <!-- Batas Akhir Main-Content -->
     </div>
-    <!-- Batas Akhir Main-Content -->
 </body>
 
 </html>

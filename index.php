@@ -17,31 +17,34 @@ require_once 'koneksi.php';
 </head>
 
 <body onload=getData()>
+    <div id="wrapper">
 
-    <!-- Ini Sidebar -->
-    <?php include("sidebar.php")?>
-    <!-- Batas Akhir Sidebar -->
 
-    <!-- Ini Main-Content -->
-    <div class="main--content">
-        <div class="header--wrapper">
-            <div class="header--title">
-                <span>Halaman</span>
-                <h2>Dashboard</h2>
-            </div>
-            <div class="user--info">
-                <!-- <div class="search--box">
+        <!-- Ini Sidebar -->
+        <?php include("sidebar.php")?>
+        <!-- Batas Akhir Sidebar -->
+
+        <!-- Ini Main-Content -->
+        <div class="main--content">
+            <div class="header--wrapper">
+                <div class="header--title">
+                    <span>Halaman</span>
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="user--info">
+                    <!-- <div class="search--box">
                     <i class="fa-solid fa-search"></i>
                     <input type="text" placeholder="Search" />
                 </div> -->
-                <img src="./img/logoPM.png" alt="logo">
+                    <img src="./img/logoPM.png" alt="logo">
+                </div>
             </div>
+
+            <!-- Ini card-container -->
+            <?php include("card_container.php")?>
+            <!-- Batas Akhir card-container -->
+
         </div>
-
-        <!-- Ini card-container -->
-        <?php include("card_container.php")?>
-        <!-- Batas Akhir card-container -->
-
     </div>
     <!-- Batas Akhir Main-Content -->
     <!-- script -->
