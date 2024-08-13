@@ -209,12 +209,19 @@ if ($jenis_result->num_rows > 0) {
                     <?php } ?>
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>">
                         </div>
                         <div class="col-md-4">
-                            <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                            <?php
+                            // Set zona waktu ke WIB (UTC+7)
+                            date_default_timezone_set('Asia/Jakarta');
+                            $current_time = date('H:i');
+                            ?>
+                            <input type="time" name="waktu" class="form-control" value="<?php echo $current_time; ?>">
                         </div>
                     </div>
+
+
 
                     <!-- Table Section -->
                     <table class="table table-bordered" id="transaksiTable">
