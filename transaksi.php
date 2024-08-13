@@ -1,9 +1,6 @@
 <?php
 include 'header.php';
 include 'fungsi.php';
-
-$query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED)");
-
 ?>
 
 <!DOCTYPE html>
@@ -17,6 +14,8 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
@@ -24,116 +23,114 @@ $query_all = query("SELECT * from sampah ORDER BY LENGTH(id),CAST(id AS UNSIGNED
     <?php include("sidebar.php") ?>
     <!-- Batas Akhir Sidebar -->
 
-
     <!-- Ini Main-Content -->
     <div class="main--content">
-
         <div class="main--content--monitoring">
-
             <div class="header--wrapper">
                 <div class="header--title">
                     <span>Halaman</span>
                     <h2>Transaksi</h2>
                 </div>
-                <div class="user--info">
-                    <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
-                            Project</button></a>
-                    <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Input
-                            Design</button></a>
-                    <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Input
-                            Nesting</button></a>
-                    <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Input
-                            Program</button></a>
-                    <a href="inputchecker.php"><button type="button" name="button" class="inputbtn">Input
-                            Checker</button></a>
-                    <a href="exportmonitoring.php"><button type="button" name="button"
-                            class="inputbtn">Export</button></a>
-                    <img src="./img/logoPM_high.png" alt="logo">
-                </div>
             </div>
 
-            <!-- Ini Tabel -->
+            <!-- Start of Form Section -->
             <div class="tabular--wrapper">
-                <div class="row align-items-start">
-                    <div class="user--info">
-                        <h3 class="main--title">Data Project</h3>
-                        <a href="tambahsampah.php"><button type="button" name="button"
-                                class="inputbtn .border-right">Tambah</button></a>
+                <!-- Search Section -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" placeholder="Search" value="bagaskoro">
                     </div>
-                </div> <?php
-                if (isset($_SESSION['message'])) {
-                    echo "<h4>" . $_SESSION['message'] . "</h4>";
-                    unset($_SESSION['message']);
-                }
-                ?>
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>id_kategori</th>
-                                <th>Jenis</th>
-                                <th>Harga Pengepul</th>
-                                <th>Harga Nasabah</th>
-                                <th>Jumalah (KG)</th>
-                                <th>AKSI</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php $i = 1; ?>
-                            <?php foreach ($query_all as $row): ?>
+                    <div class="col-md-2">
+                        <button class="btn btn-dark w-100">CHECK</button>
+                    </div>
+                </div>
 
-                            <tr>
-                                <td>
-                                    <?= $row["id"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["id_kategori"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["jenis"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["harga"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["harga_pusat"]; ?>
-                                </td>
-                                <td>
-                                    Rp. <?= $row["jumlah"]; ?>
-                                </td>
+                <!-- User Information Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <p><strong>id</strong> : 154140010022</p>
+                        <p><strong>email</strong> : elkoro424@gmail.com</p>
+                        <p><strong>username</strong> : bagaselokoro</p>
+                        <p><strong>nama lengkap</strong> : bagaskoro</p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
+                        <p><strong>Saldo Emas</strong> : 0.0000 g</p>
+                    </div>
+                </div>
 
-                                <td>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit"><a
-                                                href="edit_sampah.php?id=<?= $row["id"]; ?>"
-                                                class="inputbtn6">Ubah</a></button>
-                                    </li>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit"><a
-                                                href="hapus_sampah.php?id=<?= $row["id"]; ?>"
-                                                class="inputbtn7">Hapus</a></button>
-                                    </li>
-                                </td>
-                            </tr>
-                            <?php $i++; ?>
-                            <?php endforeach; ?>
-                        </tbody>
-                        <tfoot>
+                <!-- Date and Time Section -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <input type="date" class="form-control" value="2024-08-12">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="time" class="form-control" value="11:13">
+                    </div>
+                </div>
 
-                        </tfoot>
-                    </table>
+                <!-- Table Section -->
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>No</th>
+                            <th>Kategori</th>
+                            <th>Jenis</th>
+                            <th>Jumlah(KG)</th>
+                            <th>Harga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><button class="btn btn-danger">&times;</button></td>
+                            <td>1</td>
+                            <td>
+                                <select class="form-control">
+                                    <option>-- kategori sampah --</option>
+                                </select>
+                            </td>
+                            <td>
+                                <select class="form-control">
+                                    <option>-- jenis sampah --</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="form-control" value="0"></td>
+                            <td><input type="text" class="form-control" value="Rp. 0" readonly></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr class="bg-info text-white">
+                            <td colspan="5">Total harga</td>
+                            <td>Rp. 0</td>
+                        </tr>
+                    </tfoot>
+                </table>
+
+                <!-- Add Button Section -->
+                <div class="row mb-4">
+                    <div class="col-md-12 text-right">
+                        <button class="btn btn-primary">Tambah</button>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="row">
+                    <div class="col-md-12 text-right">
+                        <button class="btn btn-success">SUBMIT</button>
+                    </div>
                 </div>
             </div>
-            <!-- Batas Akhir Tabel -->
-            <!-- <form method="GET" action="tambah_pengguna.php">
-            <button type="submit" name="submit" class="inputbtn1">Tambah Data</button>
-        </form> -->
         </div>
-        <!-- Batas Akhir card-container -->
     </div>
+    <!-- End of Form Section -->
     </div>
     <!-- Batas Akhir Main-Content -->
+
+    <!-- Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
 </html>

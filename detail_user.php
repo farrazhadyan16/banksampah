@@ -31,7 +31,7 @@ if ($result) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Detail User</title>
+    <title>Bank Sampah | Detail User </title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->
@@ -97,8 +97,8 @@ if ($result) {
                                     <div class="card-header">Account Details</div>
                                     <div class="card-body">
                                         <?php
-                                            
-                                            ?>
+
+                                        ?>
                                         <form>
                                             <div class="mb-3">
                                                 <label class="small mb-1" for="inputUsername">Username</label>

@@ -11,11 +11,8 @@ if (isset($_POST["submit"])) {
     $harga_nasabah = $_POST['harga_nasabah'];
     $kategori = $_POST['kategori'];
 
-    // Insert the data into the database
-    $query = "INSERT INTO sampah (jenis, harga, harga_pusat, id_kategori) 
-              VALUES ('$jenis', '$harga_pengepul', '$harga_nasabah', '$kategori')";
-
-    if (mysqli_query($koneksi, $query)) {
+    // Insert the data into the database and generate ID
+    if (addWaste($jenis, $harga_pengepul, $harga_nasabah, $kategori) > 0) {
         echo "<script>
                 alert('Data berhasil ditambahkan');
                 document.location.href = 'sampah.php';
@@ -77,7 +74,7 @@ if (isset($_POST["submit"])) {
                     <label for="kategori">Kategori</label><br>
                     <select class="form-control" id="kategori" name="kategori" required>
                         <?php foreach ($categories as $category): ?>
-                        <option value="<?= $category['id']; ?>"><?= $category['name']; ?></option>
+                            <option value="<?= $category['id']; ?>"><?= $category['name']; ?></option>
                         <?php endforeach; ?>
                     </select><br><br>
 

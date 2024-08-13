@@ -130,3 +130,23 @@ function deleteCategory($id)
     mysqli_query($conn, "DELETE FROM kategori_sampah WHERE id = '$id'");
     return mysqli_affected_rows($conn);
 }
+
+function addWaste($jenis, $harga_pengepul, $harga_nasabah, $id_kategori)
+{
+    global $conn;
+
+    // Query untuk mendapatkan ID terakhir yang dimulai dengan 'S'
+    $lastId = query("SELECT id FROM sampah WHERE id LIKE 'S%' ORDER BY id DESC LIMIT 1");
+    if ($lastId) {
+        // Ambil angka dari ID terakhir, tambahkan 1, dan format ulang ID baru
+        $newId = 'S' . str_pad((int) substr($lastId[0]['id'], 1) + 1, 3, '0', STR_PAD_LEFT);
+    } else {
+        // Jika tidak ada ID sebelumnya, mulai dengan S001
+        $newId = 'S001';
+    }
+
+    $query = "INSERT INTO sampah (id, jenis, harga, harga_pusat, id_kategori) 
+              VALUES ('$newId', '$jenis', '$harga_pengepul', '$harga_nasabah', '$id_kategori')";
+    mysqli_query($conn, $query);
+    return mysqli_affected_rows($conn);
+}
