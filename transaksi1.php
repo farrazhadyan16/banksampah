@@ -23,18 +23,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $user_id = $_POST['user_id'];
     $tanggal = $_POST['tanggal'];
     $waktu = $_POST['waktu'];
-    $kategori_id = $_POST['kategori_id'];
-    $jenis_id = $_POST['jenis_id'];
-    $jumlah = $_POST['jumlah'];
-    $harga = $_POST['harga'];
+    $kategori_ids = $_POST['kategori_id'];
+    $jenis_ids = $_POST['jenis_id'];
+    $jumlahs = $_POST['jumlah'];
+    $hargas = $_POST['harga'];
 
-    // Simpan transaksi ke database
-    $transaksi_query = "INSERT INTO jual_sampah (user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
-                        VALUES ('$user_id', '$tanggal', '$waktu', '$kategori_id', '$jenis_id', '$jumlah', '$harga')";
-    if ($conn->query($transaksi_query) === TRUE) {
-        $message = "Transaksi berhasil disimpan.";
-    } else {
-        $message = "Error: " . $transaksi_query . "<br>" . $conn->error;
+    for ($i = 0; $i < count($kategori_ids); $i++) {
+        $kategori_id = $kategori_ids[$i];
+        $jenis_id = $jenis_ids[$i];
+        $jumlah = $jumlahs[$i];
+        $harga = str_replace(['Rp.', ','], '', $hargas[$i]);
+
+        if ($kategori_id && $jenis_id && $jumlah && $harga) {
+            $transaksi_query = "INSERT INTO jual_sampah (user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
+                                VALUES ('$user_id', '$tanggal', '$waktu', '$kategori_id', '$jenis_id', '$jumlah', '$harga')";
+            if ($conn->query($transaksi_query) === TRUE) {
+                $message = "Transaksi berhasil disimpan.";
+            } else {
+                $message = "Error: " . $transaksi_query . "<br>" . $conn->error;
+            }
+        }
     }
 }
 
@@ -73,26 +81,23 @@ if ($jenis_result->num_rows > 0) {
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script>
-        // Simpan data jenis sampah di variabel JavaScript
         var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
-        function updateHarga() {
-            var jenisId = document.getElementById('jenis_id').value;
-            var jumlah = document.getElementById('jumlah').value;
+        function updateHarga(index) {
+            var jenisId = document.getElementById('jenis_id_' + index).value;
+            var jumlah = document.getElementById('jumlah_' + index).value;
             var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
             var totalHarga = jumlah * harga;
 
-            // Update harga di input harga
-            document.getElementById('harga').value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+            document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
         }
 
-        function updateJenis() {
-            var kategoriSelect = document.getElementById('kategori_id');
-            var jenisSelect = document.getElementById('jenis_id');
+        function updateJenis(index) {
+            var kategoriSelect = document.getElementById('kategori_id_' + index);
+            var jenisSelect = document.getElementById('jenis_id_' + index);
             var selectedKategori = kategoriSelect.value;
 
-            // Filter jenis sampah berdasarkan kategori yang dipilih
-            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>'; // Reset pilihan jenis
+            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
             for (var id in jenisSampah) {
                 if (jenisSampah[id].id_kategori == selectedKategori) {
                     var option = document.createElement('option');
@@ -101,9 +106,47 @@ if ($jenis_result->num_rows > 0) {
                     jenisSelect.add(option);
                 }
             }
-            // Reset pilihan jenis jika kategori diubah
             jenisSelect.value = "";
-            updateHarga();
+            updateHarga(index);
+        }
+
+        function addRow() {
+            var table = document.getElementById('transaksiTable');
+            var rowCount = table.rows.length;
+            var row = table.insertRow(rowCount);
+
+            row.innerHTML = `
+                <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
+                <td>${rowCount}</td>
+                <td>
+                    <select name="kategori_id[]" id="kategori_id_${rowCount}" class="form-control" onchange="updateJenis(${rowCount})">
+                        <option value="">-- kategori sampah --</option>
+                        <?php
+                        if ($kategori_result->num_rows > 0) {
+                            while ($row = $kategori_result->fetch_assoc()) {
+                                echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                </td>
+                <td>
+                    <select name="jenis_id[]" id="jenis_id_${rowCount}" class="form-control" onchange="updateHarga(${rowCount})">
+                        <option value="">-- jenis sampah --</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="jumlah[]" id="jumlah_${rowCount}" class="form-control" placeholder="Jumlah" oninput="updateHarga(${rowCount})">
+                </td>
+                <td>
+                    <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
+                </td>
+            `;
+        }
+
+        function removeRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
         }
     </script>
 </head>
@@ -129,8 +172,7 @@ if ($jenis_result->num_rows > 0) {
                 <form method="POST" action="">
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <input type="text" name="search_value" class="form-control" placeholder="Search"
-                                value="<?php echo isset($search_value) ? $search_value : ''; ?>">
+                            <input type="text" name="search_value" class="form-control" placeholder="Search" value="<?php echo isset($search_value) ? $search_value : ''; ?>">
                         </div>
                         <div class="col-md-2">
                             <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
@@ -167,17 +209,15 @@ if ($jenis_result->num_rows > 0) {
                     <?php } ?>
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>"
-                                <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                         </div>
                         <div class="col-md-4">
-                            <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>"
-                                <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                            <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                         </div>
                     </div>
 
                     <!-- Table Section -->
-                    <table class="table table-bordered">
+                    <table class="table table-bordered" id="transaksiTable">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -190,11 +230,10 @@ if ($jenis_result->num_rows > 0) {
                         </thead>
                         <tbody>
                             <tr>
-                                <td><button class="btn btn-danger" <?php echo isset($user_data) ? '' : 'disabled'; ?>>&times;</button></td>
+                                <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                                 <td>1</td>
                                 <td>
-                                    <select name="kategori_id" id="kategori_id" class="form-control"
-                                        onchange="updateJenis()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                                    <select name="kategori_id[]" id="kategori_id_1" class="form-control" onchange="updateJenis(1)" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                         <option value="">-- kategori sampah --</option>
                                         <?php
                                         if ($kategori_result->num_rows > 0) {
@@ -206,27 +245,26 @@ if ($jenis_result->num_rows > 0) {
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="jenis_id" id="jenis_id" class="form-control"
-                                        onchange="updateHarga()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                                    <select name="jenis_id[]" id="jenis_id_1" class="form-control" onchange="updateHarga(1)" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                         <option value="">-- jenis sampah --</option>
                                     </select>
                                 </td>
                                 <td>
-                                    <input type="number" name="jumlah" id="jumlah" class="form-control"
-                                        placeholder="Jumlah" oninput="updateHarga()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                                    <input type="number" name="jumlah[]" id="jumlah_1" class="form-control" placeholder="Jumlah" oninput="updateHarga(1)" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                 </td>
                                 <td>
-                                    <input type="text" name="harga" id="harga" class="form-control" readonly
-                                        <?php echo isset($user_data) ? '' : 'disabled'; ?>>
+                                    <input type="text" name="harga[]" id="harga_1" class="form-control" readonly <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
 
                     <div class="row">
-                        <div class="col-md-12">
-                            <button type="submit" name="submit" class="btn btn-success w-100"
-                                <?php echo isset($user_data) ? '' : 'disabled'; ?>>Simpan Transaksi</button>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-primary w-100" onclick="addRow()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>Tambah Baris</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" name="submit" class="btn btn-success w-100" <?php echo isset($user_data) ? '' : 'disabled'; ?>>Simpan Transaksi</button>
                         </div>
                     </div>
                 </form>
