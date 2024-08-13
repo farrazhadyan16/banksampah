@@ -73,38 +73,38 @@ if ($jenis_result->num_rows > 0) {
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script>
-    // Simpan data jenis sampah di variabel JavaScript
-    var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
+        // Simpan data jenis sampah di variabel JavaScript
+        var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
-    function updateHarga() {
-        var jenisId = document.getElementById('jenis_id').value;
-        var jumlah = document.getElementById('jumlah').value;
-        var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
-        var totalHarga = jumlah * harga;
+        function updateHarga() {
+            var jenisId = document.getElementById('jenis_id').value;
+            var jumlah = document.getElementById('jumlah').value;
+            var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
+            var totalHarga = jumlah * harga;
 
-        // Update harga di input harga
-        document.getElementById('harga').value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-    }
-
-    function updateJenis() {
-        var kategoriSelect = document.getElementById('kategori_id');
-        var jenisSelect = document.getElementById('jenis_id');
-        var selectedKategori = kategoriSelect.value;
-
-        // Filter jenis sampah berdasarkan kategori yang dipilih
-        jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>'; // Reset pilihan jenis
-        for (var id in jenisSampah) {
-            if (jenisSampah[id].id_kategori == selectedKategori) {
-                var option = document.createElement('option');
-                option.value = id;
-                option.text = jenisSampah[id].jenis;
-                jenisSelect.add(option);
-            }
+            // Update harga di input harga
+            document.getElementById('harga').value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
         }
-        // Reset pilihan jenis jika kategori diubah
-        jenisSelect.value = "";
-        updateHarga();
-    }
+
+        function updateJenis() {
+            var kategoriSelect = document.getElementById('kategori_id');
+            var jenisSelect = document.getElementById('jenis_id');
+            var selectedKategori = kategoriSelect.value;
+
+            // Filter jenis sampah berdasarkan kategori yang dipilih
+            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>'; // Reset pilihan jenis
+            for (var id in jenisSampah) {
+                if (jenisSampah[id].id_kategori == selectedKategori) {
+                    var option = document.createElement('option');
+                    option.value = id;
+                    option.text = jenisSampah[id].jenis;
+                    jenisSelect.add(option);
+                }
+            }
+            // Reset pilihan jenis jika kategori diubah
+            jenisSelect.value = "";
+            updateHarga();
+        }
     </script>
 </head>
 
@@ -140,37 +140,39 @@ if ($jenis_result->num_rows > 0) {
 
                 <!-- User Information Section -->
                 <?php if (isset($user_data)) { ?>
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
-                        <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                        <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
-                        <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
+                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
+                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
+                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
+                            <p><strong>Saldo Emas</strong> : 0.0000 g</p>
+                        </div>
                     </div>
-                    <div class="col-md-6">
-                        <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
-                        <p><strong>Saldo Emas</strong> : 0.0000 g</p>
-                    </div>
-                </div>
                 <?php } else { ?>
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <p><?php echo $message; ?></p>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <p><?php echo $message; ?></p>
+                        </div>
                     </div>
-                </div>
                 <?php } ?>
 
                 <!-- Date and Time Section -->
                 <form method="POST" action="">
                     <?php if (isset($user_data)) { ?>
-                    <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
+                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
                     <?php } ?>
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                            <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>"
+                                <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                         </div>
                         <div class="col-md-4">
-                            <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>">
+                            <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>"
+                                <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                         </div>
                     </div>
 
@@ -188,32 +190,34 @@ if ($jenis_result->num_rows > 0) {
                         </thead>
                         <tbody>
                             <tr>
-                                <td><button class="btn btn-danger">&times;</button></td>
+                                <td><button class="btn btn-danger" <?php echo isset($user_data) ? '' : 'disabled'; ?>>&times;</button></td>
                                 <td>1</td>
                                 <td>
                                     <select name="kategori_id" id="kategori_id" class="form-control"
-                                        onchange="updateJenis()">
+                                        onchange="updateJenis()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                         <option value="">-- kategori sampah --</option>
                                         <?php
                                         if ($kategori_result->num_rows > 0) {
                                             while ($row = $kategori_result->fetch_assoc()) {
-                                                echo "<option value='".$row['id']."'>".$row['name']."</option>";
+                                                echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
                                             }
                                         }
                                         ?>
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="jenis_id" id="jenis_id" class="form-control" onchange="updateHarga()">
+                                    <select name="jenis_id" id="jenis_id" class="form-control"
+                                        onchange="updateHarga()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                         <option value="">-- jenis sampah --</option>
                                     </select>
                                 </td>
                                 <td>
                                     <input type="number" name="jumlah" id="jumlah" class="form-control"
-                                        placeholder="Jumlah" oninput="updateHarga()">
+                                        placeholder="Jumlah" oninput="updateHarga()" <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                 </td>
                                 <td>
-                                    <input type="text" name="harga" id="harga" class="form-control" readonly>
+                                    <input type="text" name="harga" id="harga" class="form-control" readonly
+                                        <?php echo isset($user_data) ? '' : 'disabled'; ?>>
                                 </td>
                             </tr>
                         </tbody>
@@ -221,12 +225,14 @@ if ($jenis_result->num_rows > 0) {
 
                     <div class="row">
                         <div class="col-md-12">
-                            <button type="submit" name="submit" class="btn btn-success w-100">Simpan Transaksi</button>
+                            <button type="submit" name="submit" class="btn btn-success w-100"
+                                <?php echo isset($user_data) ? '' : 'disabled'; ?>>Simpan Transaksi</button>
                         </div>
                     </div>
                 </form>
             </div>
             <!-- End of Form Section -->
+
         </div>
     </div>
     <!-- Batas Akhir Main-Content -->
