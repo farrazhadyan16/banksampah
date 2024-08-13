@@ -9,31 +9,31 @@
         </li>
         <li>
             <a href="sampah.php">
-                <i class="fa-solid fa-desktop"></i>
+                <i class="fa-solid fa-trash"></i>
                 <span>Sampah</span>
             </a>
         </li>
         <li>
             <a href="transaksi.php">
-                <i class="fa-solid fa-desktop"></i>
+                <i class="fa-solid fa-exchange-alt"></i>
                 <span>Transaksi</span>
             </a>
         </li>
         <li>
             <a href="admin.php">
-                <i class="fa-solid fa-desktop"></i>
+                <i class="fa-solid fa-user-shield"></i>
                 <span>Admin</span>
             </a>
         </li>
         <li>
             <a href="nasabah.php">
-                <i class="fa-solid fa-desktop"></i>
+                <i class="fa-solid fa-user"></i>
                 <span>Nasabah</span>
             </a>
         </li>
         <li class="">
             <a href="detail_user.php">
-                <i class="fa-solid fa-right-from-bracket"></i>
+                <i class="fa-solid fa-id-card"></i>
                 <span>Detail User</span>
             </a>
         </li>

@@ -34,21 +34,7 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                     <span>Halaman</span>
                     <h2>Admin</h2>
                 </div>
-                <div class="user--info">
-                    <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
-                            Project</button></a>
-                    <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Input
-                            Design</button></a>
-                    <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Input
-                            Nesting</button></a>
-                    <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Input
-                            Program</button></a>
-                    <a href="inputchecker.php"><button type="button" name="button" class="inputbtn">Input
-                            Checker</button></a>
-                    <a href="exportmonitoring.php"><button type="button" name="button"
-                            class="inputbtn">Export</button></a>
-                    <img src="./img/logoPM_high.png" alt="logo">
-                </div>
+
             </div>
 
             <!-- Ini Tabel -->
@@ -75,7 +61,6 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                                 <th>Nama</th>
                                 <th>Email</th>
                                 <th>No Telp</th>
-                                <th>NIK</th>
                                 <th>Alamat</th>
                                 <th>Tanggal Lahir</th>
                                 <th>Jenis Kelamin</th>
@@ -86,50 +71,47 @@ $query_all = query("SELECT * FROM user WHERE role in ('admin','superadmin') ORDE
                             <?php $i = 1; ?>
                             <?php foreach ($query_all as $row): ?>
 
-                            <tr>
-                                <td>
-                                    <?= $row["id"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["username"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["nama"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["email"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["notelp"]; ?>
-                                </td>
-                                <td>
-                                    Rp. <?= $row["nik"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["alamat"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["tgl_lahir"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["kelamin"]; ?>
-                                </td>
+                                <tr>
+                                    <td>
+                                        <?= $row["id"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["username"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["nama"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["email"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["notelp"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["alamat"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["tgl_lahir"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["kelamin"]; ?>
+                                    </td>
 
 
-                                <td>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit"><a
-                                                href="edit_nasabah.php?id=<?= $row["id"]; ?>"
-                                                class="inputbtn6">Ubah</a></button>
-                                    </li>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit"><a
-                                                href="hapus-nasabah.php?id=<?= $row["id"]; ?>"
-                                                class="inputbtn7">Hapus</a></button>
-                                    </li>
-                                </td>
-                            </tr>
-                            <?php $i++; ?>
+                                    <td>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit"><a
+                                                    href="edit_nasabah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn6">Ubah</a></button>
+                                        </li>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit"><a
+                                                    href="hapus-nasabah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn7">Hapus</a></button>
+                                        </li>
+                                    </td>
+                                </tr>
+                                <?php $i++; ?>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>
