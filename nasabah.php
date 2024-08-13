@@ -86,50 +86,50 @@ $query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id
                             <?php $i = 1; ?>
                             <?php foreach ($query_all as $row): ?>
 
-                            <tr>
-                                <td>
-                                    <?= $row["id"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["username"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["nama"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["email"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["notelp"]; ?>
-                                </td>
-                                <td>
-                                    Rp. <?= $row["nik"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["alamat"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["tgl_lahir"]; ?>
-                                </td>
-                                <td>
-                                    <?= $row["kelamin"]; ?>
-                                </td>
+                                <tr>
+                                    <td>
+                                        <?= $row["id"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["username"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["nama"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["email"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["notelp"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["nik"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["alamat"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["tgl_lahir"]; ?>
+                                    </td>
+                                    <td>
+                                        <?= $row["kelamin"]; ?>
+                                    </td>
 
 
-                                <td>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit"><a
-                                                href="edit_nasabah.php?id=<?= $row["id"]; ?>"
-                                                class="inputbtn6">Ubah</a></button>
-                                    </li>
-                                    <li class="liaksi">
-                                        <button type="submit" name="submit"><a
-                                                href="hapus_nasabah.php?id=<?= $row["id"]; ?>"
-                                                class="inputbtn7">Hapus</a></button>
-                                    </li>
-                                </td>
-                            </tr>
-                            <?php $i++; ?>
+                                    <td>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit"><a
+                                                    href="edit_nasabah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn6">Ubah</a></button>
+                                        </li>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit"><a
+                                                    href="hapus_nasabah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn7">Hapus</a></button>
+                                        </li>
+                                    </td>
+                                </tr>
+                                <?php $i++; ?>
                             <?php endforeach; ?>
                         </tbody>
                         <tfoot>

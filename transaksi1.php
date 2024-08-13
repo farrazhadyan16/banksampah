@@ -8,7 +8,7 @@ $message = "";
 // Jika tombol CHECK ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $search_value = $_POST['search_value'];
-    $user_query = "SELECT * FROM user WHERE (username LIKE '%$search_value%' OR nama LIKE '%$search_value%') AND role = 'Nasabah'";
+    $user_query = "SELECT * FROM user WHERE nik LIKE '%$search_value%' AND role = 'Nasabah'";
     $user_result = $conn->query($user_query);
 
     if ($user_result->num_rows > 0) {
@@ -172,7 +172,7 @@ if ($jenis_result->num_rows > 0) {
                 <form method="POST" action="">
                     <div class="row mb-4">
                         <div class="col-md-4">
-                            <input type="text" name="search_value" class="form-control" placeholder="Search" value="<?php echo isset($search_value) ? $search_value : ''; ?>">
+                            <input type="text" name="search_value" class="form-control" placeholder="Search by NIK" value="<?php echo isset($search_value) ? $search_value : ''; ?>">
                         </div>
                         <div class="col-md-2">
                             <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
@@ -185,6 +185,7 @@ if ($jenis_result->num_rows > 0) {
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
+                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
                             <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
                             <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
                             <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
