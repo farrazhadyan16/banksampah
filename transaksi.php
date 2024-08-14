@@ -307,7 +307,7 @@ if ($jenis_result->num_rows > 0) {
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="date" name="tanggal" class="form-control"
-                                    value="<?php echo date('Y-m-d'); ?>">
+                                    value="<?php echo date('Y-m-d'); ?>" disabled>
                             </div>
                             <div class="col-md-4">
                                 <?php
@@ -316,7 +316,7 @@ if ($jenis_result->num_rows > 0) {
                                 $current_time = date('H:i');
                                 ?>
                                 <input type="time" name="waktu" class="form-control"
-                                    value="<?php echo $current_time; ?>">
+                                    value="<?php echo $current_time; ?>" disabled>
                             </div>
                         </div>
 
