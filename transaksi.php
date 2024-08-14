@@ -85,54 +85,54 @@ if ($jenis_result->num_rows > 0) {
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script>
-        var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
+    var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
-        function updateHarga(index) {
-            var jenisId = document.getElementById('jenis_id_' + index).value;
-            var jumlah = document.getElementById('jumlah_' + index).value;
-            var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
-            var totalHarga = jumlah * harga;
+    function updateHarga(index) {
+        var jenisId = document.getElementById('jenis_id_' + index).value;
+        var jumlah = document.getElementById('jumlah_' + index).value;
+        var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
+        var totalHarga = jumlah * harga;
 
-            document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-            updateTotalHarga();
-        }
+        document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+        updateTotalHarga();
+    }
 
-        function updateTotalHarga() {
-            var totalHarga = 0;
-            var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
+    function updateTotalHarga() {
+        var totalHarga = 0;
+        var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
 
-            hargaInputs.forEach(function(hargaInput) {
-                var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
-                totalHarga += harga;
-            });
+        hargaInputs.forEach(function(hargaInput) {
+            var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
+            totalHarga += harga;
+        });
 
-            document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-        }
+        document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+    }
 
-        function updateJenis(index) {
-            var kategoriSelect = document.getElementById('kategori_id_' + index);
-            var jenisSelect = document.getElementById('jenis_id_' + index);
-            var selectedKategori = kategoriSelect.value;
+    function updateJenis(index) {
+        var kategoriSelect = document.getElementById('kategori_id_' + index);
+        var jenisSelect = document.getElementById('jenis_id_' + index);
+        var selectedKategori = kategoriSelect.value;
 
-            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
-            for (var id in jenisSampah) {
-                if (jenisSampah[id].id_kategori == selectedKategori) {
-                    var option = document.createElement('option');
-                    option.value = id;
-                    option.text = jenisSampah[id].jenis;
-                    jenisSelect.add(option);
-                }
+        jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
+        for (var id in jenisSampah) {
+            if (jenisSampah[id].id_kategori == selectedKategori) {
+                var option = document.createElement('option');
+                option.value = id;
+                option.text = jenisSampah[id].jenis;
+                jenisSelect.add(option);
             }
-            jenisSelect.value = "";
-            updateHarga(index);
         }
+        jenisSelect.value = "";
+        updateHarga(index);
+    }
 
-        function addRow() {
-            var table = document.getElementById('transaksiTable');
-            var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
-            var row = table.insertRow(rowCount);
+    function addRow() {
+        var table = document.getElementById('transaksiTable');
+        var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
+        var row = table.insertRow(rowCount);
 
-            row.innerHTML = `
+        row.innerHTML = `
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                 <td>${rowCount}</td>
                 <td>
@@ -159,25 +159,25 @@ if ($jenis_result->num_rows > 0) {
                     <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
                 </td>
             `;
-        }
+    }
 
-        function removeRow(button) {
-            var row = button.parentNode.parentNode;
-            row.parentNode.removeChild(row);
-            updateTotalHarga();
-        }
+    function removeRow(button) {
+        var row = button.parentNode.parentNode;
+        row.parentNode.removeChild(row);
+        updateTotalHarga();
+    }
 
-        function validateSearchForm() {
-            var searchValue = document.getElementById('search_value').value;
-            if (searchValue.trim() === '') {
-                alert('NIK tidak boleh kosong.');
-                return false; // Mencegah form dikirim
-            } else if (searchValue.length !== 16 || isNaN(searchValue)) {
-                alert('NIK harus berisi 16 digit angka.');
-                return false; // Mencegah form dikirim
-            }
-            return true; // Memungkinkan form dikirim
+    function validateSearchForm() {
+        var searchValue = document.getElementById('search_value').value;
+        if (searchValue.trim() === '') {
+            alert('NIK tidak boleh kosong.');
+            return false; // Mencegah form dikirim
+        } else if (searchValue.length !== 16 || isNaN(searchValue)) {
+            alert('NIK harus berisi 16 digit angka.');
+            return false; // Mencegah form dikirim
         }
+        return true; // Memungkinkan form dikirim
+    }
     </script>
 </head>
 
@@ -215,25 +215,25 @@ if ($jenis_result->num_rows > 0) {
 
                     <!-- User Information Section -->
                     <?php if (isset($user_data)) { ?>
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
-                                <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
-                                <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                                <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
-                                <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
-                                <p><strong>Saldo Emas</strong> : 0.0000 g</p>
-                            </div>
+                    <div class="row mb-4">
+                        <div class="col-md-5">
+                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
+                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
+                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
+                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
                         </div>
+                        <div class="col-md-5">
+                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                            <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
+                            <p><strong>Saldo Emas</strong> : 0.0000 g</p>
+                        </div>
+                    </div>
                     <?php } else { ?>
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <p class="text-danger"><?php echo $message; ?></p>
-                            </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <p class="text-danger"><?php echo $message; ?></p>
                         </div>
+                    </div>
                     <?php } ?>
 
                     <!-- Transaction Form Section
@@ -253,11 +253,12 @@ if ($jenis_result->num_rows > 0) {
                     <!-- Date and Time Section -->
                     <form method="POST" action="">
                         <?php if (isset($user_data)) { ?>
-                            <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
+                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
                         <?php } ?>
                         <div class="row mb-4">
                             <div class="col-md-4">
-                                <input type="date" name="tanggal" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                                <input type="date" name="tanggal" class="form-control"
+                                    value="<?php echo date('Y-m-d'); ?>">
                             </div>
                             <div class="col-md-4">
                                 <?php
@@ -265,7 +266,8 @@ if ($jenis_result->num_rows > 0) {
                                 date_default_timezone_set('Asia/Jakarta');
                                 $current_time = date('H:i');
                                 ?>
-                                <input type="time" name="waktu" class="form-control" value="<?php echo $current_time; ?>">
+                                <input type="time" name="waktu" class="form-control"
+                                    value="<?php echo $current_time; ?>">
                             </div>
                         </div>
 
