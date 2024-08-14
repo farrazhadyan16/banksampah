@@ -86,6 +86,10 @@ if (isset($_POST["submit"])) {
                         <input type="text" placeholder="Masukkan Nama Project" name="email"
                             value="<?= $user["email"] ?>"><br><br>
 
+                        <label for="">NoTelp</label><br>
+                        <input type="text" placeholder="Masukkan Nama Project" name="notelp"
+                            value="<?= $user["notelp"] ?>"><br><br>
+
                         <label for="">NIK</label><br>
                         <input type="text" placeholder="Masukkan Kode GBJ" name="nik"
                             value="<?= $user["nik"] ?>"><br><br>
