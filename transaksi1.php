@@ -85,67 +85,59 @@ if ($jenis_result->num_rows > 0) {
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script>
-    var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
+        var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
-    function updateHarga(index) {
-        if (!isUserChecked()) return;
+        function updateHarga(index) {
+            var jenisId = document.getElementById('jenis_id_' + index).value;
+            var jumlah = document.getElementById('jumlah_' + index).value;
+            var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
+            var totalHarga = jumlah * harga;
 
-        var jenisId = document.getElementById('jenis_id_' + index).value;
-        var jumlah = document.getElementById('jumlah_' + index).value;
-        var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
-        var totalHarga = jumlah * harga;
-
-        document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-        updateTotalHarga();
-    }
-
-    function updateTotalHarga() {
-        if (!isUserChecked()) return;
-
-        var totalHarga = 0;
-        var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
-
-        hargaInputs.forEach(function(hargaInput) {
-            var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
-            totalHarga += harga;
-        });
-
-        document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-    }
-
-    function updateJenis(index) {
-        if (!isUserChecked()) return;
-
-        var kategoriSelect = document.getElementById('kategori_id_' + index);
-        var jenisSelect = document.getElementById('jenis_id_' + index);
-        var selectedKategori = kategoriSelect.value;
-
-        jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
-        for (var id in jenisSampah) {
-            if (jenisSampah[id].id_kategori == selectedKategori) {
-                var option = document.createElement('option');
-                option.value = id;
-                option.text = jenisSampah[id].jenis;
-                jenisSelect.add(option);
-            }
+            document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+            updateTotalHarga();
         }
-        jenisSelect.value = "";
-        updateHarga(index);
-    }
 
-    function addRow() {
-        if (!isUserChecked()) return;
+        function updateTotalHarga() {
+            var totalHarga = 0;
+            var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
 
-        var table = document.getElementById('transaksiTable');
-        var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
-        var row = table.insertRow(rowCount);
+            hargaInputs.forEach(function(hargaInput) {
+                var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
+                totalHarga += harga;
+            });
 
-        row.innerHTML = `
+            document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+        }
+
+        function updateJenis(index) {
+            var kategoriSelect = document.getElementById('kategori_id_' + index);
+            var jenisSelect = document.getElementById('jenis_id_' + index);
+            var selectedKategori = kategoriSelect.value;
+
+            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
+            for (var id in jenisSampah) {
+                if (jenisSampah[id].id_kategori == selectedKategori) {
+                    var option = document.createElement('option');
+                    option.value = id;
+                    option.text = jenisSampah[id].jenis;
+                    jenisSelect.add(option);
+                }
+            }
+            jenisSelect.value = "";
+            updateHarga(index);
+        }
+
+        function addRow() {
+            var table = document.getElementById('transaksiTable');
+            var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
+            var row = table.insertRow(rowCount);
+
+            row.innerHTML = `
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                 <td>${rowCount}</td>
                 <td>
                     <select name="kategori_id[]" id="kategori_id_${rowCount}" class="form-control" onchange="updateJenis(${rowCount})">
-                        <option value="">-- kategori sampah --</option>
+                        <option value="">-- kategorikk sampah --</option>
                         <?php
                         if ($kategori_result->num_rows > 0) {
                             while ($row = $kategori_result->fetch_assoc()) {
@@ -167,47 +159,27 @@ if ($jenis_result->num_rows > 0) {
                     <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
                 </td>
             `;
-    }
 
-    function removeRow(button) {
-        var row = button.parentNode.parentNode;
-        row.parentNode.removeChild(row);
-        updateTotalHarga();
-    }
 
-    function isUserChecked() {
-        return document.getElementById('user_id').value !== '';
-    }
-
-    function validateSearchForm() {
-        var searchValue = document.getElementById('search_value').value;
-        if (searchValue.trim() === '') {
-            alert('NIK tidak boleh kosong.');
-            return false; // Mencegah form dikirim
-        } else if (searchValue.length !== 16 || isNaN(searchValue)) {
-            alert('NIK harus berisi 16 digit angka.');
-            return false; // Mencegah form dikirim
         }
-        return true; // Memungkinkan form dikirim
-    }
 
-    function enableFormInputs() {
-        var inputs = document.querySelectorAll('#transaksiTable select, #transaksiTable input');
-        inputs.forEach(function(input) {
-            input.disabled = false;
-        });
-    }
+        function removeRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            updateTotalHarga();
+        }
 
-    function disableFormInputs() {
-        var inputs = document.querySelectorAll('#transaksiTable select, #transaksiTable input');
-        inputs.forEach(function(input) {
-            input.disabled = true;
-        });
-    }
-
-    window.onload = function() {
-        disableFormInputs();
-    };
+        function validateSearchForm() {
+            var searchValue = document.getElementById('search_value').value;
+            if (searchValue.trim() === '') {
+                alert('NIK tidak boleh kosong.');
+                return false; // Mencegah form dikirim
+            } else if (searchValue.length !== 16 || isNaN(searchValue)) {
+                alert('NIK harus berisi 16 digit angka.');
+                return false; // Mencegah form dikirim
+            }
+            return true; // Memungkinkan form dikirim
+        }
     </script>
 </head>
 
@@ -234,7 +206,7 @@ if ($jenis_result->num_rows > 0) {
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="text" name="search_value" id="search_value" class="form-control"
-                                    placeholder="Search by NIK" maxlength="16" oninput="validateSearchForm()"
+                                    placeholder="Search by NIK" maxlength="16" oninput="validateNIK(this)"
                                     value="<?php echo isset($search_value) ? $search_value : ''; ?>">
                             </div>
                             <div class="col-md-2">
@@ -245,42 +217,46 @@ if ($jenis_result->num_rows > 0) {
 
                     <!-- User Information Section -->
                     <?php if (isset($user_data)) { ?>
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
-                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
-                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
-                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                        <div class="row mb-4">
+                            <div class="col-md-5">
+                                <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
+                                <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
+                                <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
+                                <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
+                            </div>
+                            <div class="col-md-5">
+                                <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                                <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
+                                <p><strong>Saldo Emas</strong> : 0.0000 g</p>
+                            </div>
                         </div>
-                        <div class="col-md-6">
-                            <p><strong>Saldo Uang</strong> : Rp. 0.00</p>
-                            <p><strong>Saldo Emas</strong> : 0.0000 g</p>
+                    <?php } else { ?>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <p class="text-danger"><?php echo $message; ?></p>
+                            </div>
                         </div>
-                    </div>
-                    <?php 
-                        enableFormInputs(); // Enable form inputs if user data is available
-                    } else { 
-                        disableFormInputs(); // Disable form inputs if no user data
-                    ?>
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <p class="text-danger"><?php echo $message; ?></p>
-                        </div>
-                    </div>
                     <?php } ?>
 
-                    <!-- Transaction Form Section -->
+
+                    <!-- Date and Time Section -->
                     <form method="POST" action="">
-                        <input type="hidden" name="user_id" id="user_id"
-                            value="<?php echo isset($user_data) ? $user_data['id'] : ''; ?>">
+                        <?php if (isset($user_data)) { ?>
+                            <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
+                        <?php } ?>
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="date" name="tanggal" class="form-control"
                                     value="<?php echo date('Y-m-d'); ?>">
                             </div>
                             <div class="col-md-4">
-                                <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>">
+                                <?php
+                                // Set zona waktu ke WIB (UTC+7)
+                                date_default_timezone_set('Asia/Jakarta');
+                                $current_time = date('H:i');
+                                ?>
+                                <input type="time" name="waktu" class="form-control"
+                                    value="<?php echo $current_time; ?>">
                             </div>
                         </div>
 
@@ -296,38 +272,7 @@ if ($jenis_result->num_rows > 0) {
                                     <th>Harga</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr>
-                                    <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
-                                    <td>1</td>
-                                    <td>
-                                        <select name="kategori_id[]" id="kategori_id_1" class="form-control"
-                                            onchange="updateJenis(1)">
-                                            <option value="">-- kategori sampah --</option>
-                                            <?php
-                                            if ($kategori_result->num_rows > 0) {
-                                                while ($row = $kategori_result->fetch_assoc()) {
-                                                    echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
-                                                }
-                                            }
-                                            ?>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <select name="jenis_id[]" id="jenis_id_1" class="form-control"
-                                            onchange="updateHarga(1)">
-                                            <option value="">-- jenis sampah --</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="jumlah[]" id="jumlah_1" class="form-control"
-                                            placeholder="Jumlah" oninput="updateHarga(1)">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="harga[]" id="harga_1" class="form-control" readonly>
-                                    </td>
-                                </tr>
-                            </tbody>
+
                             <tfoot>
                                 <tr>
                                     <th colspan="5" class="text-right">Total Harga:</th>
