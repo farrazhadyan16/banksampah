@@ -24,6 +24,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 
 // Jika tombol SUBMIT ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+    $id_trans = $_POST['id_trans'];
     $user_id = $_POST['user_id'];
     $tanggal = $_POST['tanggal'];
     $waktu = $_POST['waktu'];
@@ -32,20 +33,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $jumlahs = $_POST['jumlah'];
     $hargas = $_POST['harga'];
 
+    // Mendapatkan nomor urut terakhir
+    $id_trans_query = "SELECT nomor FROM transaksi_tb ORDER BY nomor DESC LIMIT 1";
+    $result = $conn->query($id_trans_query);
+    $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['nomor'] : 0;
+    $new_id = $last_id + 1;
+
+    // Membuat id_trans baru dengan format tertentu
+    $id_trans = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
+
+    // Loop untuk memasukkan setiap baris data
     for ($i = 0; $i < count($kategori_ids); $i++) {
         $kategori_id = $kategori_ids[$i];
         $jenis_id = $jenis_ids[$i];
         $jumlah = $jumlahs[$i];
-        $harga = str_replace(['Rp.', ','], '', $hargas[$i]);
 
-        if ($kategori_id && $jenis_id && $jumlah && $harga) {
-            $transaksi_query = "INSERT INTO jual_sampah (user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
-                                VALUES ('$user_id', '$tanggal', '$waktu', '$kategori_id', '$jenis_id', '$jumlah', '$harga')";
-            if ($conn->query($transaksi_query) === TRUE) {
-                $message = "Transaksi berhasil disimpan.";
+        // Menghapus awalan "Rp." dan karakter lainnya dari harga
+        $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
+
+        // Menyiapkan query SQL untuk memasukkan data
+        $transaksi_query = "INSERT INTO transaksi_tb (nomor, id_trans, user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
+                            VALUES (NULL, '$id_trans', ?, ?, ?, ?, ?, ?, ?)";
+
+        // Menyiapkan statement
+        if ($stmt = $conn->prepare($transaksi_query)) {
+            // Mengikat parameter
+            $stmt->bind_param("isssiii", $user_id, $tanggal, $waktu, $kategori_id, $jenis_id, $jumlah, $harga);
+
+            // Menjalankan statement
+            if ($stmt->execute()) {
+                $message = "Transaksi berhasil disimpan dengan ID: $id_trans";
             } else {
-                $message = "Error: " . $transaksi_query . "<br>" . $conn->error;
+                $message = "Error: " . $stmt->error;
             }
+
+            // Menutup statement
+            $stmt->close();
+        } else {
+            $message = "Error preparing statement: " . $conn->error;
         }
     }
 }
