@@ -9,31 +9,31 @@
     <!-- Font Awesome CDN for icons -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-    .menu ul {
-        list-style-type: none;
-        padding-left: 20px;
-    }
+        .menu ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
 
-    .menu ul li {
-        padding: 8px 0;
-    }
+        .menu ul li {
+            padding: 8px 0;
+        }
 
-    .dropdown-content {
-        display: none;
-        list-style-type: none;
-        padding-left: 20px;
-    }
+        .dropdown-content {
+            display: none;
+            list-style-type: none;
+            padding-left: 20px;
+        }
 
-    .dropdown:hover .dropdown-content {
-        display: block;
-    }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
 
-    .dropdown>a:after {
-        content: '\f0d7';
-        font-family: "Font Awesome 5 Free";
-        font-weight: 900;
-        float: right;
-    }
+        .dropdown>a:after {
+            content: '\f0d7';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            float: right;
+        }
     </style>
 </head>
 
@@ -61,9 +61,9 @@
                             <span>Transaksi</span>
                         </a>
                         <ul class="dropdown-content">
-                            <li><a href="setor_sampah.php">Setor Sampah</a></li>
-                            <li><a href="konversi_saldo.php">Konversi Saldo</a></li>
-                            <li><a href="tarik_saldo.php">Tarik Saldo</a></li>
+                            <li><a href="tambah_transaksi.php">Tambah Trankasi</a></li>
+                            <li><a href="semua_transaksi.php">Semua Transaksi</a></li>
+                            <li><a href="recap_transaksi.php">Rekap Transaksi</a></li>
                         </ul>
                     </li>
                     <li>
