@@ -342,6 +342,7 @@ if ($jenis_result->num_rows > 0) {
                         </table>
                         <button type="button" class="btn btn-dark mb-3" onclick="addRow()">Tambah Baris</button>
                         <button type="submit" name="submit" class="btn btn-primary mb-3">TAMBAH TRANSAKSI</button>
+
                     </form>
                 </div>
                 <!-- End of Form Section -->
