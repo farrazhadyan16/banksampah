@@ -41,7 +41,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     // Membuat id_trans baru dengan format tertentu
     $id_trans = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
 
-
     // Loop untuk memasukkan setiap baris data
     for ($i = 0; $i < count($kategori_ids); $i++) {
         $kategori_id = $kategori_ids[$i];
@@ -52,27 +51,26 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
         $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
 
         // Menyiapkan query SQL untuk memasukkan data
-        $transaksi_query = "INSERT INTO transaksi_tb (id_trans, user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-
+        $transaksi_query = "INSERT INTO transaksi_tb (nomor, id_trans, user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
+                            VALUES (NULL, '$id_trans', ?, ?, ?, ?, ?, ?, ?)";
 
         // Menyiapkan statement
         if ($stmt = $conn->prepare($transaksi_query)) {
             // Mengikat parameter
-            $stmt->bind_param("sisssiii", $id_trans, $user_id, $tanggal, $waktu, $kategori_id, $jenis_id, $jumlah, $harga);
+            $stmt->bind_param("isssiii", $user_id, $tanggal, $waktu, $kategori_id, $jenis_id, $jumlah, $harga);
 
             // Menjalankan statement
             if ($stmt->execute()) {
-                $message = "Transaksi berhasil disimpan dengan ID: $id_trans";
+                // Redirection to nota.php
+                header("Location: nota.php?id_trans=$id_trans");
+                exit(); // Ensure no further code is executed
             } else {
-                error_log("Error: " . $stmt->error);
                 $message = "Error: " . $stmt->error;
             }
 
             // Menutup statement
             $stmt->close();
         } else {
-            error_log("Error preparing statement: " . $conn->error);
             $message = "Error preparing statement: " . $conn->error;
         }
     }
@@ -265,6 +263,68 @@ if ($jenis_result->num_rows > 0) {
                     </div>
                     <?php } ?>
 
+                    <!-- Transaction Form Section
+                    <form method="POST" action="">
+                        <input type="hidden" name="user_id"
+                            value="<?php echo isset($user_data) ? $user_data['id'] : ''; ?>">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <input type="date" name="tanggal" class="form-control"
+                                    value="<?php echo date('Y-m-d'); ?>">
+                            </div>
+                            <div class="col-md-4">
+                                <input type="time" name="waktu" class="form-control" value="<?php echo date('H:i'); ?>">
+                            </div>
+                        </div> -->
+                    <?php
+                    if (isset($_POST['submit'])) {
+                        // var_dump($_POST);
+                        // include 'fungsi.php';
+                        $user_id = $_POST['user_id'];
+                        $tanggal = $_POST['tanggal'];
+                        $waktu = $_POST['waktu'];
+                        $kategori_ids = $_POST['kategori_id'];
+                        $jenis_ids = $_POST['jenis_id'];
+                        $jumlahs = $_POST['jumlah'];
+                        $hargas = $_POST['harga'];
+
+                        // Loop untuk memasukkan setiap baris data
+                        for ($i = 0; $i < count($kategori_ids); $i++) {
+                            $kategori_id = $kategori_ids[$i];
+                            $jenis_id = $jenis_ids[$i];
+                            $jumlah = $jumlahs[$i];
+
+                            // Menghapus awalan "Rp." dan karakter lainnya dari harga
+                            $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
+
+                            // Menyiapkan query SQL untuk memasukkan data
+                            $transaksi_query = "INSERT INTO transaksi_tb (user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
+                                                VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+                            // Menyiapkan statement
+                            if ($stmt = $conn->prepare($transaksi_query)) {
+                                // Mengikat parameter
+                                $stmt->bind_param("isssiii", $user_id, $tanggal, $waktu, $kategori_id, $jenis_id, $jumlah, $harga);
+
+                                // Menjalankan statement
+                                if ($stmt->execute()) {
+                                    echo "Transaksi berhasil disimpan.<br>";
+                                } else {
+                                    echo "Error: " . $stmt->error . "<br>";
+                                }
+                            } else {
+                                echo "Error preparing statement: " . $conn->error . "<br>";
+                            }
+
+                            // Menutup statement
+                            // $stmt->close();
+                        }
+                    }
+
+                    // Menutup koneksi
+                    $conn->close();
+
+                    ?>
 
                     <!-- Date and Time Section -->
                     <form method="POST" action="">
@@ -342,8 +402,7 @@ if ($jenis_result->num_rows > 0) {
                             </tfoot>
                         </table>
                         <button type="button" class="btn btn-dark mb-3" onclick="addRow()">Tambah Baris</button>
-                        <button type="submit" name="submit" class="btn btn-primary mb-3">TAMBAH TRANSAKSI</button>
-
+                        <button type="submit" name="submit" class="btn btn-primary mb-3">SUBMIT</button>
                     </form>
                 </div>
                 <!-- End of Form Section -->
