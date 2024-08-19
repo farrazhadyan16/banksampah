@@ -260,7 +260,7 @@ if ($jenis_result->num_rows > 0) {
                     </div>
                     <div class="user--info">
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor Sampah</button></a>
-                        <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Konversi Saldo</button></a>
+                        <a href="konversi_saldo.php"><button type="button" name="button" class="inputbtn">Konversi Saldo</button></a>
                         <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Tarik Saldo</button></a>
                         <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Jual Sampah</button></a>
                     </div>
