@@ -61,7 +61,7 @@
                             <span>Transaksi</span>
                         </a>
                         <ul class="dropdown-content">
-                            <li><a href="tambah_transaksi.php">Tambah Trankasi</a></li>
+                            <li><a href="setor_sampah.php">Tambah Trankasi</a></li>
                             <li><a href="semua_transaksi.php">Semua Transaksi</a></li>
                             <li><a href="recap_transaksi.php">Rekap Transaksi</a></li>
                         </ul>
