@@ -5,16 +5,11 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
-// // Fetch current gold price from API
-// $api_url = "https://gold-price.vercel.app/api";
-// $response = file_get_contents($api_url);
-// $gold_data = json_decode($response, true);
-// $current_gold_price = $gold_data['idr']['gr']; // Assuming the price per gram in IDR
-
+// Ambil harga emas saat ini dari API
 $api_url = "https://logam-mulia-api.vercel.app/prices/sakumas";
 $response = file_get_contents($api_url);
 $gold_data = json_decode($response, true);
-$current_gold_price = $gold_data['data'][0]['buy'];
+$current_gold_price = $gold_data['data'][0]['buy']; // Harga beli emas per gram dalam IDR
 
 // Jika tombol CHECK ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
@@ -22,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     if (empty($search_value)) {
         $message = "NIK tidak boleh kosong.";
     } else {
-        $user_query = "SELECT user.*, dompet.uang FROM user 
+        $user_query = "SELECT user.*, dompet.uang, dompet.emas FROM user 
                     LEFT JOIN dompet ON user.id = dompet.id_user 
                     WHERE user.nik LIKE '%$search_value%' AND user.role = 'Nasabah'";
         $user_result = $conn->query($user_query);
@@ -31,6 +26,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
             $user_data = $user_result->fetch_assoc();
         } else {
             $message = "User dengan role 'Nasabah' tidak ditemukan.";
+        }
+    }
+}
+
+// Jika tombol Submit ditekan untuk konversi
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
+    $user_id = $_POST['user_id'];
+    $jumlah_uang = $_POST['jumlah_uang'];
+
+    // Validasi input
+    if (empty($jumlah_uang) || !is_numeric($jumlah_uang)) {
+        $message = "Jumlah uang harus diisi dan berupa angka.";
+    } else {
+        // Hitung jumlah emas yang didapatkan
+        $jumlah_emas = $jumlah_uang / $current_gold_price;
+
+        // Update saldo uang dan saldo emas
+        $update_query = "UPDATE dompet 
+                         SET uang = uang - $jumlah_uang, emas = emas + $jumlah_emas 
+                         WHERE id_user = $user_id";
+        
+        if ($conn->query($update_query) === TRUE) {
+            $message = "Konversi berhasil! Saldo emas Anda telah diperbarui.";
+        } else {
+            $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
         }
     }
 }
@@ -54,11 +74,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 
 <body>
     <div id="wrapper">
-        <!-- Ini Sidebar -->
+        <!-- Sidebar -->
         <?php include("sidebar.php") ?>
-        <!-- Batas Akhir Sidebar -->
+        <!-- Akhir Sidebar -->
 
-        <!-- Ini Main-Content -->
+        <!-- Main Content -->
         <div class="main--content">
             <div class="main--content--monitoring">
                 <div class="header--wrapper">
@@ -67,17 +87,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
                         <h2>Konversi Saldo</h2>
                     </div>
                     <div class="user--info">
-                        <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor Sampah</button></a>
-                        <a href="konversi_saldo.php"><button type="button" name="button" class="inputbtn">Konversi Saldo</button></a>
-                        <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Tarik Saldo</button></a>
-                        <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Jual Sampah</button></a>
+                        <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
+                                Sampah</button></a>
+                        <a href="konversi_saldo.php"><button type="button" name="button" class="inputbtn">Konversi
+                                Saldo</button></a>
+                        <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Tarik
+                                Saldo</button></a>
+                        <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Jual
+                                Sampah</button></a>
                     </div>
                 </div>
 
                 <!-- Start of Form Section -->
                 <div class="tabular--wrapper">
                     <!-- Search Section -->
-                    <form method="POST" action="" onsubmit="return validateSearchForm()">
+                    <form method="POST" action="">
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="text" name="search_value" id="search_value" class="form-control"
@@ -92,32 +116,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 
                     <!-- User Information Section -->
                     <?php if (isset($user_data)) { ?>
-                        <div class="row mb-4">
-                            <div class="col-md-5">
-                                <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
-                                <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
-                                <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                                <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
-                            </div>
-                            <div class="col-md-5">
-                                <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
-                                <p><strong>Saldo Uang</strong> : Rp. <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
-                                <p><strong>Saldo Emas</strong> : 0.0000 g</p>
-                            </div>
+                    <div class="row mb-4">
+                        <div class="col-md-5">
+                            <p><strong>ID</strong> : <?php echo $user_data['id']; ?></p>
+                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
+                            <p><strong>Email</strong> : <?php echo $user_data['email']; ?></p>
+                            <p><strong>Username</strong> : <?php echo $user_data['username']; ?></p>
                         </div>
+                        <div class="col-md-5">
+                            <p><strong>Nama Lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                            <p><strong>Saldo Uang</strong> : Rp.
+                                <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
+                            <p><strong>Saldo Emas</strong> :
+                                <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
+                        </div>
+                    </div>
                     <?php } else { ?>
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <p class="text-danger"><?php echo $message; ?></p>
-                            </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <p class="text-danger"><?php echo $message; ?></p>
                         </div>
+                    </div>
                     <?php } ?>
-
 
                     <!-- Date and Time Section -->
                     <form method="POST" action="">
                         <?php if (isset($user_data)) { ?>
-                            <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
+                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
                         <?php } ?>
                         <div class="row mb-4">
                             <div class="col-md-4">
@@ -135,47 +160,55 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
                             </div>
                         </div>
 
-                        <!-- Table Section -->
+                        <!-- Gold Price Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                    </div>
+                                    <input type="text" name="harga_emas" class="form-control" placeholder="Harga Emas"
+                                        value="<?php echo $current_gold_price; ?>" readonly>
+                                </div>
+                                <small class="form-text text-muted">Harga emas (saat ini) per gram</small>
+                            </div>
+                        </div>
 
+                        <!-- Amount of Money Section -->
+                        <div class="row mb-4">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
+                                    </div>
+                                    <input type="text" name="jumlah_uang" class="form-control"
+                                        placeholder="Jumlah Uang">
+                                </div>
+                                <small class="form-text text-muted">Jumlah uang yang ingin dikonversi ke emas</small>
+                            </div>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <button type="submit" name="convert" class="btn btn-primary w-100">Convert</button>
+                            </div>
+                        </div>
+
+                        <!-- Success/Error Message -->
+                        <?php if (!empty($message)) { ?>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <p class="text-success"><?php echo $message; ?></p>
+                            </div>
+                        </div>
+                        <?php } ?>
                     </form>
-
-                    <!-- Add this right after the time input element -->
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text"><i class="fas fa-coins"></i></span>
-                                </div>
-                                <input type="text" name="harga_emas" class="form-control" placeholder="contoh: 900000" value="<?php echo $current_gold_price; ?>" readonly>
-                            </div>
-                            <small class="form-text text-muted">Harga emas (saat ini)</small>
-                        </div>
-                    </div>
-
-                    <div class="row mb-4">
-                        <div class="col-md-8">
-                            <div class="input-group">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
-                                </div>
-                                <input type="text" name="jumlah_uang" class="form-control" placeholder="contoh: 10000">
-                            </div>
-                            <small class="form-text text-muted">Jumlah uang</small>
-                        </div>
-                    </div>
-
-                    <!-- Add the Submit button -->
-                    <div class="row mb-4">
-                        <div class="col-md-4">
-                            <button type="submit" class="btn btn-primary w-100">Submit</button>
-                        </div>
-                    </div>
-
                 </div>
                 <!-- End of Form Section -->
             </div>
         </div>
-        <!-- Batas Akhir Main-Content -->
+        <!-- Akhir Main Content -->
     </div>
 </body>
 
