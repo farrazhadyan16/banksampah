@@ -1,5 +1,5 @@
 <?php
-include 'header.php';
+include 'header.php'; //koneksi
 include 'fungsi.php'; // Ensure you have the database connection
 
 $id_trans = isset($_GET['id_trans']) ? $_GET['id_trans'] : '';
