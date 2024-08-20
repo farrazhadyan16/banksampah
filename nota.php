@@ -13,9 +13,10 @@ if ($stmt = $conn->prepare($transaksi_query)) {
     $transaksi = $result->fetch_assoc();
 
     // Fetch details for items
-    $items_query = "SELECT t.*, k.name as kategori_name 
+    $items_query = "SELECT t.*, k.name as kategori_name, s.jenis as barang_name
                     FROM transaksi_tb t 
                     JOIN kategori_sampah k ON t.kategori_id = k.id 
+                    JOIN sampah s ON t.jenis_id = s.id
                     WHERE t.id_trans = ?";
     $items_stmt = $conn->prepare($items_query);
     $items_stmt->bind_param("s", $id_trans);
