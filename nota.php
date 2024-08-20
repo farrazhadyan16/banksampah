@@ -13,9 +13,10 @@ if ($stmt = $conn->prepare($transaksi_query)) {
     $transaksi = $result->fetch_assoc();
 
     // Fetch details for items
-    $items_query = "SELECT t.*, k.name as kategori_name 
+    $items_query = "SELECT t.*, k.name as kategori_name, s.jenis as barang_name
                     FROM transaksi_tb t 
                     JOIN kategori_sampah k ON t.kategori_id = k.id 
+                    JOIN sampah s ON t.jenis_id = s.id
                     WHERE t.id_trans = ?";
     $items_stmt = $conn->prepare($items_query);
     $items_stmt->bind_param("s", $id_trans);
@@ -81,7 +82,7 @@ if ($stmt = $conn->prepare($transaksi_query)) {
                 <?php foreach ($items as $item): ?>
                     <tr>
                         <td><?php echo htmlspecialchars($item['kategori_name']); ?></td>
-                        <td><?php echo htmlspecialchars($item['jenis_id']); ?></td>
+                        <td><?php echo htmlspecialchars($item['barang_name']); ?></td>
                         <td><?php echo htmlspecialchars($item['jumlah']) . ' Kg'; ?></td>
                         <td><?php echo 'Rp ' . number_format($item['harga'], 0, ',', '.'); ?></td>
                     </tr>
