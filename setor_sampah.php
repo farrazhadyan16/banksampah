@@ -11,7 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     if (empty($search_value)) {
         $message = "NIK tidak boleh kosong.";
     } else {
-        $user_query = "SELECT user.*, dompet.uang FROM user 
+        $user_query = "SELECT user.*, dompet.uang, dompet.emas FROM user 
                     LEFT JOIN dompet ON user.id = dompet.id_user 
                     WHERE user.nik LIKE '%$search_value%' AND user.role = 'Nasabah'";
         $user_result = $conn->query($user_query);
@@ -290,7 +290,8 @@ if ($jenis_result->num_rows > 0) {
                                 <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
                                 <p><strong>Saldo Uang</strong> : Rp.
                                     <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
-                                <p><strong>Saldo Emas</strong> : 0.0000 g</p>
+                                <p><strong>Saldo Emas</strong> :
+                                    <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
                             </div>
                         </div>
                     <?php } else { ?>
