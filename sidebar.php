@@ -1,3 +1,18 @@
+<?php
+if (session_status() == PHP_SESSION_NONE) {
+    session_start();
+}
+require_once 'koneksi.php';
+
+if (!isset($_SESSION['username'])) {
+    header("location:login.php");
+    exit();
+}
+
+// Get the user's role from the session
+$user_role = $_SESSION['role'];
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +21,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Fixed Sidebar</title>
     <link rel="stylesheet" href="./css/style.css">
-    <!-- Font Awesome CDN for icons -->
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
     .menu ul {
@@ -49,6 +63,8 @@
                             <span>Dashboard</span>
                         </a>
                     </li>
+
+                    <?php if ($user_role === 'admin' || $user_role === 'superadmin') { ?>
                     <li>
                         <a href="sampah.php">
                             <i class="fa-solid fa-trash"></i>
@@ -61,7 +77,7 @@
                             <span>Transaksi</span>
                         </a>
                         <ul class="dropdown-content">
-                            <li><a href="setor_sampah.php">Tambah Trankasi</a></li>
+                            <li><a href="setor_sampah.php">Tambah Transaksi</a></li>
                             <li><a href="semua_transaksi.php">Semua Transaksi</a></li>
                             <li><a href="recap_transaksi.php">Rekap Transaksi</a></li>
                         </ul>
@@ -78,12 +94,16 @@
                             <span>Nasabah</span>
                         </a>
                     </li>
+                    <?php } ?>
+
+
                     <li>
                         <a href="detail_user.php">
                             <i class="fa-solid fa-id-card"></i>
                             <span>Detail User</span>
                         </a>
                     </li>
+
                     <li class="logout">
                         <a href="logout.php">
                             <i class="fa-solid fa-right-from-bracket"></i>

@@ -1,5 +1,5 @@
 <?php
-// Include file fungsi.php untuk koneksi ke database
+include 'header.php';
 include 'fungsi.php';
 
 // Variabel untuk menyimpan pesan atau error
