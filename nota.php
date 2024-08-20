@@ -40,22 +40,23 @@ if ($stmt = $conn->prepare($transaksi_query)) {
     <title>Nota</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .print-button {
-            margin-left: 10px;
-        }
+    .print-button {
+        margin-left: 10px;
+    }
 
-        @media print {
-            .no-print {
-                display: none;
-            }
+    @media print {
+        .no-print {
+            display: none;
         }
+    }
     </style>
 </head>
 
 <body>
     <div class="container mt-5">
         <div class="d-flex justify-content-start no-print">
-            <button class="btn btn-success" onclick="window.history.back()">Kembali</button>
+            <a href="setor_sampah.php" class="btn btn-success">Kembali</a>
+            <!-- <button class="btn btn-success" onclick="window.history.back()">Kembali</button> -->
             <button class="btn btn-info print-button" onclick="window.print()">Print</button>
         </div>
 
@@ -79,12 +80,12 @@ if ($stmt = $conn->prepare($transaksi_query)) {
             </thead>
             <tbody>
                 <?php foreach ($items as $item): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($item['kategori_name']); ?></td>
-                        <td><?php echo htmlspecialchars($item['jenis_id']); ?></td>
-                        <td><?php echo htmlspecialchars($item['jumlah']) . ' Kg'; ?></td>
-                        <td><?php echo 'Rp ' . number_format($item['harga'], 0, ',', '.'); ?></td>
-                    </tr>
+                <tr>
+                    <td><?php echo htmlspecialchars($item['kategori_name']); ?></td>
+                    <td><?php echo htmlspecialchars($item['jenis_id']); ?></td>
+                    <td><?php echo htmlspecialchars($item['jumlah']) . ' Kg'; ?></td>
+                    <td><?php echo 'Rp ' . number_format($item['harga'], 0, ',', '.'); ?></td>
+                </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
