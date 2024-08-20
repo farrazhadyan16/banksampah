@@ -5,6 +5,17 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
+// // Fetch current gold price from API
+// $api_url = "https://gold-price.vercel.app/api";
+// $response = file_get_contents($api_url);
+// $gold_data = json_decode($response, true);
+// $current_gold_price = $gold_data['idr']['gr']; // Assuming the price per gram in IDR
+
+$api_url = "https://logam-mulia-api.vercel.app/prices/sakumas";
+$response = file_get_contents($api_url);
+$gold_data = json_decode($response, true);
+$current_gold_price = $gold_data['data'][0]['buy'];
+
 // Jika tombol CHECK ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $search_value = $_POST['search_value'];
@@ -135,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
                                 <div class="input-group-prepend">
                                     <span class="input-group-text"><i class="fas fa-coins"></i></span>
                                 </div>
-                                <input type="text" name="harga_emas" class="form-control" placeholder="contoh: 900000">
+                                <input type="text" name="harga_emas" class="form-control" placeholder="contoh: 900000" value="<?php echo $current_gold_price; ?>" readonly>
                             </div>
                             <small class="form-text text-muted">Harga emas (saat ini)</small>
                         </div>
