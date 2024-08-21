@@ -256,9 +256,11 @@ if ($jenis_result->num_rows > 0) {
                                 Emas</button></a>
                         <a href="konversi_rupiah.php"><button type="button" name="button" class="inputbtn">Konversi
                                 Rupiah</button></a>
-                        <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Tarik
-                                Saldo</button></a>
-                        <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Jual
+                        <a href="tarik_emas.php"><button type="button" name="button" class="inputbtn">Tarik
+                                Emas</button></a>
+                        <a href="tarik_rupiah.php"><button type="button" name="button" class="inputbtn">Tarik
+                                Rupiah</button></a>
+                        <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual
                                 Sampah</button></a>
                     </div>
                 </div>
