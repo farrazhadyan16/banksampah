@@ -33,29 +33,28 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 // Jika tombol Submit ditekan untuk konversi
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
     $user_id = $_POST['user_id'];
-    $jumlah_emas = $_POST['jumlah_emas'];
+    $jumlah_uang = $_POST['jumlah_uang'];
 
     // Validasi input
-    if (empty($jumlah_emas) || !is_numeric($jumlah_emas)) {
-        $message = "Jumlah emas harus diisi dan berupa angka.";
-    } else if ($jumlah_emas > $user_data['emas']) {
-        $message = "Jumlah emas yang dimasukkan melebihi saldo emas yang tersedia.";
+    if (empty($jumlah_uang) || !is_numeric($jumlah_uang)) {
+        $message = "Jumlah uang harus diisi dan berupa angka.";
     } else {
-        // Hitung jumlah uang yang didapatkan
-        $jumlah_uang = $jumlah_emas * $current_gold_price;
+        // Hitung jumlah emas yang didapatkan
+        $jumlah_emas = $jumlah_uang / $current_gold_price;
 
         // Update saldo uang dan saldo emas
         $update_query = "UPDATE dompet 
-                         SET uang = uang + $jumlah_uang, emas = emas - $jumlah_emas 
+                         SET uang = uang - $jumlah_uang, emas = emas + $jumlah_emas 
                          WHERE id_user = $user_id";
         
         if ($conn->query($update_query) === TRUE) {
-            $message = "Konversi berhasil! Saldo uang Anda telah diperbarui.";
+            $message = "Konversi berhasil! Saldo emas Anda telah diperbarui.";
         } else {
             $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
         }
     }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -67,7 +66,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
     <title>Bank Sampah | Transaksi</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
+    <!-- Font Awesome Cdn link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -83,7 +84,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                 <div class="header--wrapper">
                     <div class="header--title">
                         <span>Halaman</span>
-                        <h2>Konversi Emas</h2>
+                        <h2>Konversi Saldo</h2>
                     </div>
                     <div class="user--info">
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
@@ -152,6 +153,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                             </div>
                             <div class="col-md-4">
                                 <?php
+                                // Set zona waktu ke WIB (UTC+7)
                                 date_default_timezone_set('Asia/Jakarta');
                                 $current_time = date('H:i');
                                 ?>
@@ -170,21 +172,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                                     <input type="text" name="harga_emas" class="form-control" placeholder="Harga Emas"
                                         value="<?php echo $current_gold_price; ?>" readonly>
                                 </div>
-                                <small class="form-text text-muted">Harga beli emas (saat ini) per gram</small>
+                                <small class="form-text text-muted">Harga emas (saat ini) per gram</small>
                             </div>
                         </div>
 
-                        <!-- Amount of Gold Section -->
+                        <!-- Amount of Money Section -->
                         <div class="row mb-4">
                             <div class="col-md-8">
                                 <div class="input-group">
                                     <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-weight"></i></span>
+                                        <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
                                     </div>
-                                    <input type="text" name="jumlah_emas" class="form-control"
-                                        placeholder="Jumlah Emas (gram)">
+                                    <input type="text" name="jumlah_uang" class="form-control"
+                                        placeholder="Jumlah Uang">
                                 </div>
-                                <small class="form-text text-muted">Jumlah emas yang ingin dikonversi ke uang</small>
+                                <small class="form-text text-muted">Jumlah uang yang ingin dikonversi ke emas</small>
                             </div>
                         </div>
 
