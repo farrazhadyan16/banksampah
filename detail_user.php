@@ -1,27 +1,15 @@
 <?php
 require_once 'header.php'; // Sertakan file header.php yang berisi session start dan koneksi database
+require_once 'fungsi.php'; // Include the functions
 
-// Pastikan sesi pengguna sudah dimulai, jika belum redirect ke halaman login
-if (!isset($_SESSION['username'])) {
-    header("Location: login.php");
-    exit();
-}
+// Check if the user is logged in
+checkSession();
 
-// Ambil username dari sesi yang aktif
+// Get the username from the session
 $username = $_SESSION['username'];
 
-// Lakukan query untuk mengambil data username dan role dari tabel user
-$query = "SELECT username, nama, role FROM user WHERE username = '$username'";
-$result = mysqli_query($koneksi, $query);
-
-// Periksa apakah query berhasil dieksekusi
-if ($result) {
-    // Ambil hasil query sebagai array asosiatif
-    $data = mysqli_fetch_assoc($result);
-} else {
-    echo "Error fetching data: " . mysqli_error($koneksi);
-    exit();
-}
+// Fetch user data from the database
+$data = getUserData($koneksi, $username);
 ?>
 
 
@@ -55,21 +43,6 @@ if ($result) {
                         <span>Halaman</span>
                         <h2>Sampah</h2>
                     </div>
-                    <div class="user--info">
-                        <a href="inputdata.php"><button type="button" name="button" class="inputbtn">Input
-                                Project</button></a>
-                        <a href="inputdesign.php"><button type="button" name="button" class="inputbtn">Input
-                                Design</button></a>
-                        <a href="inputnesting.php"><button type="button" name="button" class="inputbtn">Input
-                                Nesting</button></a>
-                        <a href="inputprogram.php"><button type="button" name="button" class="inputbtn">Input
-                                Program</button></a>
-                        <a href="inputchecker.php"><button type="button" name="button" class="inputbtn">Input
-                                Checker</button></a>
-                        <a href="exportmonitoring.php"><button type="button" name="button"
-                                class="inputbtn">Export</button></a>
-                        <img src="./img/logoPM_high.png" alt="logo">
-                    </div>
                 </div>
 
                 <!-- Ini Tabel -->
@@ -77,8 +50,6 @@ if ($result) {
                     <div class="row align-items-start">
                         <div class="user--info">
                             <h3 class="main--title">Data Project</h3>
-                            <a href="tambahsampah.php"><button type="button" name="button"
-                                    class="inputbtn .border-right">Tambah</button></a>
                         </div>
                     </div>
 
