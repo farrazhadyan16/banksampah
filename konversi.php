@@ -80,11 +80,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
                                 Sampah</button></a>
                         <a href="konversi.php"><button type="button" name="button" class="inputbtn">Konversi
-                                Emas</button></a>
-                        <a href="tarik_emas.php"><button type="button" name="button" class="inputbtn">Tarik
-                                Emas</button></a>
-                        <a href="tarik_rupiah.php"><button type="button" name="button" class="inputbtn">Tarik
-                                Rupiah</button></a>
+                                Saldo</button></a>
+                        <a href="tarik.php"><button type="button" name="button" class="inputbtn">Tarik
+                                Saldo</button></a>
                         <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual
                                 Sampah</button></a>
                     </div>
