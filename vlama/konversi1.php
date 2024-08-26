@@ -9,80 +9,75 @@ $message = "";
 $current_gold_price_buy = getCurrentGoldPricebuy(); // For converting money to gold
 $current_gold_price_sell = getCurrentGoldPricesell(); // For converting gold to money
 
-// Retrieve the last inserted transaction ID
-$query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
-$result = $conn->query($query);
-
 // Jika tombol Submit ditekan untuk konversi
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
-    $id_user = $_POST['id_user'];
-
-    // Check if query execution was successful
-    if ($result && $result->num_rows > 0) {
-        $last_id = $result->fetch_assoc()['no'];
-    } else {
-        $last_id = 0; // No previous record found
-    }
-
+    $user_id = $_POST['user_id'];
+    $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['no'] : 0;
     $new_id = $last_id + 1;
-    $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT); // Generate unique transaction ID
 
-    // Insert data into the transaksi table
-    $jenis_transaksi = 'pindah_saldo'; // Set jenis_transaksi
-    $date = date('Y-m-d H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
+    $id_transaksi = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT); // Generate unique transaction ID
 
-    if ($conn->query($transaksi_query) === TRUE) {
-        $id_transaksi = $id; // Tetapkan $id_transaksi setelah insert berhasil
-    
-        // Periksa apakah konversi uang ke emas
-        if (isset($_POST['conversion_type']) && $_POST['conversion_type'] === 'money_to_gold') {
-            $jumlah_uang = $_POST['jumlah_uang'];
-    
-            // Validasi input
-            if (empty($jumlah_uang) || !is_numeric($jumlah_uang)) {
-                $message = "Jumlah uang harus diisi dan berupa angka.";
-            } else {
-                $hasil_konversi = $jumlah_uang / $current_gold_price_buy; // Hitung jumlah emas yang diperoleh
-    
-                // Lakukan konversi uang ke emas
-                if (convertMoneyToGold($id_user, $jumlah_uang, $current_gold_price_buy) === TRUE) {
-                    // Masukkan data ke tabel pindah_saldo
-                    $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jumlah, harga_beli_emas, hasil_konversi) VALUES (NULL, '$id_transaksi', '$hasil_konversi', '$current_gold_price_buy', '$hasil_konversi')";
-                    if ($conn->query($insert_query) === TRUE) {
-                        $message = "Konversi uang ke emas berhasil! Saldo emas Anda telah diperbarui.";
-                    } else {
-                        $message = "Terjadi kesalahan saat melakukan insert ke pindah_saldo: " . $conn->error;
-                    }
+    // Check if converting money to gold
+    if (isset($_POST['conversion_type']) && $_POST['conversion_type'] === 'money_to_gold') {
+        $jumlah_uang = $_POST['jumlah_uang'];
+
+        // Validasi input
+        if (empty($jumlah_uang) || !is_numeric($jumlah_uang)) {
+            $message = "Jumlah uang harus diisi dan berupa angka.";
+        } else {
+            $hasil_konversi = $jumlah_uang / $current_gold_price_buy; // Calculate the amount of gold
+            
+            // Convert money to gold
+            if (convertMoneyToGold($user_id, $jumlah_uang, $current_gold_price_buy) === TRUE) {
+                // Insert into pindah_saldo table
+                $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jumlah, harga_emas, hasil_konversi) VALUES (NULL,'$id_transaksi','$jumlah', '$harga_emas','$hasil_konversi')";
+                // var_dump($insert_query);
+                // die;
+                if ($stmt = $conn->prepare($insert_query)) {
+                    $stmt->bind_param("sdss", $id_transaksi, $jumlah_uang, $current_gold_price_buy, $hasil_konversi);
+                    $stmt->execute();
+                    $message = "Konversi uang ke emas berhasil! Saldo emas Anda telah diperbarui.";
                 } else {
-                    $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
+                    $message = "Terjadi kesalahan saat melakukan insert: " . $conn->error;
                 }
-            }
-        } elseif (isset($_POST['conversion_type']) && $_POST['conversion_type'] === 'gold_to_money') {
-            $jumlah_emas = $_POST['jumlah_emas'];
-    
-            // Validasi input
-            if (empty($jumlah_emas) || !is_numeric($jumlah_emas)) {
-                $message = "Jumlah emas harus diisi dan berupa angka.";
             } else {
-                $hasil_konversi = $jumlah_emas * $current_gold_price_sell; // Hitung nilai uang dari emas
-    
-                // Lakukan konversi emas ke uang
-                if (convertGoldToMoney($id_user, $jumlah_emas, $current_gold_price_sell) === TRUE) {
-                    // Masukkan data ke tabel pindah_saldo
-                    $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jumlah, harga_jual_emas, hasil_konversi) VALUES (NULL, '$id_transaksi', '$jumlah_emas', '$current_gold_price_sell', '$hasil_konversi')";
-                    if ($conn->query($insert_query) === TRUE) {
-                        $message = "Konversi emas ke uang berhasil! Saldo uang Anda telah diperbarui.";
-                    } else {
-                        $message = "Terjadi kesalahan saat melakukan insert ke pindah_saldo: " . $conn->error;
-                    }
-                } else {
-                    $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
-                }
+                $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
             }
         }
-    } else {
-        $message = "Gagal memasukkan data ke tabel transaksi: " . $conn->error;
+    } 
+    
+    // Check if converting gold to money
+    else if (isset($_POST['conversion_type']) && $_POST['conversion_type'] === 'gold_to_money') {
+        $jumlah_emas = $_POST['jumlah_emas'];
+
+        // Validasi input
+        if (empty($jumlah_emas) || !is_numeric($jumlah_emas)) {
+            $message = "Jumlah emas harus diisi dan berupa angka.";
+        } else {
+            $hasil_konversi = $jumlah_emas * $current_gold_price_sell; // Calculate the money value of gold
+            
+            // Convert gold to money
+            if (convertGoldToMoney($user_id, $jumlah_emas, $current_gold_price_sell) === TRUE) {
+                // Define the missing variables
+                $jumlah = $jumlah_emas; // Set jumlah to the amount of gold
+                $harga_emas = $current_gold_price_sell; // Set harga_emas to current gold price for selling
+
+                // Insert into pindah_saldo table
+                $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jumlah, harga_emas, hasil_konversi) VALUES (NULL,'$id_transaksi','$jumlah', '$harga_emas','$hasil_konversi')";
+                var_dump($insert_query);
+                die;
+                if ($stmt = $conn->prepare($insert_query)) {
+                    // Correctly bind parameters
+                    $stmt->bind_param("sdss", $id_transaksi, $jumlah, $harga_emas, $hasil_konversi);
+                    $stmt->execute();
+                    $message = "Konversi emas ke uang berhasil! Saldo uang Anda telah diperbarui.";
+                } else {
+                    $message = "Terjadi kesalahan saat melakukan insert: " . $conn->error;
+                }
+            } else {
+                $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
+            }
+        }
     }
 }
 ?>
@@ -177,48 +172,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                                             <span class="input-group-text"><i class="fas fa-coins"></i></span>
                                         </div>
                                         <input type="text" name="jumlah_emas" class="form-control"
-                                            placeholder="Jumlah Emas">
+                                            placeholder="Jumlah Emas (gram)">
                                     </div>
                                     <small class="form-text text-muted">Jumlah emas yang ingin dikonversi ke
                                         uang</small>
                                 </div>
                             </div>
                         </div>
+
                         <?php if (isset($user_data)) { ?>
-                        <input type="hidden" name="id_user" value="<?php echo $user_data['id']; ?>">
+                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
                         <?php } ?>
 
-
                         <div class="row mb-4">
-                            <div class="col-md-8">
-                                <button type="submit" name="convert" class="btn btn-primary">Konversi</button>
+                            <div class="col-md-4">
+                                <button type="submit" name="convert" class="btn btn-primary w-100">Convert</button>
                             </div>
                         </div>
+
+                        <?php if ($message) { ?>
+                        <div class="alert alert-info" role="alert">
+                            <?php echo $message; ?>
+                        </div>
+                        <?php } ?>
                     </form>
-                    <?php if ($message != "") { ?>
-                    <div class="alert alert-success">
-                        <?php echo $message; ?>
-                    </div>
-                    <?php } ?>
                 </div>
             </div>
         </div>
     </div>
-
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-    $(document).ready(function() {
-        $('input[name="conversion_type"]').change(function() {
-            if ($(this).val() === 'money_to_gold') {
-                $('#money_to_gold_input').show();
-                $('#gold_to_money_input').hide();
-            } else if ($(this).val() === 'gold_to_money') {
-                $('#money_to_gold_input').hide();
-                $('#gold_to_money_input').show();
-            }
-        });
+    // JavaScript to toggle input fields based on selected conversion type
+    $('input[name="conversion_type"]').on('change', function() {
+        if (this.value === 'money_to_gold') {
+            $('#money_to_gold_input').show();
+            $('#gold_to_money_input').hide();
+        } else {
+            $('#money_to_gold_input').hide();
+            $('#gold_to_money_input').show();
+        }
     });
     </script>
 </body>

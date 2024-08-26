@@ -340,3 +340,58 @@ function withdrawGold($id_user, $jumlah_emas) {
 
     return $update_stmt->execute();
 }
+
+function searchUserByNIK($nik) {
+    global $conn;
+
+    // Prepare the SQL statement
+    $query = "SELECT id, nik, email, username, saldo_uang, saldo_emas FROM user WHERE nik = ?";
+    $stmt = $conn->prepare($query);
+
+    // Check if the prepare was successful
+    if (!$stmt) {
+        die("Error preparing statement: " . $conn->error);
+    }
+
+    // Bind the parameter and execute the query
+    $stmt->bind_param("s", $nik);
+    $stmt->execute();
+
+    // Get the result
+    $result = $stmt->get_result();
+
+    // Return the fetched data
+    return $result->fetch_assoc();
+}
+
+function getSampahTypes() {
+    global $conn;
+    $query = "SELECT * FROM sampah";
+    $result = $conn->query($query);
+    return $result;
+}
+
+function insertSetorSampah($user_id, $sampah_data) {
+    global $conn;
+    $id_transaksi = uniqid();
+    $total_kg = 0;
+    $total_rp = 0;
+
+    foreach ($sampah_data as $sampah) {
+        $id_sampah = $sampah['id_sampah'];
+        $jumlah_kg = $sampah['jumlah_kg'];
+        $jumlah_rp = $sampah['jumlah_rp'];
+        $total_kg += $jumlah_kg;
+        $total_rp += $jumlah_rp;
+
+        $query = "INSERT INTO setor_sampah (id_transaksi, id_sampah, jumlah_kg, jumlah_rp) VALUES (?, ?, ?, ?)";
+        $stmt = $conn->prepare($query);
+        $stmt->bind_param("ssdd", $id_transaksi, $id_sampah, $jumlah_kg, $jumlah_rp);
+        $stmt->execute();
+    }
+
+    $query = "INSERT INTO transaksi (id_transaksi, id_user, jenis_transaksi, total_kg, total_rp, tanggal) VALUES (?, ?, 'setor_sampah', ?, ?, NOW())";
+    $stmt = $conn->prepare($query);
+    $stmt->bind_param("ssdd", $id_transaksi, $user_id, $total_kg, $total_rp);
+    return $stmt->execute();
+}

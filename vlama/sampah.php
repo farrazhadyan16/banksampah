@@ -2,29 +2,19 @@
 include 'header.php';
 include 'fungsi.php';
 
-// Check if 'id' is set in the URL and call the delete function
-if (isset($_GET["id"])) {
-    $id = $_GET["id"];
-
-    if (hapusSampah($id) > 0) {
-        echo "
-            <script>
-                alert('Data Berhasil Dihapus');
-                document.location.href='sampah.php';
-            </script>
-        ";
-    } else {
-        echo "
-            <script>
-                alert('Data Gagal Dihapus');
-                document.location.href='sampah.php';
-            </script>
-        ";
-    }
-}
-
-// Call the new function to retrieve sampah data
-$query_all = getSampahData();
+// Query to join sampah and kategori_sampah tables
+$query_all = query("
+    SELECT 
+        sampah.id, 
+        kategori_sampah.name AS kategori_name, 
+        sampah.jenis, 
+        sampah.harga, 
+        sampah.harga_pusat, 
+        sampah.jumlah 
+    FROM sampah 
+    JOIN kategori_sampah ON sampah.id_kategori = kategori_sampah.id 
+    ORDER BY LENGTH(sampah.id), CAST(sampah.id AS UNSIGNED)
+");
 ?>
 
 <!DOCTYPE html>
@@ -105,7 +95,7 @@ $query_all = getSampahData();
                                         </li>
                                         <li class="liaksi">
                                             <button type="submit" name="submit">
-                                                <a href="sampah.php?id=<?= $row["id"]; ?>"
+                                                <a href="hapus_sampah.php?id=<?= $row["id"]; ?>"
                                                     class="inputbtn7">Hapus</a>
                                             </button>
                                         </li>

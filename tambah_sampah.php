@@ -3,25 +3,10 @@ include 'header.php';
 require 'fungsi.php';
 
 // Fetch all categories from the database
-$categories = query("SELECT * FROM kategori_sampah ORDER BY name ASC");
+$categories = getCategories();
 
 if (isset($_POST["submit"])) {
-    $jenis = $_POST['jenis'];
-    $harga_pengepul = $_POST['harga_pengepul'];
-    $harga_nasabah = $_POST['harga_nasabah'];
-    $kategori = $_POST['kategori'];
-
-    // Insert the data into the database and generate ID
-    if (addWaste($jenis, $harga_pengepul, $harga_nasabah, $kategori) > 0) {
-        echo "<script>
-                alert('Data berhasil ditambahkan');
-                document.location.href = 'sampah.php';
-              </script>";
-    } else {
-        echo "<script>
-                alert('Data gagal ditambahkan');
-              </script>";
-    }
+    handleAddWaste($_POST);
 }
 ?>
 

@@ -24,82 +24,84 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     }
 }
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
-    $id_user = $_POST['user_id'] ?? '';
-    $jenis_transaksi = $_POST['jenis_transaksi'] ?? 'setor_sampah';
-    $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
-    $id_kategoris = $_POST['id_kategori'] ?? [];
-    $id_jeniss = $_POST['id_jenis'] ?? [];
-    $jumlahs = $_POST['jumlah'] ?? [];
-    $hargas = $_POST['harga'] ?? [];
 
-    // Generate new ID for transaksi
-    $id_trans_query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
+// Jika tombol SUBMIT ditekan
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+    $user_id = $_POST['user_id'];
+    $tanggal = $_POST['tanggal'];
+    $waktu = $_POST['waktu'];
+    $kategori_ids = $_POST['kategori_id'];
+    $jenis_ids = $_POST['jenis_id'];
+    $jumlahs = $_POST['jumlah'];
+    $hargas = $_POST['harga'];
+
+    // Mendapatkan nomor urut terakhir hanya sekali
+    $id_trans_query = "SELECT nomor FROM transaksi_tb ORDER BY nomor DESC LIMIT 1";
     $result = $conn->query($id_trans_query);
-    $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['no'] : 0;
+    $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['nomor'] : 0;
     $new_id = $last_id + 1;
 
-    // Create new transaksi ID
-    $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
+    // Membuat id_trans baru dengan format tertentu
+    $id_trans = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
 
-    // Calculate total amount
+    // Total uang yang harus ditambahkan ke saldo
     $total_uang = 0;
 
-    // Insert into transaksi table
-        $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) 
-        VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
-        if ($conn->query($transaksi_query) === TRUE) {
-        // Use the custom $id, not $conn->insert_id, as the id_transaksi
-        $id_transaksi = $id;
-
-        // Loop to insert each row into the setor_sampah table
-        for ($i = 0; $i < count($id_kategoris); $i++) {
-        $id_kategori = $id_kategoris[$i];
-        $id_jenis = $id_jeniss[$i];
+    // Loop untuk memasukkan setiap baris data
+    for ($i = 0; $i < count($kategori_ids); $i++) {
+        $kategori_id = $kategori_ids[$i];
+        $jenis_id = $jenis_ids[$i];
         $jumlah = $jumlahs[$i];
+
+        // Menghapus awalan "Rp." dan karakter lainnya dari harga
         $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
-        $total_uang += $harga;
 
-        // Insert into setor_sampah table
-        $setor_sampah_query = "INSERT INTO setor_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp) 
-                VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah', '$harga')";
-        if ($conn->query($setor_sampah_query) === FALSE) {
-        $message = "Error: " . $conn->error;
+        // Menyiapkan query SQL untuk memasukkan data
+        $transaksi_query = "INSERT INTO transaksi_tb (nomor, id_trans, user_id, tanggal, waktu, kategori_id, jenis_id, jumlah, harga) 
+                            VALUES (NULL, '$id_trans', '$user_id', '$tanggal', '$waktu', '$kategori_id', '$jenis_id', '$jumlah', '$harga')";
+        // var_dump($transaksi_query);
+        // die;
+
+        // Menjalankan query langsung tanpa bind_param
+        if ($conn->query($transaksi_query) === TRUE) {
+            $total_uang += $harga; // Menambahkan harga ke total uang
+        } else {
+            $message = "Error: " . $conn->error;
         }
-        }
-
-        // Update or insert into dompet table
-        $dompet_query = "SELECT * FROM dompet WHERE id_user = ?";
-        if ($stmt = $conn->prepare($dompet_query)) {
-            $stmt->bind_param("i", $id_user);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
-                if ($update_stmt = $conn->prepare($dompet_update_query)) {
-                    $update_stmt->bind_param("di", $total_uang, $id_user);
-                    $update_stmt->execute();
-                    $update_stmt->close();
-                }
-            } else {
-                $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
-                if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
-                    $insert_stmt->bind_param("id", $id_user, $total_uang);
-                    $insert_stmt->execute();
-                    $insert_stmt->close();
-                }
-            }
-
-            $stmt->close();
-        }
-
-        // Uncomment this line when ready to redirect
-        header("Location: nota.php?id_transaksi=$id_transaksi");
-    } else {
-        $message = "Error: " . $conn->error;
     }
+
+    // Memeriksa apakah pengguna sudah memiliki entri di tabel dompet
+    $dompet_query = "SELECT * FROM dompet WHERE id_user = ?";
+    if ($stmt = $conn->prepare($dompet_query)) {
+        $stmt->bind_param("i", $user_id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            // Update saldo jika entri sudah ada
+            $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
+            if ($update_stmt = $conn->prepare($dompet_update_query)) {
+                $update_stmt->bind_param("di", $total_uang, $user_id);
+                $update_stmt->execute();
+                $update_stmt->close();
+            }
+        } else {
+            // Insert saldo baru jika belum ada entri
+            $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
+            if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
+                $insert_stmt->bind_param("id", $user_id, $total_uang);
+                $insert_stmt->execute();
+                $insert_stmt->close();
+            }
+        }
+
+        $stmt->close();
+    }
+
+    // Redirect to nota.php
+    header("Location: nota.php?id_trans=$id_trans");
 }
+
 
 
 // Fetch data kategori
@@ -140,9 +142,9 @@ if ($jenis_result->num_rows > 0) {
     var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
     function updateHarga(index) {
-        var idjenis = document.getElementById('id_jenis_' + index).value;
+        var jenisId = document.getElementById('jenis_id_' + index).value;
         var jumlah = document.getElementById('jumlah_' + index).value;
-        var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
+        var harga = jenisSampah[jenisId] ? jenisSampah[jenisId].harga : 0;
         var totalHarga = jumlah * harga;
 
         document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
@@ -162,8 +164,8 @@ if ($jenis_result->num_rows > 0) {
     }
 
     function updateJenis(index) {
-        var kategoriSelect = document.getElementById('id_kategori_' + index);
-        var jenisSelect = document.getElementById('id_jenis_' + index);
+        var kategoriSelect = document.getElementById('kategori_id_' + index);
+        var jenisSelect = document.getElementById('jenis_id_' + index);
         var selectedKategori = kategoriSelect.value;
 
         jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
@@ -188,7 +190,7 @@ if ($jenis_result->num_rows > 0) {
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                 <td>${rowCount}</td>
                 <td>
-                    <select name="id_kategori[]" id="id_kategori_${rowCount}" class="form-control" onchange="updateJenis(${rowCount})">
+                    <select name="kategori_id[]" id="kategori_id_${rowCount}" class="form-control" onchange="updateJenis(${rowCount})">
                         <option value="">-- kategorikk sampah --</option>
                         <?php
                         if ($kategori_result->num_rows > 0) {
@@ -200,7 +202,7 @@ if ($jenis_result->num_rows > 0) {
                     </select>
                 </td>
                 <td>
-                    <select name="id_jenis[]" id="id_jenis_${rowCount}" class="form-control" onchange="updateHarga(${rowCount})">
+                    <select name="jenis_id[]" id="jenis_id_${rowCount}" class="form-control" onchange="updateHarga(${rowCount})">
                         <option value="">-- jenis sampah --</option>
                     </select>
                 </td>
@@ -339,7 +341,7 @@ if ($jenis_result->num_rows > 0) {
                                     <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                                     <td>1</td>
                                     <td>
-                                        <select name="id_kategori[]" id="id_kategori_1" class="form-control"
+                                        <select name="kategori_id[]" id="kategori_id_1" class="form-control"
                                             onchange="updateJenis(1)">
                                             <option value="">-- kategoriaaa sampah --</option> -->
 
@@ -355,7 +357,7 @@ if ($jenis_result->num_rows > 0) {
                                 <!-- </select>
                                     </td>
                                     <td>
-                                        <select name="id_jenis[]" id="id_jenis_1" class="form-control"
+                                        <select name="jenis_id[]" id="jenis_id_1" class="form-control"
                                             onchange="updateHarga(1)">
                                             <option value="">-- jenis sampah --</option>
                                         </select>

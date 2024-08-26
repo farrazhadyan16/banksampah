@@ -3,15 +3,28 @@ include 'header.php';
 require 'fungsi.php';
 //cek apakah tombol sudah ditekan
 
-// Get the user ID from the URL
 $id = $_GET['id'];
 
-/// Fetch user data based on ID
-$user = getUserById($id);
+$user = query("SELECT * FROM user WHERE id=$id")[0];
 
 if (isset($_POST["submit"])) {
-    // Handle the form submission
-    handleAdminUpdate($_POST);
+
+    //cek apakah data berhasil ditambahkan
+    if (updatedatanasabah($_POST) > 0) {
+        echo "
+				<script>  
+					alert('Data Berhasil Ditambahkan');
+					document.location.href ='nasabah.php';
+				</script>
+				";
+    } else {
+        echo "
+				<script>  
+					alert('Data Gagal Ditambahkan');
+					document.location.href ='nasabah.php';
+				</script>
+				";
+    }
 }
 ?>
 

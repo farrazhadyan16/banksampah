@@ -5,95 +5,43 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
-// Retrieve the last inserted transaction ID
-$query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
-$result = $conn->query($query);
-
+// Jika tombol Submit ditekan untuk tarik saldo
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
-    $id_user = $_POST['id_user'];
+    $user_id = $_POST['user_id'];
 
-    if ($result && $result->num_rows > 0) {
-        $last_id = $result->fetch_assoc()['no'];
-    } else {
-        $last_id = 0; // No previous record found
-    }
+    // Check if withdrawing money
+    if (isset($_POST['withdraw_type']) && $_POST['withdraw_type'] === 'money') {
+        $jumlah_uang = $_POST['jumlah_uang'];
 
-    $new_id = $last_id + 1;
-    $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT); // Generate unique transaction ID
-
-    $jenis_transaksi = 'tarik_saldo'; // Set jenis_transaksi
-    $date = date('Y-m-d H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
-
-    if ($conn->query($transaksi_query) === TRUE) {
-        // The transaction ID is correctly inserted into the transaksi table
-        $id_transaksi = $id; // Use the same ID for the tarik_saldo table
-        
-        // Validasi jenis penarikan
-        if (isset($_POST['withdraw_type']) && ($_POST['withdraw_type'] === 'money' || $_POST['withdraw_type'] === 'gold')) {
-            $withdraw_type = $_POST['withdraw_type'];
-
-            // Tentukan jumlah berdasarkan jenis penarikan
-            $jumlah_tarik = ($withdraw_type === 'money') ? $_POST['jumlah_uang'] : $_POST['jumlah_emas'];
-
-            // Validasi input
-            if (empty($jumlah_tarik) || !is_numeric($jumlah_tarik)) {
-                $message = "Jumlah yang ditarik harus diisi dan berupa angka.";
+        // Validasi input
+        if (empty($jumlah_uang) || !is_numeric($jumlah_uang)) {
+            $message = "Jumlah uang harus diisi dan berupa angka.";
+        } else {
+            if (withdrawMoney($user_id, $jumlah_uang) === TRUE) {
+                $message = "Penarikan uang berhasil! Saldo uang Anda telah diperbarui.";
             } else {
-                try {
-                    // Mulai transaksi
-                    $conn->begin_transaction();
-
-                    // Insert data ke tabel tarik_saldo
-                    $jenis_saldo = ($withdraw_type === 'money') ? 'tarik_uang' : 'tarik_emas';
-                    $stmt = $conn->prepare("INSERT INTO tarik_saldo (no, id_transaksi, jenis_saldo, jumlah_tarik) VALUES (NULL, ?, ?, ?)");
-                    if (!$stmt) {
-                        throw new Exception("Preparation failed: " . $conn->error);
-                    }
-                    $stmt->bind_param("ssi", $id_transaksi, $jenis_saldo, $jumlah_tarik);
-                    if (!$stmt->execute()) {
-                        throw new Exception("Execution failed: " . $stmt->error);
-                    }
-
-                    // Update saldo di tabel dompet berdasarkan jenis penarikan
-                    if ($withdraw_type === 'money') {
-                        $update_saldo_query = "UPDATE dompet SET uang = uang - ? WHERE id_user = ?";
-                    } else {
-                        $update_saldo_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
-                    }
-
-                    $stmt_update = $conn->prepare($update_saldo_query);
-                    if (!$stmt_update) {
-                        throw new Exception("Preparation for saldo update failed: " . $conn->error);
-                    }
-                    $stmt_update->bind_param("di", $jumlah_tarik, $id_user);
-                    if (!$stmt_update->execute()) {
-                        throw new Exception("Execution for saldo update failed: " . $stmt_update->error);
-                    }
-
-
-                    // Commit transaksi
-                    $conn->commit();
-
-                    // Tampilkan pesan sukses
-                    $message = "Penarikan " . ($withdraw_type === 'money' ? "uang" : "emas") . " berhasil! Saldo Anda telah diperbarui.";
-
-                    // Close the statements
-                    $stmt->close();
-                    $stmt_update->close();
-                } catch (Exception $e) {
-                    // Rollback jika terjadi kesalahan
-                    $conn->rollback();
-                    $message = "Terjadi kesalahan saat melakukan penarikan: " . $e->getMessage();
-                }
+                $message = "Terjadi kesalahan saat melakukan penarikan: " . $conn->error;
             }
         }
-    } else {
-        $message = "Gagal melakukan penarikan: " . $conn->error;
+    } 
+    
+    // Check if withdrawing gold
+    else if (isset($_POST['withdraw_type']) && $_POST['withdraw_type'] === 'gold') {
+        $jumlah_emas = $_POST['jumlah_emas'];
+
+        // Validasi input
+        if (empty($jumlah_emas) || !is_numeric($jumlah_emas)) {
+            $message = "Jumlah emas harus diisi dan berupa angka.";
+        } else {
+            if (withdrawGold($user_id, $jumlah_emas) === TRUE) {
+                $message = "Penarikan emas berhasil! Saldo emas Anda telah diperbarui.";
+            } else {
+                $message = "Terjadi kesalahan saat melakukan penarikan: " . $conn->error;
+            }
+        }
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -170,31 +118,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                                         <div class="input-group-prepend">
                                             <span class="input-group-text"><i class="fas fa-coins"></i></span>
                                         </div>
-                                        <!-- <label for="jumlah_emas">Jumlah Emas (gram)</label> -->
-                                        <select name="jumlah_emas" id="jumlah_emas" class="form-control">
-                                            <option value=''>Pilih</option>
-                                            <option value="0.5">0.5 gram</option>
-                                            <option value="1">1 gram</option>
-                                            <option value="2">2 gram</option>
-                                            <option value="5">5 gram</option>
-                                            <option value="10">10 gram</option>
-                                            <option value="25">25 gram</option>
-                                            <option value="50">50 gram</option>
-                                            <option value="100">100 gram</option>
-                                            <option value="250">250 gram</option>
-                                            <option value="500">500 gram</option>
-                                            <option value="1000">1000 gram</option>
-                                        </select>
-                                        <small class="form-text text-muted">Pilih jumlah emas yang ingin ditarik</small>
+                                        <input type="text" name="jumlah_emas" class="form-control"
+                                            placeholder="Jumlah Emas (gram)">
                                     </div>
                                     <small class="form-text text-muted">Jumlah emas yang ingin ditarik</small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Include the hidden input for id_user -->
+                        <!-- Include the hidden input for user_id -->
                         <?php if (isset($user_data)) { ?>
-                        <input type="hidden" name="id_user" value="<?php echo $user_data['id']; ?>">
+                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
                         <?php } ?>
 
                         <!-- Submit Button -->

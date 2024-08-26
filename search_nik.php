@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 </div>
 <?php } ?>
 <?php if (isset($user_data)) { ?>
-<input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
+<input type="hidden" name="id_user" value="<?php echo $user_data['id']; ?>">
 <?php } ?>
 <div class="row mb-4">
     <div class="col-md-4">
@@ -109,8 +109,8 @@ document.getElementById('searchForm').addEventListener('submit', function(event)
                             <p><strong>Saldo Emas</strong>: ${parseFloat(userData.emas).toFixed(4)} g</p>
                         </div>
                     </div>`;
-                document.querySelector('input[name="user_id"]').value = userData
-                    .id; // Set hidden user_id input
+                document.querySelector('input[name="id_user"]').value = userData
+                    .id; // Set hidden id_user input
             }
         })
         .catch(error => console.error('Error:', error));

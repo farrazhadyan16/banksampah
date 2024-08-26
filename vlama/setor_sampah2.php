@@ -24,83 +24,85 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     }
 }
 
+// Jika tombol SUBMIT ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $id_user = $_POST['user_id'] ?? '';
-    $jenis_transaksi = $_POST['jenis_transaksi'] ?? 'setor_sampah';
+    $jenis_transaksi = $_POST['jenis_transaksi'] ?? 'setor_sampah'; // set default value
     $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
+    $id_transaksi = $_POST['id_transaksi'] ?? '';
+    $id_sampah = $_POST['id_jenis'] ?? [];
+    $jumlah_kg = $_POST['jumlah'] ?? [];
+    $jumlah_rp = $_POST['harga'] ?? [];
+
     $id_kategoris = $_POST['id_kategori'] ?? [];
     $id_jeniss = $_POST['id_jenis'] ?? [];
     $jumlahs = $_POST['jumlah'] ?? [];
     $hargas = $_POST['harga'] ?? [];
 
-    // Generate new ID for transaksi
+    // Mendapatkan nomor urut terakhir hanya sekali
     $id_trans_query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
     $result = $conn->query($id_trans_query);
     $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['no'] : 0;
     $new_id = $last_id + 1;
 
-    // Create new transaksi ID
+    // Membuat id_trans baru dengan format tertentu
     $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
 
-    // Calculate total amount
+    // Total uang yang harus ditambahkan ke saldo
     $total_uang = 0;
 
-    // Insert into transaksi table
-        $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) 
-        VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
-        if ($conn->query($transaksi_query) === TRUE) {
-        // Use the custom $id, not $conn->insert_id, as the id_transaksi
-        $id_transaksi = $id;
-
-        // Loop to insert each row into the setor_sampah table
-        for ($i = 0; $i < count($id_kategoris); $i++) {
+    // Loop untuk memasukkan setiap baris data
+    for ($i = 0; $i < count($id_kategoris); $i++) {
         $id_kategori = $id_kategoris[$i];
         $id_jenis = $id_jeniss[$i];
         $jumlah = $jumlahs[$i];
+
+        // Menghapus awalan "Rp." dan karakter lainnya dari harga
         $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
-        $total_uang += $harga;
 
-        // Insert into setor_sampah table
-        $setor_sampah_query = "INSERT INTO setor_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp) 
-                VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah', '$harga')";
-        if ($conn->query($setor_sampah_query) === FALSE) {
-        $message = "Error: " . $conn->error;
+        // Menyiapkan query SQL untuk memasukkan data
+        $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) 
+                            VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
+
+        // Menjalankan query langsung tanpa bind_param
+        if ($conn->query($transaksi_query) === TRUE) {
+            $total_uang += $harga; // Menambahkan harga ke total uang
+        } else {
+            $message = "Error: " . $conn->error;
         }
-        }
-
-        // Update or insert into dompet table
-        $dompet_query = "SELECT * FROM dompet WHERE id_user = ?";
-        if ($stmt = $conn->prepare($dompet_query)) {
-            $stmt->bind_param("i", $id_user);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
-                if ($update_stmt = $conn->prepare($dompet_update_query)) {
-                    $update_stmt->bind_param("di", $total_uang, $id_user);
-                    $update_stmt->execute();
-                    $update_stmt->close();
-                }
-            } else {
-                $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
-                if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
-                    $insert_stmt->bind_param("id", $id_user, $total_uang);
-                    $insert_stmt->execute();
-                    $insert_stmt->close();
-                }
-            }
-
-            $stmt->close();
-        }
-
-        // Uncomment this line when ready to redirect
-        header("Location: nota.php?id_transaksi=$id_transaksi");
-    } else {
-        $message = "Error: " . $conn->error;
     }
-}
 
+    // Memeriksa apakah pengguna sudah memiliki entri di tabel dompet
+    $dompet_query = "SELECT * FROM dompet WHERE id_user = ?";
+    if ($stmt = $conn->prepare($dompet_query)) {
+        $stmt->bind_param("i", $id_user);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            // Update saldo jika entri sudah ada
+            $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
+            if ($update_stmt = $conn->prepare($dompet_update_query)) {
+                $update_stmt->bind_param("di", $total_uang, $id_user);
+                $update_stmt->execute();
+                $update_stmt->close();
+            }
+        } else {
+            // Insert saldo baru jika belum ada entri
+            $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
+            if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
+                $insert_stmt->bind_param("id", $id_user, $total_uang);
+                $insert_stmt->execute();
+                $insert_stmt->close();
+            }
+        }
+
+        $stmt->close();
+    }
+
+    // Redirect to nota.php
+    header("Location: nota.php?id_trans=$id");
+}
 
 // Fetch data kategori
 $kategori_query = "SELECT id, name FROM kategori_sampah";

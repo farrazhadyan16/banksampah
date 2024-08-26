@@ -2,15 +2,29 @@
 include 'header.php';
 include 'fungsi.php';
 
-// Cek apakah form pencarian telah disubmit
-if (isset($_GET['search_nik'])) {
-    $search_nik = $_GET['search_nik'];
-    // Query untuk mencari nasabah berdasarkan NIK
-    $query_all = query("SELECT * FROM user WHERE role = 'nasabah' AND nik LIKE '%$search_nik%' ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
-} else {
-    // Query default untuk menampilkan semua nasabah
-    $query_all = query("SELECT * FROM user WHERE role = 'nasabah' ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
+// Logika untuk menghapus nasabah jika ada parameter `id` pada URL
+if (isset($_GET['id'])) {
+    $id = $_GET['id'];
+    if (hapususerById($id) > 0) {
+        echo "
+            <script>
+                alert('Data Berhasil Dihapus');
+                document.location.href='nasabah.php';
+            </script>
+        ";
+    } else {
+        echo "
+            <script>
+                alert('Data Gagal Dihapus');
+                document.location.href='nasabah.php';
+            </script>
+        ";
+    }
 }
+
+// Cek apakah form pencarian telah disubmit
+$search_nik = $_GET['search_nik'] ?? null;
+$query_all = getNasabah($search_nik);
 ?>
 
 <!DOCTYPE html>
@@ -50,14 +64,26 @@ if (isset($_GET['search_nik'])) {
                 <div class="tabular--wrapper">
                     <div class="search--wrapper">
                         <form method="GET" action="">
-                            <input type="text" name="search_nik" placeholder="Cari NIK nasabah..." value="<?= isset($search_nik) ? $search_nik : '' ?>">
+                            <input type="text" name="search_nik" placeholder="Cari NIK nasabah..."
+                                value="<?= $search_nik ?>" pattern="\d{16}" maxlength="16"
+                                title="NIK harus terdiri dari 16 digit angka" required>
                             <button type="submit" class="inputbtn">Cari</button>
                         </form>
                     </div>
+                    <script>
+                    document.querySelector('form').addEventListener('submit', function(e) {
+                        var nikInput = document.querySelector('input[name="search_nik"]').value;
+                        if (nikInput.length !== 16 || !/^\d+$/.test(nikInput)) {
+                            alert('NIK harus terdiri dari 16 digit angka');
+                            e.preventDefault();
+                        }
+                    });
+                    </script>
                     <div class="row align-items-start">
                         <div class="user--info">
                             <h3 class="main--title">Data Project</h3>
-                            <a href="register.php"><button type="button" name="button" class="inputbtn .border-right">Tambah</button></a>
+                            <a href="register.php"><button type="button" name="button"
+                                    class="inputbtn .border-right">Tambah</button></a>
                         </div>
                     </div>
 
@@ -70,53 +96,57 @@ if (isset($_GET['search_nik'])) {
 
                     <div class="table-container">
                         <?php if (empty($query_all)) : ?>
-                            <div class="alert alert-warning">
-                                <strong>Nasabah tidak ditemukan!</strong> Silakan coba NIK yang lain.
-                            </div>
+                        <div class="alert alert-warning">
+                            <strong>Nasabah tidak ditemukan!</strong> Silakan coba NIK yang lain.
+                        </div>
                         <?php else : ?>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Username</th>
-                                        <th>Nama</th>
-                                        <th>Email</th>
-                                        <th>No Telp</th>
-                                        <th>NIK</th>
-                                        <th>Alamat</th>
-                                        <th>Tanggal Lahir</th>
-                                        <th>Jenis Kelamin</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php $i = 1; ?>
-                                    <?php foreach ($query_all as $row): ?>
-                                        <tr>
-                                            <td><?= $row["id"]; ?></td>
-                                            <td><?= $row["username"]; ?></td>
-                                            <td><?= $row["nama"]; ?></td>
-                                            <td><?= $row["email"]; ?></td>
-                                            <td><?= $row["notelp"]; ?></td>
-                                            <td><?= $row["nik"]; ?></td>
-                                            <td><?= $row["alamat"]; ?></td>
-                                            <td><?= $row["tgl_lahir"]; ?></td>
-                                            <td><?= $row["kelamin"]; ?></td>
-                                            <td>
-                                                <li class="liaksi">
-                                                    <button type="submit" name="submit"><a href="edit_nasabah.php?id=<?= $row["id"]; ?>" class="inputbtn6">Ubah</a></button>
-                                                </li>
-                                                <li class="liaksi">
-                                                    <button type="submit" name="submit"><a href="hapus_nasabah.php?id=<?= $row["id"]; ?>" class="inputbtn7">Hapus</a></button>
-                                                </li>
-                                            </td>
-                                        </tr>
-                                        <?php $i++; ?>
-                                    <?php endforeach; ?>
-                                </tbody>
-                                <tfoot>
-                                </tfoot>
-                            </table>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Username</th>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>No Telp</th>
+                                    <th>NIK</th>
+                                    <th>Alamat</th>
+                                    <th>Tanggal Lahir</th>
+                                    <th>Jenis Kelamin</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php $i = 1; ?>
+                                <?php foreach ($query_all as $row): ?>
+                                <tr>
+                                    <td><?= $row["id"]; ?></td>
+                                    <td><?= $row["username"]; ?></td>
+                                    <td><?= $row["nama"]; ?></td>
+                                    <td><?= $row["email"]; ?></td>
+                                    <td><?= $row["notelp"]; ?></td>
+                                    <td><?= $row["nik"]; ?></td>
+                                    <td><?= $row["alamat"]; ?></td>
+                                    <td><?= $row["tgl_lahir"]; ?></td>
+                                    <td><?= $row["kelamin"]; ?></td>
+                                    <td>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit"><a
+                                                    href="edit_nasabah.php?id=<?= $row["id"]; ?>"
+                                                    class="inputbtn6">Ubah</a></button>
+                                        </li>
+                                        <li class="liaksi">
+                                            <button type="submit" name="submit"><a
+                                                    href="nasabah.php?id=<?= $row["id"]; ?>" class="inputbtn7"
+                                                    onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a></button>
+                                        </li>
+                                    </td>
+                                </tr>
+                                <?php $i++; ?>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                            </tfoot>
+                        </table>
                         <?php endif; ?>
                     </div>
                 </div>
