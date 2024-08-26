@@ -55,7 +55,7 @@ $query_all = getAdmin($search_nik);
 
                 <div class="header--wrapper">
                     <div class="header--title">
-                        <span>Halaman</span>
+                        <span>Halama</span>
                         <h2>admin</h2>
                     </div>
                 </div>
