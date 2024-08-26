@@ -21,9 +21,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     $new_id = $last_id + 1;
     $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT); // Generate unique transaction ID
 
+    // Set the default timezone to Asia/Jakarta
+    date_default_timezone_set('Asia/Jakarta');
+
     $jenis_transaksi = 'tarik_saldo'; // Set jenis_transaksi
-    $date = date('Y-m-d H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
+    $date = date('Y-m-d'); // Get the current date and time
+    $time = date('H:i:s'); // Get the current date and time
+    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date', '$time')";
 
     if ($conn->query($transaksi_query) === TRUE) {
         // The transaction ID is correctly inserted into the transaksi table

@@ -26,11 +26,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
 
     $new_id = $last_id + 1;
     $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT); // Generate unique transaction ID
-
+    
+    // Set the default timezone to Asia/Jakarta
+    date_default_timezone_set('Asia/Jakarta');
     // Insert data into the transaksi table
     $jenis_transaksi = 'pindah_saldo'; // Set jenis_transaksi
-    $date = date('Y-m-d H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
+    $date = date('Y-m-d'); // Get the current date and time
+    $time = date('H:i:s'); // Get the current date and time
+    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date', '$time')";
 
     if ($conn->query($transaksi_query) === TRUE) {
         $id_transaksi = $id; // Tetapkan $id_transaksi setelah insert berhasil
@@ -48,12 +51,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                 // Lakukan konversi uang ke emas
                 if (convertMoneyToGold($id_user, $jumlah_uang, $current_gold_price_buy) === TRUE) {
                     // Masukkan data ke tabel pindah_saldo
-                    $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jumlah, harga_beli_emas, hasil_konversi) VALUES (NULL, '$id_transaksi', '$hasil_konversi', '$current_gold_price_buy', '$hasil_konversi')";
+                    
+                    $jenis_konversi = 'konversi_uang';
+                    $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jenis_konversi, jumlah, harga_beli_emas, hasil_konversi) VALUES (NULL, '$id_transaksi','$jenis_konversi', '$jumlah_uang', '$current_gold_price_buy', '$hasil_konversi')";
                     if ($conn->query($insert_query) === TRUE) {
                         $message = "Konversi uang ke emas berhasil! Saldo emas Anda telah diperbarui.";
                     } else {
                         $message = "Terjadi kesalahan saat melakukan insert ke pindah_saldo: " . $conn->error;
                     }
+                    
                 } else {
                     $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
                 }
@@ -70,12 +76,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                 // Lakukan konversi emas ke uang
                 if (convertGoldToMoney($id_user, $jumlah_emas, $current_gold_price_sell) === TRUE) {
                     // Masukkan data ke tabel pindah_saldo
-                    $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jumlah, harga_jual_emas, hasil_konversi) VALUES (NULL, '$id_transaksi', '$jumlah_emas', '$current_gold_price_sell', '$hasil_konversi')";
+                    
+                    $jenis_konversi = 'konversi_emas';
+                    $insert_query = "INSERT INTO pindah_saldo (no, id_transaksi, jenis_konversi, jumlah, harga_jual_emas, hasil_konversi) VALUES (NULL, '$id_transaksi','$jenis_konversi', '$jumlah_emas', '$current_gold_price_sell', '$hasil_konversi')";
                     if ($conn->query($insert_query) === TRUE) {
                         $message = "Konversi emas ke uang berhasil! Saldo uang Anda telah diperbarui.";
                     } else {
                         $message = "Terjadi kesalahan saat melakukan insert ke pindah_saldo: " . $conn->error;
                     }
+                    // var_dump($insert_query);
+                    // die;
                 } else {
                     $message = "Terjadi kesalahan saat melakukan konversi: " . $conn->error;
                 }

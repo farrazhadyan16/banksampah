@@ -42,12 +42,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     // Create new transaksi ID
     $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
 
+    // Set the default timezone to Asia/Jakarta
+    date_default_timezone_set('Asia/Jakarta');
+    
     // Calculate total amount
     $total_uang = 0;
 
     // Insert into transaksi table
-        $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date) 
-        VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date')";
+    $date = date('Y-m-d'); // Get the current date and time
+    $time = date('H:i:s'); // Get the current date and time
+    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date', '$time')";
+
         if ($conn->query($transaksi_query) === TRUE) {
         // Use the custom $id, not $conn->insert_id, as the id_transaksi
         $id_transaksi = $id;
