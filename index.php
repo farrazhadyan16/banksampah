@@ -1,14 +1,14 @@
 <?php
 require_once 'header.php'; // Sertakan file header.php yang berisi session start dan koneksi database
-require_once 'fungsi.php'; // Include the functions
+require_once 'fungsi.php'; // Sertakan file fungsi untuk fungsi-fungsi yang diperlukan
 
-// Check if the user is logged in
+// Cek apakah pengguna sudah login
 checkSession();
 
-// Get the username from the session
+// Mendapatkan username dari session
 $username = $_SESSION['username'];
 
-// Fetch user data from the database
+// Ambil data pengguna dari database
 $data = getUserData($koneksi, $username);
 $id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
 
@@ -57,6 +57,73 @@ if ($result === false) {
     echo "Error: " . $koneksi->error;
     exit;
 }
+
+// Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
+$sqlTransaksi = "
+SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, 
+       ts.jenis_saldo, ts.jumlah_tarik, 
+       ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp,
+       ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
+       u.id AS id_user, u.username
+FROM transaksi t
+LEFT JOIN tarik_saldo ts ON t.id = ts.id_transaksi
+LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
+LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
+LEFT JOIN user u ON t.id_user = u.id
+WHERE u.id = ?
+ORDER BY t.date DESC";
+
+
+// Prepare statement untuk menghindari SQL Injection
+$stmtTransaksi = $koneksi->prepare($sqlTransaksi);
+if (!$stmtTransaksi) {
+    die("Prepare statement failed: " . $koneksi->error);
+}
+
+// Bind parameter untuk id_user
+$stmtTransaksi->bind_param("i", $id_user);
+$stmtTransaksi->execute();
+$resultTransaksi = $stmtTransaksi->get_result();
+
+// Query to get the sum of waste deposits (in kg and Rp) per month for the logged-in user
+$sqlMonthlySetorSampah = "
+    SELECT 
+        DATE_FORMAT(t.date, '%Y-%m') AS month,
+        SUM(ss.jumlah_kg) AS total_kg,
+        SUM(ss.jumlah_rp) AS total_rp
+    FROM 
+        transaksi t
+    JOIN 
+        setor_sampah ss ON t.id = ss.id_transaksi
+    WHERE 
+        t.jenis_transaksi = 'setor_sampah' AND t.id_user = ?
+    GROUP BY 
+        month
+    ORDER BY 
+        month ASC";
+
+// Prepare and execute the query
+$stmt = $koneksi->prepare($sqlMonthlySetorSampah);
+$stmt->bind_param("i", $id_user); // Bind the user ID to the query
+$stmt->execute();
+$resultMonthlySetorSampah = $stmt->get_result();
+
+// Initialize arrays to hold the data
+$months = [];
+$totalKg = [];
+$totalRp = [];
+
+// Fetch the data and populate the arrays
+if ($resultMonthlySetorSampah->num_rows > 0) {
+    while ($row = $resultMonthlySetorSampah->fetch_assoc()) {
+        $months[] = $row['month'];
+        $totalKg[] = $row['total_kg'];
+        $totalRp[] = $row['total_rp'];
+    }
+}
+
+// Close the statement
+$stmt->close();
 ?>
 
 <!DOCTYPE html>
@@ -96,55 +163,6 @@ if ($result === false) {
             padding: 20px;
             background-color: #fff;
         }
-
-        .transaction-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .transaction-item {
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .transaction-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 14px;
-            color: #888;
-        }
-
-        .transaction-type {
-            font-weight: bold;
-            color: #333;
-        }
-
-        .transaction-date {
-            color: #888;
-        }
-
-        .transaction-body {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .transaction-detail {
-            color: #333;
-            font-size: 16px;
-        }
-
-        .transaction-amount {
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
     </style>
 </head>
 
@@ -165,7 +183,7 @@ if ($result === false) {
                 </div>
             </div>
 
-            <div class="dashboard-cards">
+            <!-- <div class="dashboard-cards">
                 <div class="card">
                     <span>Kertas</span>
                     <span>0.0 Kg</span>
@@ -182,15 +200,12 @@ if ($result === false) {
                     <span>Lain-Lain</span>
                     <span>0.0 Kg</span>
                 </div>
-            </div>
+            </div> -->
 
             <div class="dashboard-content">
                 <div class="grafik-penyetoran">
-                    <h3>Grafik Penyetoran</h3>
-                    <input type="text" id="startDate" placeholder="Pilih tanggal mulai">
-                    <input type="text" id="endDate" placeholder="Pilih tanggal akhir">
-                    <button id="filterButton">Filter</button>
-                    <canvas id="myChart"></canvas>
+                    <h3>Grafik Setor Sampah Bulanan</h3>
+                    <canvas id="setorSampahChart"></canvas>
                 </div>
 
                 <div class="history">
@@ -205,7 +220,6 @@ if ($result === false) {
                                 echo "<span class='transaction-date'>" . date('d M Y', strtotime($row['date'])) . "</span>";
                                 echo "</div>";
 
-                                // Cek jenis transaksi dan tampilkan detailnya
                                 if ($row['jenis_transaksi'] == 'tarik_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jenis Saldo: " . ucfirst($row['jenis_saldo']) . "</span>";
@@ -219,7 +233,8 @@ if ($result === false) {
                                 } elseif ($row['jenis_transaksi'] == 'pindah_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jumlah: Rp. " . number_format($row['jumlah'], 2, ',', '.') . "</span>";
-                                    echo "<span class='transaction-amount'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " g Emas</span>";
+
+                                    echo "<span class='transaction-amount'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " | " . $row['jenis_konversi'] . "</span>";
                                     echo "</div>";
                                 }
 
@@ -294,7 +309,37 @@ if ($result === false) {
             </div>
         </div>
     </div>
-
+    <script>
+        var ctx = document.getElementById('setorSampahChart').getContext('2d');
+        var setorSampahChart = new Chart(ctx, {
+            type: 'bar', // or 'line', 'pie', etc.
+            data: {
+                labels: <?php echo json_encode($months); ?>,
+                datasets: [{
+                        label: 'Total Kg',
+                        data: <?php echo json_encode($totalKg); ?>,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Total Rp',
+                        data: <?php echo json_encode($totalRp); ?>,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
 </body>
 
 </html>
