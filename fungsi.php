@@ -13,23 +13,44 @@ function query($query)
 }
 
 //detail_user.php
-function checkSession() {
+function checkSession()
+{
     if (!isset($_SESSION['username'])) {
         header("Location: login.php");
         exit();
     }
 }
 
-function getUserData($koneksi, $username) {
-    $query = "SELECT username, nama, role FROM user WHERE username = '$username'";
-    $result = mysqli_query($koneksi, $query);
+function getUserData($koneksi, $username)
+{
+    // Query untuk mengambil data user termasuk saldo dari tabel dompet
+    $query = "SELECT u.id, u.username, u.nama, u.nik, u.created_at AS tanggal_bergabung, u.role, 
+                     d.uang, d.emas 
+              FROM user u
+              LEFT JOIN dompet d ON u.id = d.id_user
+              WHERE u.username = ?";
+
+    // Menggunakan prepared statement untuk keamanan
+    $stmt = $koneksi->prepare($query);
+    if (!$stmt) {
+        die("Prepare statement failed: " . $koneksi->error);
+    }
+
+    // Bind parameter
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+
+    // Mendapatkan hasil
+    $result = $stmt->get_result();
 
     if ($result) {
-        return mysqli_fetch_assoc($result);
+        // Mengembalikan hasil sebagai array asosiatif
+        return $result->fetch_assoc();
     } else {
-        die("Error fetching data: " . mysqli_error($koneksi));
+        die("Error fetching data: " . $koneksi->error);
     }
 }
+
 
 //hapus user
 function hapusUser($id)
@@ -58,17 +79,20 @@ function updateDataUser($data)
     return mysqli_affected_rows($conn);
 }
 
-function getUserById($id) {
+function getUserById($id)
+{
     $query = "SELECT * FROM user WHERE id=$id";
     return query($query)[0];
 }
 
-function hapususerById($id) {
+function hapususerById($id)
+{
     return hapususer($id);
 }
 
 //admin.php
-function getAdmin($search_nik = null) {
+function getAdmin($search_nik = null)
+{
     if ($search_nik) {
         return query("SELECT * FROM user WHERE role in ('admin','superadmin') AND nik LIKE '%$search_nik%' ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
     } else {
@@ -77,7 +101,8 @@ function getAdmin($search_nik = null) {
 }
 
 //nasabah.php (cari nik dan hapus nasabah)
-function getNasabah($search_nik = null) {
+function getNasabah($search_nik = null)
+{
     if ($search_nik) {
         return query("SELECT * FROM user WHERE role = 'nasabah' AND nik LIKE '%$search_nik%' ORDER BY LENGTH(id), CAST(id AS UNSIGNED)");
     } else {
@@ -88,7 +113,8 @@ function getNasabah($search_nik = null) {
 //edit_nasabah.php
 // Function to get user data by ID
 // Function to handle the form submission
-function handleNasabahUpdate($postData) {
+function handleNasabahUpdate($postData)
+{
     if (updateDataUser($postData) > 0) {
         echo "
             <script>  
@@ -107,7 +133,8 @@ function handleNasabahUpdate($postData) {
 }
 
 //edit_admin.php
-function handleAdminUpdate($postData) {
+function handleAdminUpdate($postData)
+{
     if (updateDataUser($postData) > 0) {
         echo "
             <script>  
@@ -197,11 +224,13 @@ function addWaste($jenis, $harga_pengepul, $harga_nasabah, $id_kategori)
     mysqli_query($conn, $query);
     return mysqli_affected_rows($conn);
 }
-function getCategories() {
+function getCategories()
+{
     return query("SELECT * FROM kategori_sampah ORDER BY name ASC");
 }
 
-function handleAddWaste($postData) {
+function handleAddWaste($postData)
+{
     $jenis = $postData['jenis'];
     $harga_pengepul = $postData['harga_pengepul'];
     $harga_nasabah = $postData['harga_nasabah'];
@@ -220,7 +249,8 @@ function handleAddWaste($postData) {
 }
 
 //sampah.php
-function getSampahData() {
+function getSampahData()
+{
     return query("
         SELECT 
             sampah.id, 
@@ -237,7 +267,8 @@ function getSampahData() {
 
 //get api emas untuk konvert ke emas
 // Function to get the current gold price from the API
-function getCurrentGoldPricebuy() {
+function getCurrentGoldPricebuy()
+{
     $api_url = "https://logam-mulia-api.vercel.app/prices/sakumas";
     $response = file_get_contents($api_url);
     $gold_data = json_decode($response, true);
@@ -246,7 +277,8 @@ function getCurrentGoldPricebuy() {
 
 //get api emas untuk konvert ke rupiah
 // Function to get the current gold price from the API
-function getCurrentGoldPricesell() {
+function getCurrentGoldPricesell()
+{
     $api_url = "https://logam-mulia-api.vercel.app/prices/sakumas";
     $response = file_get_contents($api_url);
     $gold_data = json_decode($response, true);
@@ -254,7 +286,8 @@ function getCurrentGoldPricesell() {
 }
 //konversi duit ke emas
 // Function to convert money to gold and update the user's wallet
-function convertMoneyToGold($user_id, $jumlah_uang, $current_gold_price) {
+function convertMoneyToGold($user_id, $jumlah_uang, $current_gold_price)
+{
     global $conn;
     $jumlah_emas = $jumlah_uang / $current_gold_price;
 
@@ -266,7 +299,8 @@ function convertMoneyToGold($user_id, $jumlah_uang, $current_gold_price) {
 
 //konversi emas ke duit
 // Function to convert money to gold and update the user's wallet
-function convertGoldToMoney($user_id, $jumlah_emas, $current_gold_price) {
+function convertGoldToMoney($user_id, $jumlah_emas, $current_gold_price)
+{
     global $conn;
     $jumlah_uang = $jumlah_emas * $current_gold_price;
 
@@ -278,7 +312,8 @@ function convertGoldToMoney($user_id, $jumlah_emas, $current_gold_price) {
 
 // Fungsi untuk menarik uang
 // Fungsi untuk menarik uang
-function withdrawMoney($id_user, $jumlah_uang) {
+function withdrawMoney($id_user, $jumlah_uang)
+{
     global $conn;
 
     // Cek saldo pengguna dari tabel dompet
@@ -310,7 +345,8 @@ function withdrawMoney($id_user, $jumlah_uang) {
 }
 
 // Fungsi untuk menarik emas
-function withdrawGold($id_user, $jumlah_emas) {
+function withdrawGold($id_user, $jumlah_emas)
+{
     global $conn;
 
     // Cek saldo pengguna dari tabel dompet
@@ -341,7 +377,8 @@ function withdrawGold($id_user, $jumlah_emas) {
     return $update_stmt->execute();
 }
 
-function searchUserByNIK($nik) {
+function searchUserByNIK($nik)
+{
     global $conn;
 
     // Prepare the SQL statement
@@ -364,14 +401,16 @@ function searchUserByNIK($nik) {
     return $result->fetch_assoc();
 }
 
-function getSampahTypes() {
+function getSampahTypes()
+{
     global $conn;
     $query = "SELECT * FROM sampah";
     $result = $conn->query($query);
     return $result;
 }
 
-function insertSetorSampah($user_id, $sampah_data) {
+function insertSetorSampah($user_id, $sampah_data)
+{
     global $conn;
     $id_transaksi = uniqid();
     $total_kg = 0;
