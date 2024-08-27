@@ -5,29 +5,10 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
-// Jika tombol CHECK ditekan
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
-    $search_value = $_POST['search_value'];
-    if (empty($search_value)) {
-        $message = "NIK tidak boleh kosong.";
-    } else {
-        $user_query = "SELECT user.*, dompet.uang, dompet.emas FROM user 
-                    LEFT JOIN dompet ON user.id = dompet.id_user 
-                    WHERE user.nik LIKE '%$search_value%' AND user.role = 'Nasabah'";
-        $user_result = $conn->query($user_query);
-
-        if ($user_result->num_rows > 0) {
-            $user_data = $user_result->fetch_assoc();
-        } else {
-            $message = "User dengan role 'Nasabah' tidak ditemukan.";
-        }
-    }
-}
-
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
-    $id_user = $_POST['user_id'] ?? '';
-    $jenis_transaksi = $_POST['jenis_transaksi'] ?? 'setor_sampah';
-    $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
+    $jenis_transaksi = 'jual_sampah';
+    
+    // $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
     $id_kategoris = $_POST['id_kategori'] ?? [];
     $id_jeniss = $_POST['id_jenis'] ?? [];
     $jumlahs = $_POST['jumlah'] ?? [];
@@ -36,84 +17,59 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     // Generate new ID for transaksi
     $id_trans_query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
     $result = $conn->query($id_trans_query);
-    $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['no'] : 0;
-    $new_id = $last_id + 1;
+    $last_no = ($result->num_rows > 0) ? $result->fetch_assoc()['no'] : 0;
+    $new_no = $last_no + 1;
 
     // Create new transaksi ID
-    $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
+    $id_transaksi = 'TRANS' . date('Y') . str_pad($new_no, 6, '0', STR_PAD_LEFT);
 
     // Set the default timezone to Asia/Jakarta
     date_default_timezone_set('Asia/Jakarta');
-    
-    // Calculate total amount
-    $total_uang = 0;
+    $date = date('Y-m-d'); // Get the current date
+    $time = date('H:i:s'); // Get the current time
 
     // Insert into transaksi table
-    $date = date('Y-m-d'); // Get the current date and time
-    $time = date('H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date', '$time')";
+    $transaksi_query = mysqli_query($conn,"INSERT INTO transaksi (no, id, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$jenis_transaksi', '$date', '$time')");
 
-        if ($conn->query($transaksi_query) === TRUE) {
-        // Use the custom $id, not $conn->insert_id, as the id_transaksi
-        $id_transaksi = $id;
+    if (isset($transaksi_query)) {
+        # code..
+    // if ($conn->query($transaksi_query) === TRUE) {
+    
 
-        // Loop to insert each row into the setor_sampah table
+        // Loop to insert each row into the jual_sampah table
         for ($i = 0; $i < count($id_kategoris); $i++) {
-        $id_kategori = $id_kategoris[$i];
-        $id_jenis = $id_jeniss[$i];
-        $jumlah = $jumlahs[$i];
-        $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
-        $total_uang += $harga;
+            $id_kategori = $id_kategoris[$i];
+            $id_jenis = $id_jeniss[$i];
+            $jumlah_kg = $jumlahs[$i];
+            $harga_nasabah = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
+            $jumlah_rp = $jumlah_kg * $harga_nasabah;
 
-        // Insert into setor_sampah table
-        $setor_sampah_query = "INSERT INTO setor_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp) 
-                VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah', '$harga')";
-                    // var_dump($setor_sampah_query);
-                    // die;
-        if ($conn->query($setor_sampah_query) === FALSE) {
-        $message = "Error: " . $conn->error;
-        }
-
-         // Update the jumlah in the sampah table
-        $update_sampah_query = "UPDATE sampah SET jumlah = jumlah + $jumlah WHERE id = '$id_jenis'";
-        if ($conn->query($update_sampah_query) === FALSE) {
-            $message = "Error: " . $conn->error;
-    }
-        }
-
-        // Update or insert into dompet table
-        $dompet_query = "SELECT * FROM dompet WHERE id_user = ?";
-        if ($stmt = $conn->prepare($dompet_query)) {
-            $stmt->bind_param("i", $id_user);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
-                if ($update_stmt = $conn->prepare($dompet_update_query)) {
-                    $update_stmt->bind_param("di", $total_uang, $id_user);
-                    $update_stmt->execute();
-                    $update_stmt->close();
-                }
-            } else {
-                $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
-                if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
-                    $insert_stmt->bind_param("id", $id_user, $total_uang);
-                    $insert_stmt->execute();
-                    $insert_stmt->close();
-                }
+            // Insert into jual_sampah table
+            $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp, harga_nasabah) 
+                                   VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$jumlah_rp', '$harga_nasabah')";
+                // var_dump($jual_sampah_query);
+                // die;
+            if ($conn->query($jual_sampah_query) === FALSE) {
+                $message = "Error: " . $conn->error;
+                break;
             }
-
-            $stmt->close();
+            // Update the jumlah in the sampah table
+            $update_sampah_query = "UPDATE sampah SET jumlah = jumlah - $jumlah_kg WHERE id = '$id_sampah'";
+            if ($conn->query($update_sampah_query) === FALSE) {
+                $message = "Error updating sampah: " . $conn->error;
+                break;
         }
+    }
 
+    if (empty($message)) {
+        $message = "Transaction successful!";
         // Uncomment this line when ready to redirect
-        header("Location: nota.php?id_transaksi=$id_transaksi");
+        // header("Location: nota.php?id_transaksi=$id_transaksi");
+    }
     } else {
-        $message = "Error: " . $conn->error;
+        $message = "Error inserting into transaksi: " . $conn->error;
     }
 }
-
 
 // Fetch data kategori
 $kategori_query = "SELECT id, name FROM kategori_sampah";
@@ -231,18 +187,6 @@ if ($jenis_result->num_rows > 0) {
         row.parentNode.removeChild(row);
         updateTotalHarga();
     }
-
-    function validateSearchForm() {
-        var searchValue = document.getElementById('search_value').value;
-        if (searchValue.trim() === '') {
-            alert('NIK tidak boleh kosong.');
-            return false; // Mencegah form dikirim
-        } else if (searchValue.length !== 16 || isNaN(searchValue)) {
-            alert('NIK harus berisi 16 digit angka.');
-            return false; // Mencegah form dikirim
-        }
-        return true; // Memungkinkan form dikirim
-    }
     </script>
 </head>
 
@@ -274,55 +218,14 @@ if ($jenis_result->num_rows > 0) {
 
                 <!-- Start of Form Section -->
                 <div class="tabular--wrapper">
-                    <!-- Search Section -->
-                    <form method="POST" action="" onsubmit="return validateSearchForm()">
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <input type="text" name="search_value" id="search_value" class="form-control"
-                                    placeholder="Search by NIK" maxlength="16" oninput="validateNIK(this)"
-                                    value="<?php echo isset($search_value) ? $search_value : ''; ?>">
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <!-- User Information Section -->
-                    <?php if (isset($user_data)) { ?>
-                    <div class="row mb-4">
-                        <div class="col-md-5">
-                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
-                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
-                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
-                        </div>
-                        <div class="col-md-5">
-                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
-                            <p><strong>Saldo Uang</strong> : Rp.
-                                <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
-                            <p><strong>Saldo Emas</strong> :
-                                <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
-                        </div>
-                    </div>
-                    <?php } else { ?>
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <p class="text-danger"><?php echo $message; ?></p>
-                        </div>
-                    </div>
-                    <?php } ?>
-
 
                     <!-- Date and Time Section -->
                     <form method="POST" action="">
-                        <?php if (isset($user_data)) { ?>
-                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
-                        <?php } ?>
+
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="date" name="tanggal" class="form-control"
-                                    value="<?php echo date('Y-m-d'); ?>">
+                                    value="<?php echo date('Y-m-d'); ?>" disabled>
                             </div>
                             <div class="col-md-4">
                                 <?php
@@ -331,7 +234,7 @@ if ($jenis_result->num_rows > 0) {
                                 $current_time = date('H:i');
                                 ?>
                                 <input type="time" name="waktu" class="form-control"
-                                    value="<?php echo $current_time; ?>">
+                                    value="<?php echo $current_time; ?>" disabled>
                             </div>
                         </div>
 
@@ -348,13 +251,6 @@ if ($jenis_result->num_rows > 0) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- <tr>
-                                    <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
-                                    <td>1</td>
-                                    <td>
-                                        <select name="id_kategori[]" id="id_kategori_1" class="form-control"
-                                            onchange="updateJenis(1)">
-                                            <option value="">-- kategoriaaa sampah --</option> -->
 
                                 <?php
                                 if ($kategori_result->num_rows > 0) {
@@ -365,22 +261,6 @@ if ($jenis_result->num_rows > 0) {
                                 ?>
 
 
-                                <!-- </select>
-                                    </td>
-                                    <td>
-                                        <select name="id_jenis[]" id="id_jenis_1" class="form-control"
-                                            onchange="updateHarga(1)">
-                                            <option value="">-- jenis sampah --</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="jumlah[]" id="jumlah_1" class="form-control"
-                                            placeholder="Jumlah" oninput="updateHarga(1)">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="harga[]" id="harga_1" class="form-control" readonly>
-                                    </td>
-                                </tr> -->
                             </tbody>
                             <tfoot>
                                 <tr>
