@@ -5,8 +5,20 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
+// Cek apakah pengguna sudah login
+checkSession();
+
+// Mendapatkan username dari session
+$username = $_SESSION['username'];
+
+// Ambil data pengguna dari database
+$data = getUserData($koneksi, $username);
+$id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
+
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $jenis_transaksi = 'jual_sampah';
+
+    // $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
     $id_kategoris = $_POST['id_kategori'] ?? [];
     $id_jeniss = $_POST['id_jenis'] ?? [];
     $jumlahs = $_POST['jumlah'] ?? [];
@@ -27,10 +39,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $time = date('H:i:s'); // Get the current time
 
     // Insert into transaksi table
-    $transaksi_query = "INSERT INTO transaksi (no, id, jenis_transaksi, date, time) 
-                        VALUES (NULL, '$id_transaksi', '$jenis_transaksi', '$date', '$time')";
+    $transaksi_query = mysqli_query($conn,"INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$id_user','$jenis_transaksi', '$date', '$time')");
 
-    if ($conn->query($transaksi_query) === TRUE) {
+    if (isset($transaksi_query)) {
+        # code..
+    // if ($conn->query($transaksi_query) === TRUE) {
+    
+
         // Loop to insert each row into the jual_sampah table
         for ($i = 0; $i < count($id_kategoris); $i++) {
             $id_kategori = $id_kategoris[$i];
@@ -42,25 +57,25 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
             // Insert into jual_sampah table
             $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp, harga_nasabah) 
                                    VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$jumlah_rp', '$harga_nasabah')";
-
+                // var_dump($jual_sampah_query);
+                // die;
             if ($conn->query($jual_sampah_query) === FALSE) {
                 $message = "Error: " . $conn->error;
                 break;
             }
-
             // Update the jumlah in the sampah table
             $update_sampah_query = "UPDATE sampah SET jumlah = jumlah - $jumlah_kg WHERE id = '$id_jenis'";
             if ($conn->query($update_sampah_query) === FALSE) {
                 $message = "Error updating sampah: " . $conn->error;
                 break;
-            }
         }
+    }
 
-        if (empty($message)) {
-            $message = "Transaction successful!";
-            // Uncomment this line when ready to redirect
-            // header("Location: nota.php?id_transaksi=$id_transaksi");
-        }
+    if (empty($message)) {
+        $message = "Transaction successful!";
+        // Uncomment this line when ready to redirect
+        // header("Location: nota.php?id_transaksi=$id_transaksi");
+    }
     } else {
         $message = "Error inserting into transaksi: " . $conn->error;
     }
@@ -246,13 +261,6 @@ if ($jenis_result->num_rows > 0) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- <tr>
-                                    <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
-                                    <td>1</td>
-                                    <td>
-                                        <select name="id_kategori[]" id="id_kategori_1" class="form-control"
-                                            onchange="updateJenis(1)">
-                                            <option value="">-- kategoriaaa sampah --</option> -->
 
                                 <?php
                                 if ($kategori_result->num_rows > 0) {
@@ -263,22 +271,6 @@ if ($jenis_result->num_rows > 0) {
                                 ?>
 
 
-                                <!-- </select>
-                                    </td>
-                                    <td>
-                                        <select name="id_jenis[]" id="id_jenis_1" class="form-control"
-                                            onchange="updateHarga(1)">
-                                            <option value="">-- jenis sampah --</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="jumlah[]" id="jumlah_1" class="form-control"
-                                            placeholder="Jumlah" oninput="updateHarga(1)">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="harga[]" id="harga_1" class="form-control" readonly>
-                                    </td>
-                                </tr> -->
                             </tbody>
                             <tfoot>
                                 <tr>

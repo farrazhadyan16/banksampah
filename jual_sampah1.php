@@ -7,7 +7,7 @@ $message = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $jenis_transaksi = 'jual_sampah';
-    
+
     // $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
     $id_kategoris = $_POST['id_kategori'] ?? [];
     $id_jeniss = $_POST['id_jenis'] ?? [];
@@ -54,7 +54,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
                 break;
             }
             // Update the jumlah in the sampah table
-            $update_sampah_query = "UPDATE sampah SET jumlah = jumlah - $jumlah_kg WHERE id = '$id_sampah'";
+            $update_sampah_query = "UPDATE sampah SET jumlah = jumlah - $jumlah_kg WHERE id = '$id_jenis'";
             if ($conn->query($update_sampah_query) === FALSE) {
                 $message = "Error updating sampah: " . $conn->error;
                 break;
