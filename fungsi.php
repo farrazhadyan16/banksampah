@@ -5,12 +5,19 @@ function query($query)
 {
     global $conn;
     $result = mysqli_query($conn, $query);
+
+    if (!$result) {
+        // Display or log the SQL error
+        die("Query failed: " . mysqli_error($conn));
+    }
+
     $rows = [];
     while ($row = mysqli_fetch_assoc($result)) {
         $rows[] = $row;
     }
     return $rows;
 }
+
 
 //detail_user.php
 function checkSession()

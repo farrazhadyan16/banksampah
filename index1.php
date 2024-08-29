@@ -205,7 +205,7 @@ $stmt->close();
                                 if ($row['jenis_transaksi'] == 'tarik_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jenis Saldo: " . ucfirst($row['jenis_saldo']) . "</span>";
-                                    echo "<span class='transaction-amount' style='color: red;'>- Rp. " . number_format($row['jumlah_tarik'], 2, ',', '.') . "</span>";
+                                    echo "<span class='transaction-amount' style='color: red;'>" . number_format($row['jumlah_tarik'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 } elseif ($row['jenis_transaksi'] == 'setor_sampah') {
                                     echo "<div class='transaction-body'>";
