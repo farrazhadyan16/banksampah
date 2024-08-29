@@ -8,6 +8,10 @@ checkSession();
 // Mendapatkan username dari session
 $username = $_SESSION['username'];
 
+// Mendapatkan parameter pencarian jika ada
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+
+// Memodifikasi query untuk menambahkan pencarian
 $query = "
     SELECT 
         t.id AS id, 
@@ -53,13 +57,30 @@ $query = "
         jual_sampah js ON t.id = js.id_transaksi
     LEFT JOIN 
         user u ON t.id_user = u.id
+    WHERE 
+        t.id LIKE '%$search%' OR 
+        u.username LIKE '%$search%' OR 
+        CASE 
+            WHEN ts.id_transaksi IS NOT NULL THEN 
+                CASE 
+                    WHEN ts.jenis_saldo = 'tarik_emas' THEN 'Tarik Saldo (Emas)'
+                    WHEN ts.jenis_saldo = 'tarik_uang' THEN 'Tarik Saldo (Uang)'
+                END
+            WHEN ps.id_transaksi IS NOT NULL THEN 
+                CASE 
+                    WHEN ps.jenis_konversi = 'konversi_emas' THEN 'Pindah Saldo (Emas)'
+                    WHEN ps.jenis_konversi = 'konversi_uang' THEN 'Pindah Saldo (Uang)'
+                END
+            WHEN ss.id_transaksi IS NOT NULL THEN 'Setor Sampah'
+            WHEN js.id_transaksi IS NOT NULL THEN 'Jual Sampah'
+        END LIKE '%$search%'
     ORDER BY 
         t.date DESC, t.time DESC
 ";
 
-
 // Eksekusi query
 $transaksi_result = query($query);
+
 
 ?>
 
@@ -90,12 +111,23 @@ $transaksi_result = query($query);
                 <div class="header--wrapper">
                     <div class="header--title">
                         <span>Halaman</span>
-                        <h2>Daftar Transaksi</h2>
+                        <h2>Rekap Transaksi</h2>
                     </div>
                 </div>
 
                 <!-- Start of Transaction Table Section -->
                 <div class="tabular--wrapper">
+                    <!-- Form Pencarian -->
+                    <form method="GET" action="">
+                        <div class="form-group">
+                            <label for="search">Cari Transaksi:</label>
+                            <input type="text" name="search" id="search" class="form-control" placeholder="Masukkan ID Transaksi, Username, atau Jenis Transaksi" value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
+                            <button type="submit" class="inputbtn">Cari</button>
+
+                        </div>
+                    </form>
+                    <!-- End of Form Pencarian -->
+
                     <table class="table table-bordered">
                         <thead>
                             <tr>
@@ -114,7 +146,7 @@ $transaksi_result = query($query);
                                         <td><?php echo $row['id']; ?></td>
                                         <td><?php echo $row['username']; ?></td>
                                         <td><?php echo $row['jenis_transaksi']; ?></td>
-                                        <td><?php echo $row['jumlah']; ?> KG</td>
+                                        <td><?php echo $row['jumlah']; ?></td>
                                         <td><?php echo $row['date']; ?></td>
                                         <td>
                                             <a href="cetak_nota.php?id=<?php echo $row['id']; ?>" class="btn btn-success btn-sm">Cetak</a>
