@@ -5,10 +5,26 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
-    $jenis_transaksi = 'jual_sampah';
+// Jika tombol CHECK ditekan
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
+    $search_value = $_POST['search_value'];
+    if (empty($search_value)) {
+        $message = "username tidak boleh kosong.";
+    } else {
+        $user_query = "SELECT user WHERE username LIKE '%$search_value%' AND user.role = 'admin','superadmin'";
+        $user_result = $conn->query($user_query);
 
-    // $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
+        if ($user_result->num_rows > 0) {
+            $user_data = $user_result->fetch_assoc();
+        } else {
+            $message = "User dengan role 'Admin / Super Admin' tidak ditemukan.";
+        }
+    }
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+    $id_user = $_POST['user_id'] ?? '';
+    $jenis_transaksi = 'jual_sampah';
     $id_kategoris = $_POST['id_kategori'] ?? [];
     $id_jeniss = $_POST['id_jenis'] ?? [];
     $jumlahs = $_POST['jumlah'] ?? [];
@@ -29,11 +45,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $time = date('H:i:s'); // Get the current time
 
     // Insert into transaksi table
-    $transaksi_query = mysqli_query($conn,"INSERT INTO transaksi (no, id, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$jenis_transaksi', '$date', '$time')");
+    $transaksi_query = mysqli_query($conn,"INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$id_user','$jenis_transaksi', '$date', '$time')");
 
-    if (isset($transaksi_query)) {
+    // if (isset($transaksi_query)) {
         # code..
-    // if ($conn->query($transaksi_query) === TRUE) {
+    if ($conn->query($transaksi_query) === TRUE) {
     
 
         // Loop to insert each row into the jual_sampah table
@@ -187,6 +203,14 @@ if ($jenis_result->num_rows > 0) {
         row.parentNode.removeChild(row);
         updateTotalHarga();
     }
+
+    function validateSearchForm() {
+        var searchValue = document.getElementById('search_value').value;
+        if (searchValue.trim() === '') {
+            alert('Userame tidak boleh kosong.');
+        }
+        return true; // Memungkinkan form dikirim
+    }
     </script>
 </head>
 
@@ -218,10 +242,49 @@ if ($jenis_result->num_rows > 0) {
 
                 <!-- Start of Form Section -->
                 <div class="tabular--wrapper">
+                    <form method="POST" action="" onsubmit="return validateSearchForm()">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <input type="text" name="search_value" id="search_value" class="form-control"
+                                    placeholder="Search by Username" maxlength="16" oninput="validateNIK(this)"
+                                    value="<?php echo isset($search_value) ? $search_value : ''; ?>">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- User Information Section -->
+                    <?php if (isset($user_data)) { ?>
+                    <div class="row mb-4">
+                        <div class="col-md-5">
+                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
+                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
+                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
+                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
+                        </div>
+                        <div class="col-md-5">
+                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                            <p><strong>Saldo Uang</strong> : Rp.
+                                <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
+                            <p><strong>Saldo Emas</strong> :
+                                <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
+                        </div>
+                    </div>
+                    <?php } else { ?>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <p class="text-danger"><?php echo $message; ?></p>
+                        </div>
+                    </div>
+                    <?php } ?>
 
                     <!-- Date and Time Section -->
                     <form method="POST" action="">
-
+                        <?php if (isset($user_data)) { ?>
+                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
+                        <?php } ?>
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="date" name="tanggal" class="form-control"

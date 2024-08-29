@@ -11,22 +11,6 @@ checkSession();
 // Mendapatkan username dari session
 $username = $_SESSION['username'];
 
-// Fetch data jenis dan harga (Move this section up)
-$jenis_query = "SELECT id, jenis, harga, id_kategori, harga_pusat FROM sampah";
-$jenis_result = $conn->query($jenis_query);
-
-// Simpan data jenis sampah ke dalam array (Move this section up)
-$jenis_sampah = [];
-if ($jenis_result->num_rows > 0) {
-    while ($row = $jenis_result->fetch_assoc()) {
-        $jenis_sampah[$row['id']] = [
-            'jenis' => $row['jenis'],
-            'harga' => $row['harga'],
-            'harga_pusat' => $row['harga_pusat'],
-            'id_kategori' => $row['id_kategori']
-        ];
-    }
-}
 // Ambil data pengguna dari database
 $data = getUserData($koneksi, $username);
 $id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
@@ -34,10 +18,21 @@ $id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $jenis_transaksi = 'jual_sampah';
 
-    // Ambil data dari POST
+    // $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
     $id_kategoris = $_POST['id_kategori'] ?? [];
     $id_jeniss = $_POST['id_jenis'] ?? [];
     $jumlahs = $_POST['jumlah'] ?? [];
+    $hargas = $_POST['harga'] ?? [];
+    $harga_pusats = $_POST['harga_pusat'] ?? [];
+
+// Debug: Tampilkan isi array untuk memastikan semuanya terisi
+echo "<pre>";
+print_r($id_kategoris);
+print_r($id_jeniss);
+print_r($jumlahs);
+print_r($hargas);
+print_r($harga_pusats);
+echo "</pre>";
 
     // Generate new ID for transaksi
     $id_trans_query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
@@ -54,40 +49,62 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     $time = date('H:i:s'); // Get the current time
 
     // Insert into transaksi table
-    $transaksi_query = mysqli_query($conn, "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$id_user','$jenis_transaksi', '$date', '$time')");
-    
-    if ($transaksi_query) {
-        // Loop untuk setiap kategori dan jenis sampah
+    $transaksi_query = mysqli_query($conn,"INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$id_user','$jenis_transaksi', '$date', '$time')");
+    // var_dump($transaksi_query);
+    // die;
+    if (isset($transaksi_query)) {
+        // Loop to insert each row into the jual_sampah table
         for ($i = 0; $i < count($id_kategoris); $i++) {
-            $id_jenis = $id_jeniss[$i];
-            $jumlah_kg = $jumlahs[$i];
-            $harga = $jenis_sampah[$id_jenis]['harga']; // harga dari nasabah
-            $harga_pusat = $jenis_sampah[$id_jenis]['harga_pusat']; // harga dari pusat
-            $harga_nasabah = $jumlah_kg * $harga;
-            $jumlah_rp = $jumlah_kg * $harga_pusat;
+            // Pastikan setiap nilai ada sebelum digunakan
+                $id_kategori = $id_kategoris[$i];
+                $id_jenis = $id_jeniss[$i];
+                $jumlah_kg = $jumlahs[$i];
+                $harga_nasabah = $jumlah_kg * $hargas[$i];
+                $jumlah_rp = $jumlah_kg * $harga_pusats[$i];
 
-            // Insert ke tabel jual_sampah
-            $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, harga_nasabah, jumlah_rp) 
-                                  VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$harga_nasabah', '$jumlah_rp')";
+                // Debug: Tampilkan isi array untuk memastikan semuanya terisi
+// echo "<pre>";
+// print_r($id_kategori);
+// print_r($id_jenis);
+// print_r($jumlah_kg);
+// print_r($harga_nasabah);
+// print_r($jumlah_rp);
+// echo "</pre>";
+
+
+                // Insert into jual_sampah table
+                $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, harga_nasabah, jumlah_rp) 
+                                       VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$harga_nasabah', '$jumlah_rp')";
+echo "<pre>";
+echo "Generated Query: $jual_sampah_query\n";
+echo "</pre>";
+
+// Execute the query
+if ($conn->query($jual_sampah_query) === FALSE) {
+    $message = "Error: " . $conn->error;
+    break;
+}
+
+                if ($conn->query($jual_sampah_query) === FALSE) {
+                    $message = "Error: " . $conn->error;
+                    break;
+                }
+
+                // Update the jumlah in the sampah table
+                $update_sampah_query = "UPDATE sampah SET jumlah = jumlah - $jumlah_kg WHERE id = '$id_jenis'";
+                if ($conn->query($update_sampah_query) === FALSE) {
+                    $message = "Error updating sampah: " . $conn->error;
+                    break;
+                }
             
-            if ($conn->query($jual_sampah_query) === FALSE) {
-                $message = "Error: " . $conn->error;
-                break;
-            }
+            
+    }
 
-            // Update stok sampah di tabel sampah
-            $update_sampah_query = "UPDATE sampah SET jumlah = jumlah - $jumlah_kg WHERE id = '$id_jenis'";
-            if ($conn->query($update_sampah_query) === FALSE) {
-                $message = "Error updating sampah: " . $conn->error;
-                break;
-            }
-        }
-
-        if (empty($message)) {
-            $message = "Transaction successful!";
-            // Uncomment this line when ready to redirect
-            // header("Location: nota.php?id_transaksi=$id_transaksi");
-        }
+    if (empty($message)) {
+        $message = "Transaction successful!";
+        // Uncomment this line when ready to redirect
+        // header("Location: nota.php?id_transaksi=$id_transaksi");
+    }
     } else {
         $message = "Error inserting into transaksi: " . $conn->error;
     }
@@ -134,9 +151,7 @@ if ($jenis_result->num_rows > 0) {
     function updateHarga(index) {
         var idjenis = document.getElementById('id_jenis_' + index).value;
         var jumlah = document.getElementById('jumlah_' + index).value;
-        var harga_nasabah = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
         var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga_pusat : 0;
-        var total_Harga_nasabah = jumlah * harga_nasabah;
         var totalHarga = jumlah * harga;
 
         document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');

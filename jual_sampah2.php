@@ -55,8 +55,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
             $jumlah_rp = $jumlah_kg * $harga_nasabah;
 
             // Insert into jual_sampah table
-            $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp, harga_nasabah) 
-                                   VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$jumlah_rp', '$harga_nasabah')";
+            $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, harga_nasabah, jumlah_rp) 
+                                   VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$harga_nasabah', '$jumlah_rp')";
                 // var_dump($jual_sampah_query);
                 // die;
             if ($conn->query($jual_sampah_query) === FALSE) {
@@ -281,6 +281,14 @@ if ($jenis_result->num_rows > 0) {
                         </table>
                         <button type="button" class="btn btn-dark mb-3" onclick="addRow()">Tambah Baris</button>
                         <button type="submit" name="submit" class="btn btn-primary mb-3">SUBMIT</button>
+                        <!-- Success/Error Message -->
+                        <?php if (!empty($message)) { ?>
+                        <div class="row mb-4">
+                            <div class="col-md-12">
+                                <p class="text-success"><?php echo $message; ?></p>
+                            </div>
+                        </div>
+                        <?php } ?>
                     </form>
                 </div>
                 <!-- End of Form Section -->
