@@ -86,7 +86,7 @@ body {
 * {
   margin: 0;
   padding: 0;
-  border: none;
+  border: no;
   outline: none;
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
@@ -95,6 +95,8 @@ body {
 body {
   height: 100%;
   overflow-x: hidden; 
+  background-color: #ebe9e9;
+
 }
 
 #wrapper {
@@ -160,8 +162,8 @@ body {
 
 .menu a i {
   font-size: 1.2rem;
-}
-
+} 
+ 
 #content {
   margin-left: 110px; 
   transition: margin-left 0.5s;

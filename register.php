@@ -12,20 +12,26 @@ if ($loggedInRole === 'superadmin') {
 } elseif ($loggedInRole === 'admin') {
     $roles = ['admin', 'nasabah'];
 } else {
-    // Jika tidak login, role otomatis di-set sebagai 'Nasabah'
     $roles = ['nasabah'];
     $autoRole = 'nasabah';
 }
 
 // Inisialisasi variabel error
 $err = '';
+$username = $nama = $email = $notelp = $nik = $alamat = $tgl_lahir = $kelamin = '';
 
 // Proses form jika method POST terdeteksi
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = $_POST['username'];
     $password = $_POST['password'];
     $nama = $_POST['nama'];
-    
+    $email = $_POST['email'];
+    $notelp = $_POST['notelp'];
+    $nik = $_POST['nik'];
+    $alamat = $_POST['alamat'];
+    $tgl_lahir = $_POST['tgl_lahir'];
+    $kelamin = $_POST['kelamin'];
+
     // Jika pengguna tidak login, role otomatis adalah Nasabah
     if (!isset($loggedInRole)) {
         $role = 'nasabah';
@@ -34,13 +40,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Validasi input
-    if (empty($username) || empty($password) || empty($nama) || empty($role)) {
+    if (empty($username) || empty($password) || empty($nama) || empty($role) || empty($email) || empty($notelp) || empty($nik) || empty($alamat) || empty($tgl_lahir) || empty($kelamin)) {
         $err = "Semua bidang harus diisi!";
     } elseif (isset($loggedInRole) && !in_array($role, $roles)) {
-        // Validasi tambahan untuk memastikan user tidak bisa memasukkan role yang tidak sesuai dengan hak aksesnya
         $err = "Role tidak valid!";
     } else {
-        // Check if username already exists
         $check_query = "SELECT username FROM user WHERE username = ?";
         $check_stmt = mysqli_prepare($koneksi, $check_query);
         mysqli_stmt_bind_param($check_stmt, "s", $username);
@@ -50,13 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_stmt_num_rows($check_stmt) > 0) {
             $err = "Username sudah digunakan. Silakan pilih username lain.";
         } else {
-            // Hash password
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            // Insert data ke dalam tabel user
-            $insert_query = "INSERT INTO user (username, password, nama, role) VALUES (?, ?, ?, ?)";
+            $insert_query = "INSERT INTO user (username, password, nama, role, email, notelp, nik, alamat, tgl_lahir, kelamin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $insert_stmt = mysqli_prepare($koneksi, $insert_query);
-            mysqli_stmt_bind_param($insert_stmt, "ssss", $username, $hashed_password, $nama, $role);
+            mysqli_stmt_bind_param($insert_stmt, "ssssssssss", $username, $hashed_password, $nama, $role, $email, $notelp, $nik, $alamat, $tgl_lahir, $kelamin);
 
             if (mysqli_stmt_execute($insert_stmt)) {
                 header("location: login.php");
@@ -74,23 +76,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 
 <script>
-function validateForm() {
-    var password = document.getElementById("password").value;
-    if (password.length < 8) {
-        alert("Password harus terdiri dari minimal 8 karakter.");
-        return false;
+    function validateForm() {
+        var password = document.getElementById("password").value;
+        if (password.length < 8) {
+            alert("Password harus terdiri dari minimal 8 karakter.");
+            return false;
+        }
+        return true;
     }
-    return true;
-}
 
-function togglePassword() {
-    var passwordField = document.getElementById("password");
-    if (passwordField.type === "password") {
-        passwordField.type = "text";
-    } else {
-        passwordField.type = "password";
+    function togglePassword() {
+        var passwordField = document.getElementById("password");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+        } else {
+            passwordField.type = "password";
+        }
     }
-}
 </script>
 
 <!DOCTYPE html>
@@ -99,72 +101,103 @@ function togglePassword() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Register</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="./img/">
-    <!-- Font Awesome Cdn link -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <title>Register</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .scrollable-container {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .btn-custom {
+            background-color: rgba(0, 50, 153, 1);
+            color: white;
+        }
+
+        .btn-custom:hover {
+            background-color: rgba(0, 50, 153, 0.8);
+            color: white;
+
+        }
+    </style>
 </head>
 
 <body>
-    <div id="app">
+    <div class="container mt-5 scrollable-container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4>Register</h4>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($err)): ?>
+                            <div class="alert alert-danger">
+                                <?= $err ?>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" action="">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" name="username" id="username" class="form-control" value="<?= htmlspecialchars($username); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" name="password" id="password" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nama">Nama</label>
+                                <input type="text" name="nama" id="nama" class="form-control" value="<?= htmlspecialchars($nama); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" name="email" id="email" class="form-control" value="<?= htmlspecialchars($email); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="notelp">No. Telp</label>
+                                <input type="text" name="notelp" id="notelp" class="form-control" value="<?= htmlspecialchars($notelp); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nik">NIK</label>
+                                <input type="text" name="nik" id="nik" class="form-control" maxlength="16" pattern="\d{16}" title="NIK harus terdiri dari 16 digit angka" required>
+                            </div>
 
-        <div class="container">
-            <p class="login-text" style="font-size: 2rem; font-weight: 800;">
-                <img src="" alt="logo" width="225" height="46.5">
-            </p>
-            <br />
+                            <div class="form-group">
+                                <label for="alamat">Alamat</label>
+                                <textarea name="alamat" id="alamat" class="form-control" required><?= htmlspecialchars($alamat); ?></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="tgl_lahir">Tanggal Lahir</label>
+                                <input type="date" name="tgl_lahir" id="tgl_lahir" class="form-control" value="<?= htmlspecialchars($tgl_lahir); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="kelamin">Jenis Kelamin</label>
+                                <select name="kelamin" id="kelamin" class="form-control" required>
+                                    <option value="Pria" <?= $kelamin == 'Pria' ? 'selected' : '' ?>>Pria</option>
+                                    <option value="Wanita" <?= $kelamin == 'Wanita' ? 'selected' : '' ?>>Wanita</option>
+                                </select>
+                            </div>
 
-            <form method="POST" action="">
-                <div class="input-group">
-                    <label class="control-label col-sm-4">Username</label>
-                    <br>
-                    <input type="text" class="input" placeholder="Masukkan Username" name="username" required>
-                </div>
-                <div class="input-group">
-                    <label class="control-label col-sm-4">Password</label>
-                    <br>
-                    <input type="password" class="form-control" placeholder="Masukkan Password" name="password"
-                        required>
-                </div>
-                <div class="input-group">
-                    <label class="control-label col-sm-4">Nama</label>
-                    <br>
-                    <input type="text" class="form-control" placeholder="Masukkan Nama" name="nama" required>
-                </div>
-
-                <?php if (isset($loggedInRole)): ?>
-                <div class="input-group">
-                    <div class="col-sm-8">
-                        <label class="control-label col-sm-4" for="role">Role</label>
-                        <br>
-                        <select name="role" id="role" class="input-group" required>
-                            <option value=''>Pilih</option>
-                            <?php
-                            // Loop through each allowed role and create an option element
-                            foreach ($roles as $roleOption) {
-                                echo "<option value='$roleOption'>$roleOption</option>";
-                            }
-                            ?>
-                        </select>
+                            <?php if (isset($loggedInRole)): ?>
+                                <div class="form-group">
+                                    <label for="role">Role</label>
+                                    <select name="role" id="role" class="form-control">
+                                        <?php foreach ($roles as $role): ?>
+                                            <option value="<?= $role ?>"><?= ucfirst($role) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            <?php endif; ?>
+                            <button type="submit" class="btn btn-custom btn-block">Register</button>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p>Sudah punya akun? <a href="login.php">Login di sini</a></p>
                     </div>
                 </div>
-                <?php endif; ?>
-
-                <div class="input-group">
-                    <button type="submit" name="submit" class="btn">Daftar</button>
-                </div>
-            </form>
-
-            <?php
-             if ($err) {
-                echo "<h style='color: red; text-align: center;'>$err</h>";
-             }
-            ?>
-
+            </div>
         </div>
     </div>
-
 </body>
 
 </html>
