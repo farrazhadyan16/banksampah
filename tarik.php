@@ -49,6 +49,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                   ($withdraw_type === 'gold' && $jumlah_tarik > $user_balance['emas'])) {
             // Show alert if withdrawal amount exceeds balance
             $message = "Jumlah yang ditarik tidak boleh melebihi saldo " . ($withdraw_type === 'money' ? "uang" : "emas") . " Anda.";
+        } elseif ($withdraw_type === 'money' && ($user_balance['uang'] - $jumlah_tarik) < 100) {
+            // Show alert if withdrawal leaves less than 1000 units in money balance
+            $message = "Saldo uang tidak boleh kurang dari 100 setelah penarikan.";
         } else {
             try {
                 // Proceed with the transaction if the amount is valid
