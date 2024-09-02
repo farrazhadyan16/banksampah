@@ -45,7 +45,7 @@ if (isset($_POST["submit"])) {
     <div id="wrapper">
 
         <!-- Ini Sidebar -->
-        <?php include("sidebar.php")?>
+        <?php include("sidebar.php") ?>
         <!-- Batas Akhir Sidebar -->
 
         <!-- Ini Main-Content -->
@@ -82,13 +82,15 @@ if (isset($_POST["submit"])) {
                         <input type="text" placeholder="Masukan Tgl JO" name="jenis"
                             value="<?= $sampah["jenis"] ?>"><br><br>
 
-                        <label for="">Harga Pengepul</label><br>
-                        <input type="text" placeholder="Masukkan Nama Project" name="harga"
-                            value="<?= $sampah["harga"] ?>"><br><br>
-
                         <label for="">Harga Nasabah</label><br>
                         <input type="text" placeholder="Masukkan Kode GBJ" name="harga_pusat"
+                            value="<?= $sampah["harga"] ?>"><br><br>
+
+                        <label for="">Harga Pengepul</label><br>
+                        <input type="text" placeholder="Masukkan Nama Project" name="harga"
                             value="<?= $sampah["harga_pusat"] ?>"><br><br>
+
+
 
                         <label for="">Harga</label><br>
                         <input type="text" placeholder="Masukkan Harga" name="jumlah"

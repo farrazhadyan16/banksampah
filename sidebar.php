@@ -23,31 +23,31 @@ $user_role = $_SESSION['role'];
     <link rel="stylesheet" href="./css/style.css">
     <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
     <style>
-    .menu ul {
-        list-style-type: none;
-        padding-left: 20px;
-    }
+        .menu ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
 
-    .menu ul li {
-        padding: 8px 0;
-    }
+        .menu ul li {
+            padding: 8px 0;
+        }
 
-    .dropdown-content {
-        display: none;
-        list-style-type: none;
-        padding-left: 20px;
-    }
+        .dropdown-content {
+            display: none;
+            list-style-type: none;
+            padding-left: 20px;
+        }
 
-    .dropdown:hover .dropdown-content {
-        display: block;
-    }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
 
-    .dropdown>a:after {
-        content: '\f0d7';
-        font-family: "Font Awesome 5 Free";
-        font-weight: 900;
-        float: right;
-    }
+        .dropdown>a:after {
+            content: '\f0d7';
+            font-family: "Font Awesome 5 Free";
+            font-weight: 900;
+            float: right;
+        }
     </style>
 </head>
 
@@ -65,35 +65,35 @@ $user_role = $_SESSION['role'];
                     </li>
 
                     <?php if ($user_role === 'admin' || $user_role === 'superadmin') { ?>
-                    <li>
-                        <a href="sampah.php">
-                            <i class="fa-solid fa-trash"></i>
-                            <span>Sampah</span>
-                        </a>
-                    </li>
-                    <li class="dropdown">
-                        <a href="#">
-                            <i class="fa-solid fa-exchange-alt"></i>
-                            <span>Transaksi</span>
-                        </a>
-                        <ul class="dropdown-content">
-                            <li><a href="setor_sampah.php">Tambah Transaksi</a></li>
-                            <li><a href="semua_transaksi.php">Semua Transaksi</a></li>
-                            <li><a href="recap_transaksi.php">Rekap Transaksi</a></li>
-                        </ul>
-                    </li>
-                    <li>
-                        <a href="admin.php">
-                            <i class="fa-solid fa-user-shield"></i>
-                            <span>Admin</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="nasabah.php">
-                            <i class="fa-solid fa-user"></i>
-                            <span>Nasabah</span>
-                        </a>
-                    </li>
+                        <li>
+                            <a href="sampah.php">
+                                <i class="fa-solid fa-trash"></i>
+                                <span>Sampah</span>
+                            </a>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#">
+                                <i class="fa-solid fa-exchange-alt"></i>
+                                <span>Transaksi</span>
+                            </a>
+                            <ul class="dropdown-content">
+                                <li><a href="setor_sampah.php">Tambah Transaksi</a></li>
+                                <li><a href="semua_transaksi.php">Semua Transaksi</a></li>
+                                <li><a href="rekap_transaksi.php">Rekap Transaksi</a></li>
+                            </ul>
+                        </li>
+                        <li>
+                            <a href="admin.php">
+                                <i class="fa-solid fa-user-shield"></i>
+                                <span>Admin</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="nasabah.php">
+                                <i class="fa-solid fa-user"></i>
+                                <span>Nasabah</span>
+                            </a>
+                        </li>
                     <?php } ?>
 
 

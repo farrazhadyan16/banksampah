@@ -16,34 +16,38 @@ $query = "
     SELECT 
         t.id AS id, 
         u.username AS username, 
-        CASE 
-            WHEN ts.id_transaksi IS NOT NULL THEN 
-                CASE 
-                    WHEN ts.jenis_saldo = 'tarik_emas' THEN 'Tarik Saldo (Emas)'
-                    WHEN ts.jenis_saldo = 'tarik_uang' THEN 'Tarik Saldo (Uang)'
-                END
-            WHEN ps.id_transaksi IS NOT NULL THEN 
-                CASE 
-                    WHEN ps.jenis_konversi = 'konversi_emas' THEN 'Pindah Saldo (Emas)'
-                    WHEN ps.jenis_konversi = 'konversi_uang' THEN 'Pindah Saldo (Uang)'
-                END
-            WHEN ss.id_transaksi IS NOT NULL THEN 'Setor Sampah'
-            WHEN js.id_transaksi IS NOT NULL THEN 'Jual Sampah'
-        END AS jenis_transaksi,
-        CASE 
-            WHEN ts.id_transaksi IS NOT NULL THEN 
-                CASE 
-                    WHEN ts.jenis_saldo = 'tarik_emas' THEN CONCAT(ts.jumlah_tarik, ' Gram')
-                    WHEN ts.jenis_saldo = 'tarik_uang' THEN CONCAT('Rp. ', FORMAT(ts.jumlah_tarik, 2))
-                END
-            WHEN ps.id_transaksi IS NOT NULL THEN 
-                CASE 
-                    WHEN ps.jenis_konversi = 'konversi_emas' THEN CONCAT(ps.jumlah, ' Gram')
-                    WHEN ps.jenis_konversi = 'konversi_uang' THEN CONCAT('Rp. ', FORMAT(ps.jumlah, 2))
-                END
-            WHEN ss.id_transaksi IS NOT NULL THEN CONCAT(ss.jumlah_kg, ' KG')
-            WHEN js.id_transaksi IS NOT NULL THEN CONCAT(js.jumlah_kg, ' KG')
-        END AS jumlah,
+        GROUP_CONCAT(DISTINCT 
+            CASE 
+                WHEN ts.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ts.jenis_saldo = 'tarik_emas' THEN 'Tarik Saldo (Emas)'
+                        WHEN ts.jenis_saldo = 'tarik_uang' THEN 'Tarik Saldo (Uang)'
+                    END
+                WHEN ps.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ps.jenis_konversi = 'konversi_emas' THEN 'Pindah Saldo (Emas)'
+                        WHEN ps.jenis_konversi = 'konversi_uang' THEN 'Pindah Saldo (Uang)'
+                    END
+                WHEN ss.id_transaksi IS NOT NULL THEN 'Setor Sampah'
+                WHEN js.id_transaksi IS NOT NULL THEN 'Jual Sampah'
+            END 
+        SEPARATOR ', ') AS jenis_transaksi,
+        GROUP_CONCAT(DISTINCT 
+            CASE 
+                WHEN ts.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ts.jenis_saldo = 'tarik_emas' THEN CONCAT(ts.jumlah_tarik, ' Gram')
+                        WHEN ts.jenis_saldo = 'tarik_uang' THEN CONCAT('Rp. ', FORMAT(ts.jumlah_tarik, 2))
+                    END
+                WHEN ps.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ps.jenis_konversi = 'konversi_emas' THEN CONCAT(ps.jumlah, ' Gram')
+                        WHEN ps.jenis_konversi = 'konversi_uang' THEN CONCAT('Rp. ', FORMAT(ps.jumlah, 2))
+                    END
+                WHEN ss.id_transaksi IS NOT NULL THEN CONCAT(ss.jumlah_kg, ' KG')
+                WHEN js.id_transaksi IS NOT NULL THEN CONCAT(js.jumlah_kg, ' KG')
+            END 
+        SEPARATOR ' | ') AS jumlah,
         t.date AS date
     FROM 
         transaksi t
@@ -74,6 +78,8 @@ $query = "
             WHEN ss.id_transaksi IS NOT NULL THEN 'Setor Sampah'
             WHEN js.id_transaksi IS NOT NULL THEN 'Jual Sampah'
         END LIKE '%$search%'
+    GROUP BY 
+        t.id, t.date, u.username
     ORDER BY 
         t.date DESC, t.time DESC
 ";
