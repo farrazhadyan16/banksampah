@@ -9,10 +9,10 @@ $username = "";
 $password = "";
 $err = "";
 
-if(isset($_POST['login'])){
+if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
-    if($username == '' || $password == ''){
+    if ($username == '' || $password == '') {
         $err .= "<p>Silahkan Masukkan username dan password</p>";
     }
 
@@ -20,36 +20,33 @@ if(isset($_POST['login'])){
         $sql = "SELECT * FROM user WHERE username = ?";
         $stmt = mysqli_prepare($koneksi, $sql);
         if ($stmt) {
-            mysqli_stmt_bind_param($stmt,"s",$username);
+            mysqli_stmt_bind_param($stmt, "s", $username);
             mysqli_stmt_execute($stmt);
             $result = mysqli_stmt_get_result($stmt);
 
-            if ($result && mysqli_num_rows($result) > 0){
+            if ($result && mysqli_num_rows($result) > 0) {
                 $user = mysqli_fetch_assoc($result);
 
-                if(password_verify($password, $user['password'])){
+                if (password_verify($password, $user['password'])) {
                     //pass correct
-                    $_SESSION['username']=$username;
+                    $_SESSION['username'] = $username;
                     $_SESSION['role'] = $user['role'];
                     header("location:index.php");
                     exit();
-                }
-                else{
+                } else {
                     //pass incor
-                    $err .="<p>Password Salah</p>";
+                    $err .= "<p>Password Salah</p>";
                 }
-            }
-                else{
+            } else {
                 $err .= "<p>Akun Tidak Ditemukan</p>";
-                }
-        
+            }
+
             mysqli_stmt_close($stmt);
-            }
-                else{
-                $err .= "<p>Error : ".mysqli_error($koneksi) . "</p>";
-            }
+        } else {
+            $err .= "<p>Error : " . mysqli_error($koneksi) . "</p>";
         }
     }
+}
 ?>
 
 
@@ -59,48 +56,55 @@ if(isset($_POST['login'])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Login</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="./img/">
-    <!-- Font Awesome Cdn link -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-</head>
+    <title>Login</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>s
+<style>
+    .btn-custom {
+        background-color: rgba(0, 50, 153, 1);
+        color: white;
+    }
+
+    .btn-custom:hover {
+        background-color: rgba(0, 50, 153, 0.8);
+        color: white;
+
+    }
+</style>
 
 <body>
-    <div id="app">
-
-        <div class="container">
-            <p class="login-text" style="font-size: 2rem; font-weight: 800;"><img src="" alt="logo" width="225"
-                    height="46.5"></p> <br />
-
-            <form action="" method="post">
-                <div class="input-group">
-                    <input type="text" value="<?php echo htmlspecialchars($username); ?>" name="username" class="input"
-                        placeholder="Username"><br>
+    <div class="container mt-3">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header text-center">
+                        <h4>Login</h4>
+                    </div>
+                    <div class="card-body">
+                        <?php if (!empty($err)): ?>
+                            <div class="alert alert-danger">
+                                <?= $err ?>
+                            </div>
+                        <?php endif; ?>
+                        <form method="POST" action="">
+                            <div class="form-group">
+                                <label for="username">Username</label>
+                                <input type="text" name="username" id="username" class="form-control" value="<?= htmlspecialchars($username); ?>" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="password">Password</label>
+                                <input type="password" name="password" id="password" class="form-control" required>
+                            </div>
+                            <button type="submit" name="login" class="btn btn-custom btn-block">Login</button>
+                        </form>
+                    </div>
+                    <div class="card-footer text-center">
+                        <p>Belum punya akun? <a href="register.php">Register di sini</a></p>
+                    </div>
                 </div>
-                <div class="input-group">
-                    <input type="password" name="password" class="input" placeholder="Password"><br>
-                </div>
-                <div class="input-group">
-                    <input type="submit" class="btn" name="login" value="Login"><br>
-                </div>
-
-                <div class="input-group">
-                    <a href="register.php"><button type="button" class="btn" name="button">Register</button>
-                    </a>
-                </div>
-            </form>
-
-
-            <?php
-             if ($err) {
-            echo "<h style='color: red; text-align: center;'>$err</h>";
-               }
-            ?>
-
+            </div>
         </div>
     </div>
-
 </body>
 
 </html>
