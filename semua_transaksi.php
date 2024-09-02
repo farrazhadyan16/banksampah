@@ -121,7 +121,9 @@ $transaksi_result = query($query);
                     <form method="GET" action="">
                         <div class="form-group">
                             <label for="search">Cari Transaksi:</label>
-                            <input type="text" name="search" id="search" class="form-control" placeholder="Masukkan ID Transaksi, Username, atau Jenis Transaksi" value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
+                            <input type="text" name="search" id="search" class="form-control"
+                                placeholder="Masukkan ID Transaksi, Username, atau Jenis Transaksi"
+                                value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
                             <button type="submit" class="inputbtn">Cari</button>
 
                         </div>
@@ -141,22 +143,22 @@ $transaksi_result = query($query);
                         </thead>
                         <tbody>
                             <?php if (count($transaksi_result) > 0): ?>
-                                <?php foreach ($transaksi_result as $row): ?>
-                                    <tr>
-                                        <td><?php echo $row['id']; ?></td>
-                                        <td><?php echo $row['username']; ?></td>
-                                        <td><?php echo $row['jenis_transaksi']; ?></td>
-                                        <td><?php echo $row['jumlah']; ?></td>
-                                        <td><?php echo $row['date']; ?></td>
-                                        <td>
-                                            <a href="cetak_nota.php?id=<?php echo $row['id']; ?>" class="btn btn-success btn-sm">Cetak</a>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
+                            <?php foreach ($transaksi_result as $row): ?>
+                            <tr>
+                                <td><?php echo $row['id']; ?></td>
+                                <td><?php echo $row['username']; ?></td>
+                                <td><?php echo $row['jenis_transaksi']; ?></td>
+                                <td><?php echo $row['jumlah']; ?></td>
+                                <td><?php echo $row['date']; ?></td>
+                                <td>
+                                    <button class="btn btn-info print-button" onclick="window.print()">Print</button>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
                             <?php else: ?>
-                                <tr>
-                                    <td colspan="6" class="text-center">Tidak ada transaksi ditemukan.</td>
-                                </tr>
+                            <tr>
+                                <td colspan="6" class="text-center">Tidak ada transaksi ditemukan.</td>
+                            </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>

@@ -82,12 +82,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
                 break;
             }
         }
-
-        if (empty($message)) {
-            $message = "Transaction successful!";
-            // Uncomment this line when ready to redirect
-            // header("Location: nota.php?id_transaksi=$id_transaksi");
-        }
+        // if (empty($message)) {
+        //     $message = "Transaction successful!";
+            //Uncomment this line when ready to redirect
+            header("Location: nota.php?id_transaksi=$id_transaksi");
     } else {
         $message = "Error inserting into transaksi: " . $conn->error;
     }

@@ -91,6 +91,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['convert'])) {
                 }
             }
         }
+        // Uncomment this line when ready to redirect
+        header("Location: nota.php?id_transaksi=$id_transaksi");
     } else {
         $message = "Gagal memasukkan data ke tabel transaksi: " . $conn->error;
     }

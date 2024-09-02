@@ -25,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 }
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+
     $id_user = $_POST['user_id'] ?? '';
     $jenis_transaksi = $_POST['jenis_transaksi'] ?? 'setor_sampah';
     $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
@@ -109,10 +110,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
 
         // Uncomment this line when ready to redirect
         header("Location: nota.php?id_transaksi=$id_transaksi");
+        exit;
     } else {
         $message = "Error: " . $conn->error;
     }
 }
+
 
 
 // Fetch data kategori
@@ -218,7 +221,7 @@ if ($jenis_result->num_rows > 0) {
                     </select>
                 </td>
                 <td>
-                    <input type="number" name="jumlah[]" id="jumlah_${rowCount}" class="form-control" placeholder="Jumlah" oninput="updateHarga(${rowCount})">
+                    <input type="number" name="jumlah[]" id="jumlah_${rowCount}" class="form-control" placeholder="Jumlah" oninput="updateHarga(${rowCount})" step="0.001">
                 </td>
                 <td>
                     <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
@@ -280,7 +283,7 @@ if ($jenis_result->num_rows > 0) {
                             <div class="col-md-4">
                                 <input type="text" name="search_value" id="search_value" class="form-control"
                                     placeholder="Search by NIK" maxlength="16" oninput="validateNIK(this)"
-                                    value="<?php echo isset($search_value) ? $search_value : ''; ?>">
+                                    value="<?php echo isset($search_value) ? $search_value : ''; ?>" required>
                             </div>
                             <div class="col-md-2">
                                 <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>

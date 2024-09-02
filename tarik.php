@@ -25,76 +25,75 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     date_default_timezone_set('Asia/Jakarta');
 
     $jenis_transaksi = 'tarik_saldo'; // Set jenis_transaksi
-    $date = date('Y-m-d'); // Get the current date and time
-    $time = date('H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date', '$time')";
+    $date = date('Y-m-d'); // Get the current date
+    $time = date('H:i:s'); // Get the current time
 
-    if ($conn->query($transaksi_query) === TRUE) {
-        // The transaction ID is correctly inserted into the transaksi table
-        $id_transaksi = $id; // Use the same ID for the tarik_saldo table
-        
-        // Validasi jenis penarikan
-        if (isset($_POST['withdraw_type']) && ($_POST['withdraw_type'] === 'money' || $_POST['withdraw_type'] === 'gold')) {
-            $withdraw_type = $_POST['withdraw_type'];
+    // Fetch user's balance
+    $balance_query = "SELECT uang, emas FROM dompet WHERE id_user = ?";
+    $stmt_balance = $conn->prepare($balance_query);
+    $stmt_balance->bind_param("i", $id_user);
+    $stmt_balance->execute();
+    $balance_result = $stmt_balance->get_result();
+    $user_balance = $balance_result->fetch_assoc();
 
-            // Tentukan jumlah berdasarkan jenis penarikan
-            $jumlah_tarik = ($withdraw_type === 'money') ? $_POST['jumlah_uang'] : $_POST['jumlah_emas'];
+    if (isset($_POST['withdraw_type']) && ($_POST['withdraw_type'] === 'money' || $_POST['withdraw_type'] === 'gold')) {
+        $withdraw_type = $_POST['withdraw_type'];
 
-            // Validasi input
-            if (empty($jumlah_tarik) || !is_numeric($jumlah_tarik)) {
-                $message = "Jumlah yang ditarik harus diisi dan berupa angka.";
-            } else {
-                try {
-                    // Mulai transaksi
-                    $conn->begin_transaction();
+        // Determine withdrawal amount
+        $jumlah_tarik = ($withdraw_type === 'money') ? $_POST['jumlah_uang'] : $_POST['jumlah_emas'];
 
-                    // Insert data ke tabel tarik_saldo
-                    $jenis_saldo = ($withdraw_type === 'money') ? 'tarik_uang' : 'tarik_emas';
-                    $stmt = $conn->prepare("INSERT INTO tarik_saldo (no, id_transaksi, jenis_saldo, jumlah_tarik) VALUES (NULL, ?, ?, ?)");
-                    if (!$stmt) {
-                        throw new Exception("Preparation failed: " . $conn->error);
-                    }
-                    $stmt->bind_param("ssi", $id_transaksi, $jenis_saldo, $jumlah_tarik);
-                    if (!$stmt->execute()) {
-                        throw new Exception("Execution failed: " . $stmt->error);
-                    }
+        // Validate withdrawal amount
+        if (empty($jumlah_tarik) || !is_numeric($jumlah_tarik)) {
+            $message = "Jumlah yang ditarik harus diisi dan berupa angka.";
+        } elseif (($withdraw_type === 'money' && $jumlah_tarik > $user_balance['uang']) ||
+                  ($withdraw_type === 'gold' && $jumlah_tarik > $user_balance['emas'])) {
+            // Show alert if withdrawal amount exceeds balance
+            $message = "Jumlah yang ditarik tidak boleh melebihi saldo " . ($withdraw_type === 'money' ? "uang" : "emas") . " Anda.";
+        } else {
+            try {
+                // Proceed with the transaction if the amount is valid
+                $conn->begin_transaction();
 
-                    // Update saldo di tabel dompet berdasarkan jenis penarikan
-                    if ($withdraw_type === 'money') {
-                        $update_saldo_query = "UPDATE dompet SET uang = uang - ? WHERE id_user = ?";
-                    } else {
-                        $update_saldo_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
-                    }
+                // Insert into transaksi table
+                $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, ?, ?, ?, ?, ?)";
+                $stmt_transaksi = $conn->prepare($transaksi_query);
+                $stmt_transaksi->bind_param("sssss", $id, $id_user, $jenis_transaksi, $date, $time);
+                $stmt_transaksi->execute();
 
-                    $stmt_update = $conn->prepare($update_saldo_query);
-                    if (!$stmt_update) {
-                        throw new Exception("Preparation for saldo update failed: " . $conn->error);
-                    }
-                    $stmt_update->bind_param("di", $jumlah_tarik, $id_user);
-                    if (!$stmt_update->execute()) {
-                        throw new Exception("Execution for saldo update failed: " . $stmt_update->error);
-                    }
+                // Insert into tarik_saldo table
+                $jenis_saldo = ($withdraw_type === 'money') ? 'tarik_uang' : 'tarik_emas';
+                $stmt = $conn->prepare("INSERT INTO tarik_saldo (no, id_transaksi, jenis_saldo, jumlah_tarik) VALUES (NULL, ?, ?, ?)");
+                $stmt->bind_param("ssi", $id, $jenis_saldo, $jumlah_tarik);
+                $stmt->execute();
 
-
-                    // Commit transaksi
-                    $conn->commit();
-
-                    // Tampilkan pesan sukses
-                    $message = "Penarikan " . ($withdraw_type === 'money' ? "uang" : "emas") . " berhasil! Saldo Anda telah diperbarui.";
-
-                    // Close the statements
-                    $stmt->close();
-                    $stmt_update->close();
-                } catch (Exception $e) {
-                    // Rollback jika terjadi kesalahan
-                    $conn->rollback();
-                    $message = "Terjadi kesalahan saat melakukan penarikan: " . $e->getMessage();
+                // Update user's balance
+                if ($withdraw_type === 'money') {
+                    $update_saldo_query = "UPDATE dompet SET uang = uang - ? WHERE id_user = ?";
+                } else {
+                    $update_saldo_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
                 }
+
+                $stmt_update = $conn->prepare($update_saldo_query);
+                $stmt_update->bind_param("di", $jumlah_tarik, $id_user);
+                $stmt_update->execute();
+
+                // Commit transaction
+                $conn->commit();
+
+                // Display success message
+                $message = "Penarikan " . ($withdraw_type === 'money' ? "uang" : "emas") . " berhasil! Saldo Anda telah diperbarui.";
+
+                // Redirect to nota.php
+                header("Location: nota.php?id_transaksi=$id");
+                exit();
+            } catch (Exception $e) {
+                // Rollback transaction in case of an error
+                $conn->rollback();
+                $message = "Terjadi kesalahan saat melakukan penarikan: " . $e->getMessage();
             }
         }
-    } else {
-        $message = "Gagal melakukan penarikan: " . $conn->error;
     }
+
 }
 ?>
 
@@ -211,8 +210,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                         <!-- Success/Error Message -->
                         <?php if (!empty($message)) { ?>
                         <div class="row mb-4">
-                            <div class="col-md-12">
-                                <p class="text-success"><?php echo $message; ?></p>
+                            <div class="alert alert-danger" role="alert">
+                                <?php echo $message; ?>
                             </div>
                         </div>
                         <?php } ?>
