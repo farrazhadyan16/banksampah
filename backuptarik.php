@@ -9,7 +9,6 @@ $message = "";
 $query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
 $result = $conn->query($query);
 
-// If NIK has been searched and the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     $id_user = $_POST['id_user'];
 
@@ -50,9 +49,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                   ($withdraw_type === 'gold' && $jumlah_tarik > $user_balance['emas'])) {
             // Show alert if withdrawal amount exceeds balance
             $message = "Jumlah yang ditarik tidak boleh melebihi saldo " . ($withdraw_type === 'money' ? "uang" : "emas") . " Anda.";
-        } elseif ($withdraw_type === 'money' && ($user_balance['uang'] - $jumlah_tarik) < 1000) {
+        } elseif ($withdraw_type === 'money' && ($user_balance['uang'] - $jumlah_tarik) < 100) {
             // Show alert if withdrawal leaves less than 1000 units in money balance
-            $message = "Saldo uang tidak boleh kurang dari 1000 setelah penarikan.";
+            $message = "Saldo uang tidak boleh kurang dari 100 setelah penarikan.";
         } else {
             try {
                 // Proceed with the transaction if the amount is valid
@@ -97,8 +96,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
             }
         }
     }
+
 }
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -132,8 +133,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                     <div class="user--info">
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
                                 Sampah</button></a>
-                        <a href="konversi.php"><button type="button" name="button" class="inputbtn">Konversi
-                                Saldo</button></a>
+                        <a href="konversi.php"><button type="button" name="button" class="inputbtn">Konversi Saldo
+                            </button></a>
                         <a href="tarik.php"><button type="button" name="button" class="inputbtn">Tarik
                                 Saldo</button></a>
                         <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual
@@ -145,9 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                 <div class="tabular--wrapper">
                     <!-- Search Section -->
                     <?php include("search_nik.php") ?>
-
                     <!-- Form Tarik Saldo -->
-                    <?php if (isset($user_data) && !is_null($user_data)) { ?>
                     <form method="POST" action="">
                         <!-- Withdrawal Type Selection -->
                         <div class="row mb-4">
@@ -178,38 +177,48 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                                             <span class="input-group-text"><i class="fas fa-coins"></i></span>
                                         </div>
                                         <!-- <label for="jumlah_emas">Jumlah Emas (gram)</label> -->
-                                        <select name="jumlah_emas" class="form-control">
+                                        <select name="jumlah_emas" id="jumlah_emas" class="form-control">
+                                            <option value=''>Pilih</option>
                                             <option value="0.5">0.5 gram</option>
                                             <option value="1">1 gram</option>
                                             <option value="2">2 gram</option>
                                             <option value="5">5 gram</option>
+                                            <option value="10">10 gram</option>
+                                            <option value="25">25 gram</option>
+                                            <option value="50">50 gram</option>
+                                            <option value="100">100 gram</option>
+                                            <option value="250">250 gram</option>
+                                            <option value="500">500 gram</option>
+                                            <option value="1000">1000 gram</option>
                                         </select>
+                                        <small class="form-text text-muted">Pilih jumlah emas yang ingin ditarik</small>
                                     </div>
                                     <small class="form-text text-muted">Jumlah emas yang ingin ditarik</small>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Hidden Field for User ID -->
+                        <!-- Include the hidden input for id_user -->
+                        <?php if (isset($user_data)) { ?>
                         <input type="hidden" name="id_user" value="<?php echo $user_data['id']; ?>">
+                        <?php } ?>
 
                         <!-- Submit Button -->
-                        <div class="row">
-                            <div class="col-md-8">
-                                <button type="submit" name="withdraw" class="btn btn-success">Tarik</button>
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <button type="submit" name="withdraw" class="btn btn-primary w-100">Tarik</button>
                             </div>
                         </div>
-                    </form>
-                    <?php } else { ?>
-                    <p> Silakan cari Data nasabah dengan NIK. </p>
-                    <?php } ?>
 
-                    <!-- Display any error or success messages -->
-                    <?php if ($message) { ?>
-                    <div class="alert alert-info">
-                        <?php echo $message; ?>
-                    </div>
-                    <?php } ?>
+                        <!-- Success/Error Message -->
+                        <?php if (!empty($message)) { ?>
+                        <div class="row mb-4">
+                            <div class="alert alert-danger" role="alert">
+                                <?php echo $message; ?>
+                            </div>
+                        </div>
+                        <?php } ?>
+                    </form>
                 </div>
                 <!-- End of Form Section -->
             </div>
@@ -217,25 +226,20 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
         <!-- Akhir Main Content -->
     </div>
 
-    <!-- Script for Dynamic Input Display -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const moneyRadio = document.querySelector('input[name="withdraw_type"][value="money"]');
-        const goldRadio = document.querySelector('input[name="withdraw_type"][value="gold"]');
-        const moneyInput = document.getElementById('money_input');
-        const goldInput = document.getElementById('gold_input');
+    // Show/hide input fields based on withdrawal type
+    const withdrawTypeRadios = document.querySelectorAll('input[name="withdraw_type"]');
+    const moneyInput = document.getElementById('money_input');
+    const goldInput = document.getElementById('gold_input');
 
-        moneyRadio.addEventListener('change', function() {
-            if (moneyRadio.checked) {
+    withdrawTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'money') {
                 moneyInput.style.display = 'block';
                 goldInput.style.display = 'none';
-            }
-        });
-
-        goldRadio.addEventListener('change', function() {
-            if (goldRadio.checked) {
-                goldInput.style.display = 'block';
+            } else {
                 moneyInput.style.display = 'none';
+                goldInput.style.display = 'block';
             }
         });
     });
