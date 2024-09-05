@@ -2,142 +2,148 @@
 include 'header.php';
 include 'fungsi.php';
 
-// Variabel untuk menyimpan pesan atau error
-$message = "";
+// Cek apakah pengguna sudah login
+checkSession();
 
-// Jika tombol CHECK ditekan
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
-    $search_value = $_POST['search_value'];
-    if (empty($search_value)) {
-        $message = "NIK tidak boleh kosong.";
-    } else {
-        $user_query = "SELECT user.*, dompet.uang, dompet.emas FROM user 
-                    LEFT JOIN dompet ON user.id = dompet.id_user 
-                    WHERE user.nik LIKE '%$search_value%' AND user.role = 'Nasabah'";
-        $user_result = $conn->query($user_query);
+// Mendapatkan username dari session
+$username = $_SESSION['username'];
 
-        if ($user_result->num_rows > 0) {
-            $user_data = $user_result->fetch_assoc();
-        } else {
-            $message = "User dengan role 'Nasabah' tidak ditemukan.";
-        }
-    }
-}
+// Mendapatkan parameter pencarian jika ada
+$search = isset($_GET['search']) ? $_GET['search'] : '';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
+// Dapatkan jumlah data per halaman dari dropdown, default 10
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
 
-    $id_user = $_POST['user_id'] ?? '';
-    $jenis_transaksi = $_POST['jenis_transaksi'] ?? 'setor_sampah';
-    $date = $_POST['tanggal'] . ' ' . $_POST['waktu'];
-    $id_kategoris = $_POST['id_kategori'] ?? [];
-    $id_jeniss = $_POST['id_jenis'] ?? [];
-    $jumlahs = $_POST['jumlah'] ?? [];
-    $hargas = $_POST['harga'] ?? [];
+// Dapatkan halaman saat ini dari URL, default halaman 1
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
 
-    // Generate new ID for transaksi
-    $id_trans_query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
-    $result = $conn->query($id_trans_query);
-    $last_id = ($result->num_rows > 0) ? $result->fetch_assoc()['no'] : 0;
-    $new_id = $last_id + 1;
+// Modifikasi query untuk pagination, jika limit = 0 (Tampilkan Semua), maka query tidak menggunakan LIMIT
+$query = "
+    SELECT 
+        t.id AS id, 
+        u.username AS username,
+    FROM 
+        transaksi t
+    WHERE 
+        t.id LIKE '%$search%'
+    ORDER BY 
+        t.date DESC
+";
 
-    // Create new transaksi ID
-    $id = 'TRANS' . date('Y') . str_pad($new_id, 6, '0', STR_PAD_LEFT);
-
-    // Set the default timezone to Asia/Jakarta
-    date_default_timezone_set('Asia/Jakarta');
-    
-    // Calculate total amount
-    $total_uang = 0;
-
-    // Insert into transaksi table
-    $date = date('Y-m-d'); // Get the current date and time
-    $time = date('H:i:s'); // Get the current date and time
-    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id', '$id_user', '$jenis_transaksi', '$date', '$time')";
-
-        if ($conn->query($transaksi_query) === TRUE) {
-        // Use the custom $id, not $conn->insert_id, as the id_transaksi
-        $id_transaksi = $id;
-
-        // Loop to insert each row into the setor_sampah table
-        for ($i = 0; $i < count($id_kategoris); $i++) {
-        $id_kategori = $id_kategoris[$i];
-        $id_jenis = $id_jeniss[$i];
-        $jumlah = $jumlahs[$i];
-        $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
-        $total_uang += $harga;
-
-        // Insert into setor_sampah table
-        $setor_sampah_query = "INSERT INTO setor_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp) 
-                VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah', '$harga')";
-                    // var_dump($setor_sampah_query);
-                    // die;
-        if ($conn->query($setor_sampah_query) === FALSE) {
-        $message = "Error: " . $conn->error;
-        }
-
-         // Update the jumlah in the sampah table
-        $update_sampah_query = "UPDATE sampah SET jumlah = jumlah + $jumlah WHERE id = '$id_jenis'";
-        if ($conn->query($update_sampah_query) === FALSE) {
-            $message = "Error: " . $conn->error;
-    }
-        }
-
-        // Update or insert into dompet table
-        $dompet_query = "SELECT * FROM dompet WHERE id_user = ?";
-        if ($stmt = $conn->prepare($dompet_query)) {
-            $stmt->bind_param("i", $id_user);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result->num_rows > 0) {
-                $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
-                if ($update_stmt = $conn->prepare($dompet_update_query)) {
-                    $update_stmt->bind_param("di", $total_uang, $id_user);
-                    $update_stmt->execute();
-                    $update_stmt->close();
-                }
-            } else {
-                $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
-                if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
-                    $insert_stmt->bind_param("id", $id_user, $total_uang);
-                    $insert_stmt->execute();
-                    $insert_stmt->close();
-                }
-            }
-
-            $stmt->close();
-        }
-
-        // Uncomment this line when ready to redirect
-        header("Location: nota.php?id_transaksi=$id_transaksi");
-        exit;
-    } else {
-        $message = "Error: " . $conn->error;
-    }
+if ($limit > 0) {
+    // Jika limit tidak 0, tambahkan limit dan offset ke query
+    $query .= " LIMIT $limit OFFSET $offset";
 }
 
 
 
-// Fetch data kategori
-$kategori_query = "SELECT id, name FROM kategori_sampah";
-$kategori_result = $conn->query($kategori_query);
+// Memodifikasi query untuk menambahkan pencarian, jenis sampah, limit, dan offset
+$query = "
+    SELECT 
+        t.id AS id, 
+        u.username AS username,
+        GROUP_CONCAT(DISTINCT 
+            CASE 
+                WHEN ts.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ts.jenis_saldo = 'tarik_emas' THEN 'Tarik Saldo (Emas)'
+                        WHEN ts.jenis_saldo = 'tarik_uang' THEN 'Tarik Saldo (Uang)'
+                    END
+                WHEN ps.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ps.jenis_konversi = 'konversi_emas' THEN 'Pindah Saldo (Emas)'
+                        WHEN ps.jenis_konversi = 'konversi_uang' THEN 'Pindah Saldo (Uang)'
+                    END
+                WHEN ss.id_transaksi IS NOT NULL THEN 'Setor Sampah'
+                WHEN js.id_transaksi IS NOT NULL THEN 'Jual Sampah'
+            END 
+        SEPARATOR ', ') AS jenis_transaksi,
+        IFNULL(
+            CASE
+                WHEN COUNT(ss.id_transaksi) > 0 THEN CONCAT(COUNT(ss.id_transaksi), ' item', IF(COUNT(ss.id_transaksi) > 1, 's', ''))
+                WHEN COUNT(js.id_transaksi) > 0 THEN CONCAT(COUNT(js.id_transaksi), ' item', IF(COUNT(js.id_transaksi) > 1, 's', ''))
+                WHEN ts.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ts.jenis_saldo = 'tarik_emas' THEN CONCAT(ts.jumlah_tarik, ' Gram')
+                        WHEN ts.jenis_saldo = 'tarik_uang' THEN CONCAT('Rp. ', FORMAT(ts.jumlah_tarik, 2))
+                    END
+                WHEN ps.id_transaksi IS NOT NULL THEN 
+                    CASE 
+                        WHEN ps.jenis_konversi = 'konversi_emas' THEN CONCAT(ps.jumlah, ' Gram')
+                        WHEN ps.jenis_konversi = 'konversi_uang' THEN CONCAT('Rp. ', FORMAT(ps.jumlah, 2))
+                    END
+                ELSE '0'
+            END, 
+            CONCAT(
+                CASE 
+                    WHEN ts.id_transaksi IS NOT NULL THEN 
+                        CASE 
+                            WHEN ts.jenis_saldo = 'tarik_emas' THEN CONCAT(ts.jumlah_tarik, ' Gram')
+                            WHEN ts.jenis_saldo = 'tarik_uang' THEN CONCAT('Rp. ', FORMAT(ts.jumlah_tarik, 2))
+                        END
+                    WHEN ps.id_transaksi IS NOT NULL THEN 
+                        CASE 
+                            WHEN ps.jenis_konversi = 'konversi_emas' THEN CONCAT(ps.jumlah, ' Gram')
+                            WHEN ps.jenis_konversi = 'konversi_uang' THEN CONCAT('Rp. ', FORMAT(ps.jumlah, 2))
+                        END
+                    ELSE '0'
+                END
+            )
+        ) AS jumlah,
+        t.date AS date,
+        GROUP_CONCAT(DISTINCT CONCAT(s.jenis, ' : ', ss.jumlah_kg, ' KG') SEPARATOR '<br>') AS detail_sampah
+    FROM 
+        transaksi t
+    LEFT JOIN 
+        tarik_saldo ts ON t.id = ts.id_transaksi
+    LEFT JOIN 
+        pindah_saldo ps ON t.id = ps.id_transaksi
+    LEFT JOIN 
+        setor_sampah ss ON t.id = ss.id_transaksi
+    LEFT JOIN 
+        jual_sampah js ON t.id = js.id_transaksi
+    LEFT JOIN 
+        sampah s ON (ss.id_sampah = s.id OR js.id_sampah = s.id)
+    LEFT JOIN 
+        user u ON t.id_user = u.id
+    WHERE 
+        t.id LIKE '%$search%' OR 
+        u.username LIKE '%$search%' OR 
+        CASE 
+            WHEN ts.id_transaksi IS NOT NULL THEN 
+                CASE 
+                    WHEN ts.jenis_saldo = 'tarik_emas' THEN 'Tarik Saldo (Emas)'
+                    WHEN ts.jenis_saldo = 'tarik_uang' THEN 'Tarik Saldo (Uang)'
+                END
+            WHEN ps.id_transaksi IS NOT NULL THEN 
+                CASE 
+                    WHEN ps.jenis_konversi = 'konversi_emas' THEN 'Pindah Saldo (Emas)'
+                    WHEN ps.jenis_konversi = 'konversi_uang' THEN 'Pindah Saldo (Uang)'
+                END
+            WHEN ss.id_transaksi IS NOT NULL THEN 'Setor Sampah'
+            WHEN js.id_transaksi IS NOT NULL THEN 'Jual Sampah'
+        END LIKE '%$search%'
+    GROUP BY 
+        t.id, t.date, u.username
+    ORDER BY 
+        t.date DESC, t.time DESC
+    LIMIT $limit OFFSET $offset
+";
 
-// Fetch data jenis dan harga
-$jenis_query = "SELECT id, jenis, harga, id_kategori FROM sampah";
-$jenis_result = $conn->query($jenis_query);
+// Eksekusi query
+$transaksi_result = query($query);
 
-// Simpan data jenis sampah ke dalam array
-$jenis_sampah = [];
-if ($jenis_result->num_rows > 0) {
-    while ($row = $jenis_result->fetch_assoc()) {
-        $jenis_sampah[$row['id']] = [
-            'jenis' => $row['jenis'],
-            'harga' => $row['harga'],
-            'id_kategori' => $row['id_kategori']
-        ];
-    }
-}
+// Hitung total data untuk pagination
+$total_query = "SELECT COUNT(*) AS total FROM transaksi";
+$total_result = query($total_query);
+$total_rows = $total_result[0]['total'];
+$total_pages = ceil($total_rows / $limit);
 ?>
+
+
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -145,108 +151,13 @@ if ($jenis_result->num_rows > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Transaksi</title>
+    <title>Bank Sampah | Daftar Transaksi</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <script>
-    var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
-
-    function updateHarga(index) {
-        var idjenis = document.getElementById('id_jenis_' + index).value;
-        var jumlah = document.getElementById('jumlah_' + index).value;
-        var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
-        var totalHarga = jumlah * harga;
-
-        document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-        updateTotalHarga();
-    }
-
-    function updateTotalHarga() {
-        var totalHarga = 0;
-        var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
-
-        hargaInputs.forEach(function(hargaInput) {
-            var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
-            totalHarga += harga;
-        });
-
-        document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-    }
-
-    function updateJenis(index) {
-        var kategoriSelect = document.getElementById('id_kategori_' + index);
-        var jenisSelect = document.getElementById('id_jenis_' + index);
-        var selectedKategori = kategoriSelect.value;
-
-        jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
-        for (var id in jenisSampah) {
-            if (jenisSampah[id].id_kategori == selectedKategori) {
-                var option = document.createElement('option');
-                option.value = id;
-                option.text = jenisSampah[id].jenis;
-                jenisSelect.add(option);
-            }
-        }
-        jenisSelect.value = "";
-        updateHarga(index);
-    }
-
-    function addRow() {
-        var table = document.getElementById('transaksiTable');
-        var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
-        var row = table.insertRow(rowCount);
-
-        row.innerHTML = `
-                <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
-                <td>${rowCount}</td>
-                <td>
-                    <select name="id_kategori[]" id="id_kategori_${rowCount}" class="form-control" onchange="updateJenis(${rowCount})">
-                        <option value="">-- kategorikk sampah --</option>
-                        <?php
-                        if ($kategori_result->num_rows > 0) {
-                            while ($row = $kategori_result->fetch_assoc()) {
-                                echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
-                            }
-                        }
-                        ?>
-                    </select>
-                </td>
-                <td>
-                    <select name="id_jenis[]" id="id_jenis_${rowCount}" class="form-control" onchange="updateHarga(${rowCount})">
-                        <option value="">-- jenis sampah --</option>
-                    </select>
-                </td>
-                <td>
-                    <input type="number" name="jumlah[]" id="jumlah_${rowCount}" class="form-control" placeholder="Jumlah" oninput="updateHarga(${rowCount})" step="0.001">
-                </td>
-                <td>
-                    <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
-                </td>
-            `;
-    }
-
-    function removeRow(button) {
-        var row = button.parentNode.parentNode;
-        row.parentNode.removeChild(row);
-        updateTotalHarga();
-    }
-
-    function validateSearchForm() {
-        var searchValue = document.getElementById('search_value').value;
-        if (searchValue.trim() === '') {
-            alert('NIK tidak boleh kosong.');
-            return false; // Mencegah form dikirim
-        } else if (searchValue.length !== 16 || isNaN(searchValue)) {
-            alert('NIK harus berisi 16 digit angka.');
-            return false; // Mencegah form dikirim
-        }
-        return true; // Memungkinkan form dikirim
-    }
-    </script>
 </head>
 
 <body>
@@ -261,146 +172,163 @@ if ($jenis_result->num_rows > 0) {
                 <div class="header--wrapper">
                     <div class="header--title">
                         <span>Halaman</span>
-                        <h2>Setor Sampah</h2>
-                    </div>
-                    <div class="user--info">
-                        <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
-                                Sampah</button></a>
-                        <a href="Konversi.php"><button type="button" name="button" class="inputbtn">Konversi
-                                Saldo</button></a>
-                        <a href="tarik.php"><button type="button" name="button" class="inputbtn">Tarik
-                                Saldo</button></a>
-                        <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual
-                                Sampah</button></a>
+                        <h2>Rekap Transaksi</h2>
                     </div>
                 </div>
 
-                <!-- Start of Form Section -->
+                <!-- Start of Transaction Table Section -->
                 <div class="tabular--wrapper">
-                    <!-- Search Section -->
-                    <form method="POST" action="" onsubmit="return validateSearchForm()">
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <input type="text" name="search_value" id="search_value" class="form-control"
-                                    placeholder="Search by NIK" maxlength="16" oninput="validateNIK(this)"
-                                    value="<?php echo isset($search_value) ? $search_value : ''; ?>" required>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" name="search" class="btn btn-dark w-100">CHECK</button>
-                            </div>
+                    <!-- Form Pencarian -->
+                    <form method="GET" action="">
+                        <div class="form-group">
+                            <label for="search">Cari Transaksi:</label>
+                            <input type="text" name="search" id="search" class="form-control"
+                                placeholder="Masukkan ID Transaksi, Username, atau Jenis Transaksi"
+                                value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
+                            <button type="submit" class="inputbtn">Cari</button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="limit">Tampilkan:</label>
+                            <select name="limit" id="limit" class="form-control">
+                                <option value="5" <?php if ($limit == 5) echo 'selected'; ?>>5</option>
+                                <option value="10" <?php if ($limit == 10) echo 'selected'; ?>>10</option>
+                                <option value="20" <?php if ($limit == 20) echo 'selected'; ?>>20</option>
+                                <option value="40" <?php if ($limit == 40) echo 'selected'; ?>>40</option>
+
+                            </select>
                         </div>
                     </form>
 
-                    <!-- User Information Section -->
-                    <?php if (isset($user_data)) { ?>
-                    <div class="row mb-4">
-                        <div class="col-md-5">
-                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
-                            <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
-                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
-                        </div>
-                        <div class="col-md-5">
-                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
-                            <p><strong>Saldo Uang</strong> : Rp.
-                                <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
-                            <p><strong>Saldo Emas</strong> :
-                                <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
-                        </div>
-                    </div>
-                    <?php } else { ?>
-                    <div class="row mb-4">
-                        <div class="col-md-12">
-                            <p class="text-danger"><?php echo $message; ?></p>
-                        </div>
-                    </div>
-                    <?php } ?>
 
+                    <!-- End of Form Pencarian -->
 
-                    <!-- Date and Time Section -->
-                    <form method="POST" action="">
-                        <?php if (isset($user_data)) { ?>
-                        <input type="hidden" name="user_id" value="<?php echo $user_data['id']; ?>">
-                        <?php } ?>
-                        <div class="row mb-4">
-                            <div class="col-md-4">
-                                <input type="date" name="tanggal" class="form-control"
-                                    value="<?php echo date('Y-m-d'); ?>" disabled>
-                            </div>
-                            <div class="col-md-4">
-                                <?php
-                                // Set zona waktu ke WIB (UTC+7)
-                                date_default_timezone_set('Asia/Jakarta');
-                                $current_time = date('H:i');
-                                ?>
-                                <input type="time" name="waktu" class="form-control"
-                                    value="<?php echo $current_time; ?>" disabled>
-                            </div>
-                        </div>
-
-                        <!-- Table Section -->
-                        <table class="table table-bordered" id="transaksiTable">
-                            <thead>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>ID Transaksi</th>
+                                <th>Username</th>
+                                <th>Jenis Transaksi</th>
+                                <th>Jumlah (KG)</th>
+                                <th>Tanggal</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($transaksi_result) > 0): ?>
+                                <?php foreach ($transaksi_result as $row): ?>
+                                    <tr>
+                                        <td><?php echo $row['id']; ?></td>
+                                        <td><?php echo $row['username']; ?></td>
+                                        <td><?php echo $row['jenis_transaksi']; ?></td>
+                                        <td><?php echo $row['jumlah']; ?></td>
+                                        <td><?php echo $row['date']; ?></td>
+                                        <td>
+                                            <button class="btn btn-primary detail-button"
+                                                data-toggle="modal"
+                                                data-target="#detailModal"
+                                                data-id="<?php echo $row['id']; ?>"
+                                                data-username="<?php echo $row['username']; ?>"
+                                                data-jenis="<?php echo $row['jenis_transaksi']; ?>"
+                                                data-jumlah="<?php echo $row['jumlah']; ?>"
+                                                data-date="<?php echo $row['date']; ?>"
+                                                data-detail-sampah="<?php echo $row['detail_sampah']; ?>">Detail
+                                            </button>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
                                 <tr>
-                                    <th>#</th>
-                                    <th>No</th>
-                                    <th>Kategori</th>
-                                    <th>Jenis</th>
-                                    <th>Jumlah(KG)</th>
-                                    <th>Harga</th>
+                                    <td colspan="6" class="text-center">Tidak ada transaksi ditemukan.</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <!-- <tr>
-                                    <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
-                                    <td>1</td>
-                                    <td>
-                                        <select name="id_kategori[]" id="id_kategori_1" class="form-control"
-                                            onchange="updateJenis(1)">
-                                            <option value="">-- kategoriaaa sampah --</option> -->
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
 
-                                <?php
-                                if ($kategori_result->num_rows > 0) {
-                                    while ($row = $kategori_result->fetch_assoc()) {
-                                        echo "<option value='" . $row['id'] . "'>" . $row['name'] . "</option>";
-                                    }
-                                }
-                                ?>
+                    <!-- Pagination -->
+                    <div class="pagination-wrapper">
+                        <ul class="pagination">
+                            <?php if ($page > 1): ?>
+                                <li class="page-item"><a href="?page=<?php echo $page - 1; ?>&limit=<?php echo $limit; ?>" class="page-link">Previous</a></li>
+                            <?php endif; ?>
 
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <li class="page-item <?php if ($page == $i) echo 'active'; ?>">
+                                    <a href="?page=<?php echo $i; ?>&limit=<?php echo $limit; ?>" class="page-link"><?php echo $i; ?></a>
+                                </li>
+                            <?php endfor; ?>
 
-                                <!-- </select>
-                                    </td>
-                                    <td>
-                                        <select name="id_jenis[]" id="id_jenis_1" class="form-control"
-                                            onchange="updateHarga(1)">
-                                            <option value="">-- jenis sampah --</option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" name="jumlah[]" id="jumlah_1" class="form-control"
-                                            placeholder="Jumlah" oninput="updateHarga(1)">
-                                    </td>
-                                    <td>
-                                        <input type="text" name="harga[]" id="harga_1" class="form-control" readonly>
-                                    </td>
-                                </tr> -->
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <th colspan="5" class="text-right">Total Harga:</th>
-                                    <th id="totalHarga">Rp. 0</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                        <button type="button" class="btn btn-dark mb-3" onclick="addRow()">Tambah Baris</button>
-                        <button type="submit" name="submit" class="btn btn-primary mb-3">SUBMIT</button>
-                    </form>
+                            <?php if ($page < $total_pages): ?>
+                                <li class="page-item"><a href="?page=<?php echo $page + 1; ?>&limit=<?php echo $limit; ?>" class="page-link">Next</a></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+
                 </div>
-                <!-- End of Form Section -->
+                <!-- End of Transaction Table Section -->
             </div>
         </div>
         <!-- Batas Akhir Main-Content -->
     </div>
+
+    <!-- Detail Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="detailModalLabel">Detail Transaksi</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>ID Transaksi:</strong> <span id="modal-id"></span></p>
+                    <p><strong>Username:</strong> <span id="modal-username"></span></p>
+                    <p><strong>Jenis Transaksi:</strong> <span id="modal-jenis"></span></p>
+                    <p><strong>Jumlah:</strong> <span id="modal-jumlah"></span></p>
+                    <p><strong>Detail Sampah:</strong></p>
+                    <p id="modal-detail-sampah"></p>
+                    <p><strong>Tanggal:</strong> <span id="modal-date"></span></p>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End of Detail Modal -->
+
+    <!-- jQuery, Popper.js, Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        $(document).on('click', '.detail-button', function() {
+            var id = $(this).data('id');
+            var username = $(this).data('username');
+            var jenis = $(this).data('jenis');
+            var jumlah = $(this).data('jumlah');
+            var date = $(this).data('date');
+            var detailSampah = $(this).data('detail-sampah'); // Mengambil detail sampah
+
+            $('#modal-id').text(id);
+            $('#modal-username').text(username);
+            $('#modal-jenis').text(jenis);
+            $('#modal-jumlah').text(jumlah);
+            $('#modal-date').text(date);
+            $('#modal-detail-sampah').html(detailSampah); // Menampilkan detail sampah dengan line break
+        });
+    </script>
+
+    <script>
+        // Event listener untuk mengirim form secara otomatis ketika dropdown limit berubah
+        document.getElementById('limit').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
+
 </body>
 
 </html>
