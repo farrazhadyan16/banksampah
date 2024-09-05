@@ -14,6 +14,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 
         if ($user_result->num_rows > 0) {
             $user_data = $user_result->fetch_assoc();
+
+            // Ambil harga emas terkini
+            $current_gold_price_sell = getCurrentGoldPricesell();
+
+             // Hitung jumlah emas yang setara dengan saldo uang
+             $gold_equivalent = $user_data['emas'] * $current_gold_price_sell;
+             
         } else {
             $message = "User dengan role 'Nasabah' tidak ditemukan.";
         }
@@ -43,14 +50,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
         <p><strong>ID</strong> : <?php echo $user_data['id']; ?></p>
         <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
         <p><strong>Email</strong> : <?php echo $user_data['email']; ?></p>
-        <p><strong>Username</strong> : <?php echo $user_data['username']; ?></p>
     </div>
     <div class="col-md-5">
+        <p><strong>Username</strong> : <?php echo $user_data['username']; ?></p>
+
         <p><strong>Nama Lengkap</strong> : <?php echo $user_data['nama']; ?></p>
-        <p><strong>Saldo Uang</strong> : Rp.
-            <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
-        <p><strong>Saldo Emas</strong> :
-            <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
+        <p><strong>Saldo</strong> :
+            <?php echo number_format($user_data['emas'], 4, '.', '.'); ?> g =
+            Rp. <?php echo round($gold_equivalent, 2); ?>
+        </p>
+        <!-- <p><strong>Saldo Emas</strong> :
+            <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p> -->
     </div>
 </div>
 <?php } else { ?>
@@ -76,43 +86,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
         <input type="time" name="waktu" class="form-control" value="<?php echo $current_time; ?>" disabled>
     </div>
 </div>
-<script>
-document.getElementById('searchForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Prevent the form from submitting normally
-
-    var formData = new FormData(this);
-
-    fetch('search_nik.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            var userInfoDiv = document.getElementById('userInfo');
-            userInfoDiv.innerHTML = ''; // Clear previous user info
-
-            if (data.error) {
-                userInfoDiv.innerHTML = `<p class="text-danger">${data.error}</p>`;
-            } else {
-                var userData = data.data;
-                userInfoDiv.innerHTML = `
-                    <div class="row mb-4">
-                        <div class="col-md-5">
-                            <p><strong>ID</strong>: ${userData.id}</p>
-                            <p><strong>NIK</strong>: ${userData.nik}</p>
-                            <p><strong>Email</strong>: ${userData.email}</p>
-                            <p><strong>Username</strong>: ${userData.username}</p>
-                        </div>
-                        <div class="col-md-5">
-                            <p><strong>Nama Lengkap</strong>: ${userData.nama}</p>
-                            <p><strong>Saldo Uang</strong>: Rp. ${parseFloat(userData.uang).toLocaleString('id-ID')}</p>
-                            <p><strong>Saldo Emas</strong>: ${parseFloat(userData.emas).toFixed(4)} g</p>
-                        </div>
-                    </div>`;
-                document.querySelector('input[name="id_user"]').value = userData
-                    .id; // Set hidden id_user input
-            }
-        })
-        .catch(error => console.error('Error:', error));
-});
-</script>

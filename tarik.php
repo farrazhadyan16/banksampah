@@ -9,6 +9,10 @@ $message = "";
 $query = "SELECT no FROM transaksi ORDER BY no DESC LIMIT 1";
 $result = $conn->query($query);
 
+$current_gold_price_buy = getCurrentGoldPricebuy(); // For converting money to gold
+$current_gold_price_sell = getCurrentGoldPricesell(); // For converting gold to money
+
+
 // If NIK has been searched and the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     $id_user = $_POST['id_user'];
@@ -98,6 +102,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
         }
     }
 }
+
+// Fetch user's balance
+$balance_query = "SELECT uang, emas FROM dompet WHERE id_user = ?";
+$stmt_balance = $conn->prepare($balance_query);
+$stmt_balance->bind_param("i", $id_user);
+$stmt_balance->execute();
+$balance_result = $stmt_balance->get_result();
+$user_balance = $balance_result->fetch_assoc();
+
 ?>
 
 <!DOCTYPE html>
@@ -146,6 +159,31 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                     <!-- Search Section -->
                     <?php include("search_nik.php") ?>
 
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                </div>
+                                <input type="text" name="harga_emas_beli" class="form-control"
+                                    placeholder="Harga Emas Beli" value="<?php echo $current_gold_price_buy; ?>"
+                                    readonly>
+                            </div>
+                            <small class="form-text text-muted">Harga beli emas (saat ini) per gram</small>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                </div>
+                                <input type="text" name="harga_emas_jual" class="form-control"
+                                    placeholder="Harga Emas Jual" value="<?php echo $current_gold_price_sell; ?>"
+                                    readonly>
+                            </div>
+                            <small class="form-text text-muted">Harga jual emas (saat ini) per gram</small>
+                        </div>
+                    </div>
+
                     <!-- Form Tarik Saldo -->
                     <?php if (isset($user_data) && !is_null($user_data)) { ?>
                     <form method="POST" action="">
@@ -170,6 +208,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                                             placeholder="Jumlah Uang">
                                     </div>
                                     <small class="form-text text-muted">Jumlah uang yang ingin ditarik</small>
+                                    <p id="sisa_saldo_uang" class="text-info"></p> <!-- Remaining money balance -->
                                 </div>
 
                                 <div id="gold_input" style="display: none;">
@@ -186,6 +225,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                                         </select>
                                     </div>
                                     <small class="form-text text-muted">Jumlah emas yang ingin ditarik</small>
+                                    <p id="sisa_saldo_emas" class="text-info"></p> <!-- Remaining gold balance -->
                                 </div>
                             </div>
                         </div>
@@ -224,6 +264,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
         const goldRadio = document.querySelector('input[name="withdraw_type"][value="gold"]');
         const moneyInput = document.getElementById('money_input');
         const goldInput = document.getElementById('gold_input');
+        const jumlahUang = document.getElementById('jumlah_uang');
+        const jumlahEmas = document.getElementById('jumlah_emas');
+        const sisaSaldoUang = document.getElementById('sisa_saldo_uang');
+        const sisaSaldoEmas = document.getElementById('sisa_saldo_emas');
+
 
         moneyRadio.addEventListener('change', function() {
             if (moneyRadio.checked) {
@@ -237,6 +282,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                 goldInput.style.display = 'block';
                 moneyInput.style.display = 'none';
             }
+        });
+
+        // Update remaining balance for money
+        jumlahUang.addEventListener('input', function() {
+            const tarikUang = parseFloat(jumlahUang.value) || 0;
+            const remainingMoney = userMoneyBalance - tarikUang;
+            sisaSaldoUang.textContent =
+                `Sisa saldo uang: ${remainingMoney.toLocaleString('id-ID')} units`;
+        });
+
+        // Update remaining balance for gold
+        jumlahEmas.addEventListener('change', function() {
+            const tarikEmas = parseFloat(jumlahEmas.value) || 0;
+            const remainingGold = userGoldBalance - tarikEmas;
+            sisaSaldoEmas.textContent = `Sisa saldo emas: ${remainingGold.toFixed(2)} gram`;
         });
     });
     </script>
