@@ -11,7 +11,34 @@ $username = $_SESSION['username'];
 // Mendapatkan parameter pencarian jika ada
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
-// Memodifikasi query untuk menambahkan pencarian dan jenis sampah
+// Dapatkan jumlah data per halaman dari dropdown, default 10
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+
+// Dapatkan halaman saat ini dari URL, default halaman 1
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $limit;
+
+// Modifikasi query untuk pagination, jika limit = 0 (Tampilkan Semua), maka query tidak menggunakan LIMIT
+$query = "
+    SELECT 
+        t.id AS id, 
+        u.username AS username,
+    FROM 
+        transaksi t
+    WHERE 
+        t.id LIKE '%$search%'
+    ORDER BY 
+        t.date DESC
+";
+
+if ($limit > 0) {
+    // Jika limit tidak 0, tambahkan limit dan offset ke query
+    $query .= " LIMIT $limit OFFSET $offset";
+}
+
+
+
+// Memodifikasi query untuk menambahkan pencarian, jenis sampah, limit, dan offset
 $query = "
     SELECT 
         t.id AS id, 
@@ -101,11 +128,19 @@ $query = "
         t.id, t.date, u.username
     ORDER BY 
         t.date DESC, t.time DESC
+    LIMIT $limit OFFSET $offset
 ";
 
 // Eksekusi query
 $transaksi_result = query($query);
+
+// Hitung total data untuk pagination
+$total_query = "SELECT COUNT(*) AS total FROM transaksi";
+$total_result = query($total_query);
+$total_rows = $total_result[0]['total'];
+$total_pages = ceil($total_rows / $limit);
 ?>
+
 
 
 
@@ -116,7 +151,7 @@ $transaksi_result = query($query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Sampah | Semua Transaksi</title>
+    <title>Bank Sampah | Daftar Transaksi</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
     <!-- Font Awesome Cdn link -->
@@ -152,7 +187,20 @@ $transaksi_result = query($query);
                                 value="<?php echo isset($_GET['search']) ? $_GET['search'] : ''; ?>">
                             <button type="submit" class="inputbtn">Cari</button>
                         </div>
+
+                        <div class="form-group">
+                            <label for="limit">Tampilkan:</label>
+                            <select name="limit" id="limit" class="form-control">
+                                <option value="5" <?php if ($limit == 5) echo 'selected'; ?>>5</option>
+                                <option value="10" <?php if ($limit == 10) echo 'selected'; ?>>10</option>
+                                <option value="20" <?php if ($limit == 20) echo 'selected'; ?>>20</option>
+                                <option value="40" <?php if ($limit == 40) echo 'selected'; ?>>40</option>
+
+                            </select>
+                        </div>
                     </form>
+
+
                     <!-- End of Form Pencarian -->
 
                     <table class="table table-bordered">
@@ -176,7 +224,6 @@ $transaksi_result = query($query);
                                         <td><?php echo $row['jumlah']; ?></td>
                                         <td><?php echo $row['date']; ?></td>
                                         <td>
-                                            <!-- <button class="btn btn-info print-button" onclick="window.print()">Print</button> -->
                                             <button class="btn btn-primary detail-button"
                                                 data-toggle="modal"
                                                 data-target="#detailModal"
@@ -197,6 +244,26 @@ $transaksi_result = query($query);
                             <?php endif; ?>
                         </tbody>
                     </table>
+
+                    <!-- Pagination -->
+                    <div class="pagination-wrapper">
+                        <ul class="pagination">
+                            <?php if ($page > 1): ?>
+                                <li class="page-item"><a href="?page=<?php echo $page - 1; ?>&limit=<?php echo $limit; ?>" class="page-link">Previous</a></li>
+                            <?php endif; ?>
+
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <li class="page-item <?php if ($page == $i) echo 'active'; ?>">
+                                    <a href="?page=<?php echo $i; ?>&limit=<?php echo $limit; ?>" class="page-link"><?php echo $i; ?></a>
+                                </li>
+                            <?php endfor; ?>
+
+                            <?php if ($page < $total_pages): ?>
+                                <li class="page-item"><a href="?page=<?php echo $page + 1; ?>&limit=<?php echo $limit; ?>" class="page-link">Next</a></li>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+
                 </div>
                 <!-- End of Transaction Table Section -->
             </div>
@@ -254,6 +321,14 @@ $transaksi_result = query($query);
             $('#modal-detail-sampah').html(detailSampah); // Menampilkan detail sampah dengan line break
         });
     </script>
+
+    <script>
+        // Event listener untuk mengirim form secara otomatis ketika dropdown limit berubah
+        document.getElementById('limit').addEventListener('change', function() {
+            this.form.submit();
+        });
+    </script>
+
 </body>
 
 </html>
