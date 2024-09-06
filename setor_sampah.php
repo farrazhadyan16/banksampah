@@ -5,6 +5,9 @@ include 'fungsi.php';
 // Variabel untuk menyimpan pesan atau error
 $message = "";
 
+$current_gold_price_buy = getCurrentGoldPricebuy(); // For converting money to gold
+$current_gold_price_sell = getCurrentGoldPricesell(); // For converting gold to money
+
 // Jika tombol CHECK ditekan
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
     $search_value = $_POST['search_value'];
@@ -48,6 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
     
     // Calculate total amount
     $total_uang = 0;
+    $total_emas = 0; // Variable to store total gold converted
 
     // Insert into transaksi table
     $date = date('Y-m-d'); // Get the current date and time
@@ -66,9 +70,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
         $harga = str_replace(['Rp. ', '.', ','], '', $hargas[$i]);
         $total_uang += $harga;
 
+        // Convert money to gold based on current gold price
+        $emas_converted = $harga / $current_gold_price_buy;
+        $total_emas += $emas_converted;
+
         // Insert into setor_sampah table
-        $setor_sampah_query = "INSERT INTO setor_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp) 
-                VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah', '$harga')";
+        $setor_sampah_query = "INSERT INTO setor_sampah (no, id_transaksi, id_sampah, jumlah_kg, jumlah_rp, jumlah_emas) 
+                VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah', '$harga','$emas_converted')";
                     // var_dump($setor_sampah_query);
                     // die;
         if ($conn->query($setor_sampah_query) === FALSE) {
@@ -90,16 +98,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
             $result = $stmt->get_result();
 
             if ($result->num_rows > 0) {
-                $dompet_update_query = "UPDATE dompet SET uang = uang + ?, emas = emas WHERE id_user = ?";
+                // Update existing record, including both uang and emas columns
+                $dompet_update_query = "UPDATE dompet SET  emas = emas + ? WHERE id_user = ?";
                 if ($update_stmt = $conn->prepare($dompet_update_query)) {
-                    $update_stmt->bind_param("di", $total_uang, $id_user);
+                    $update_stmt->bind_param("di", $total_emas, $id_user);
                     $update_stmt->execute();
                     $update_stmt->close();
                 }
             } else {
-                $dompet_insert_query = "INSERT INTO dompet (id_user, uang, emas) VALUES (?, ?, 0.0000)";
+                // Insert new record if no existing record found
+                $dompet_insert_query = "INSERT INTO dompet (id_user, emas) VALUES (, ?, ?)";
                 if ($insert_stmt = $conn->prepare($dompet_insert_query)) {
-                    $insert_stmt->bind_param("id", $id_user, $total_uang);
+                    $insert_stmt->bind_param("id", $id_user,  $total_emas);
                     $insert_stmt->execute();
                     $insert_stmt->close();
                 }
@@ -107,6 +117,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
 
             $stmt->close();
         }
+
+        
 
         // Uncomment this line when ready to redirect
         header("Location: nota.php?id_transaksi=$id_transaksi");
@@ -161,9 +173,14 @@ if ($jenis_result->num_rows > 0) {
         var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
         var totalHarga = jumlah * harga;
 
+        // Assuming you have `current_gold_price_buy` as a JavaScript variable, otherwise pass it to JS
+        var totalEmas = totalHarga / <?php echo $current_gold_price_buy; ?>; // Convert total price to gold
+
         document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-        updateTotalHarga();
+        document.getElementById('totalEmas').innerText = totalEmas.toFixed(4) + ' g'; // Show total gold in grams
+        updateTotalHarga(); // Call function to update total money
     }
+
 
     function updateTotalHarga() {
         var totalHarga = 0;
@@ -196,9 +213,9 @@ if ($jenis_result->num_rows > 0) {
     }
 
     function addRow() {
-        var table = document.getElementById('transaksiTable');
-        var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
-        var row = table.insertRow(rowCount);
+        var tbody = document.querySelector('#transaksiTable tbody');
+        var rowCount = tbody.rows.length + 1; // Adjust row count to account for existing rows in tbody
+        var row = tbody.insertRow(); // Add row to tbody instead of the table directly
 
         row.innerHTML = `
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
@@ -338,6 +355,31 @@ if ($jenis_result->num_rows > 0) {
                             </div>
                         </div>
 
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                    </div>
+                                    <input type="text" name="harga_emas_beli" class="form-control"
+                                        placeholder="Harga Emas Beli" value="<?php echo $current_gold_price_buy; ?>"
+                                        readonly>
+                                </div>
+                                <small class="form-text text-muted">Harga beli emas (saat ini) per gram</small>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-coins"></i></span>
+                                    </div>
+                                    <input type="text" name="harga_emas_jual" class="form-control"
+                                        placeholder="Harga Emas Jual" value="<?php echo $current_gold_price_sell; ?>"
+                                        readonly>
+                                </div>
+                                <small class="form-text text-muted">Harga jual emas (saat ini) per gram</small>
+                            </div>
+                        </div>
+
                         <!-- Table Section -->
                         <table class="table table-bordered" id="transaksiTable">
                             <thead>
@@ -389,6 +431,10 @@ if ($jenis_result->num_rows > 0) {
                                 <tr>
                                     <th colspan="5" class="text-right">Total Harga:</th>
                                     <th id="totalHarga">Rp. 0</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="5" class="text-right">Total Emas:</th>
+                                    <th id="totalEmas">0gr</th>
                                 </tr>
                             </tfoot>
                         </table>

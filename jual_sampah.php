@@ -172,9 +172,10 @@ if ($jenis_result->num_rows > 0) {
     }
 
     function addRow() {
-        var table = document.getElementById('transaksiTable');
-        var rowCount = table.rows.length - 1; // Mengurangi 1 untuk tidak menghitung footer
-        var row = table.insertRow(rowCount);
+        var tbody = document.querySelector('#transaksiTable tbody');
+        var rowCount = tbody.rows.length + 1; // Adjust row count to account for existing rows in tbody
+        var row = tbody.insertRow(); // Add row to tbody instead of the table directly
+
 
         row.innerHTML = `
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>

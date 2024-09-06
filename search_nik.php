@@ -86,3 +86,43 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
         <input type="time" name="waktu" class="form-control" value="<?php echo $current_time; ?>" disabled>
     </div>
 </div>
+<script>
+document.getElementById('searchForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // Prevent the form from submitting normally
+
+    var formData = new FormData(this);
+
+    fetch('search_nik.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            var userInfoDiv = document.getElementById('userInfo');
+            userInfoDiv.innerHTML = ''; // Clear previous user info
+
+            if (data.error) {
+                userInfoDiv.innerHTML = `<p class="text-danger">${data.error}</p>`;
+            } else {
+                var userData = data.data;
+                userInfoDiv.innerHTML = `
+                    <div class="row mb-4">
+                        <div class="col-md-5">
+                            <p><strong>ID</strong>: ${userData.id}</p>
+                            <p><strong>NIK</strong>: ${userData.nik}</p>
+                            <p><strong>Email</strong>: ${userData.email}</p>
+                            <p><strong>Username</strong>: ${userData.username}</p>
+                        </div>
+                        <div class="col-md-5">
+                            <p><strong>Nama Lengkap</strong>: ${userData.nama}</p>
+                            <p><strong>Saldo Uang</strong>: Rp. ${parseFloat(userData.uang).toLocaleString('id-ID')}</p>
+                            <p><strong>Saldo Emas</strong>: ${parseFloat(userData.emas).toFixed(4)} g</p>
+                        </div>
+                    </div>`;
+                document.querySelector('input[name="id_user"]').value = userData
+                    .id; // Set hidden id_user input
+            }
+        })
+        .catch(error => console.error('Error:', error));
+});
+</script>

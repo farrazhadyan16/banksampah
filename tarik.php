@@ -12,7 +12,6 @@ $result = $conn->query($query);
 $current_gold_price_buy = getCurrentGoldPricebuy(); // For converting money to gold
 $current_gold_price_sell = getCurrentGoldPricesell(); // For converting gold to money
 
-
 // If NIK has been searched and the form is submitted
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     $id_user = $_POST['id_user'];
@@ -50,60 +49,103 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
         // Validate withdrawal amount
         if (empty($jumlah_tarik) || !is_numeric($jumlah_tarik)) {
             $message = "Jumlah yang ditarik harus diisi dan berupa angka.";
-        } elseif (($withdraw_type === 'money' && $jumlah_tarik > $user_balance['uang']) ||
-                  ($withdraw_type === 'gold' && $jumlah_tarik > $user_balance['emas'])) {
-            // Show alert if withdrawal amount exceeds balance
-            $message = "Jumlah yang ditarik tidak boleh melebihi saldo " . ($withdraw_type === 'money' ? "uang" : "emas") . " Anda.";
-        } elseif ($withdraw_type === 'money' && ($user_balance['uang'] - $jumlah_tarik) < 1000) {
-            // Show alert if withdrawal leaves less than 1000 units in money balance
-            $message = "Saldo uang tidak boleh kurang dari 1000 setelah penarikan.";
-        } else {
-            try {
-                // Proceed with the transaction if the amount is valid
-                $conn->begin_transaction();
+        } elseif ($withdraw_type === 'money') {
+            // Calculate how much gold needs to be deducted
+            $gold_to_deduct = $jumlah_tarik / $current_gold_price_sell; // Convert money to gold amount
+            if ($gold_to_deduct > $user_balance['emas']) {
+                $message = "Jumlah yang ditarik tidak boleh melebihi saldo emas Anda.";
+            } elseif (($user_balance['emas'] - $gold_to_deduct) < 0.1) {
+                // Show alert if withdrawal leaves less than 0.1 grams in gold balance
+                $message = "Saldo emas tidak boleh kurang dari 0.1 gram setelah penarikan.";
+            } else {
+                try {
+                    // Proceed with the transaction if the amount is valid
+                    $conn->begin_transaction();
 
-                // Insert into transaksi table
-                $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, ?, ?, ?, ?, ?)";
-                $stmt_transaksi = $conn->prepare($transaksi_query);
-                $stmt_transaksi->bind_param("sssss", $id, $id_user, $jenis_transaksi, $date, $time);
-                $stmt_transaksi->execute();
+                    // Insert into transaksi table
+                    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, ?, ?, ?, ?, ?)";
+                    $stmt_transaksi = $conn->prepare($transaksi_query);
+                    $stmt_transaksi->bind_param("sssss", $id, $id_user, $jenis_transaksi, $date, $time);
+                    $stmt_transaksi->execute();
 
-                // Insert into tarik_saldo table
-                $jenis_saldo = ($withdraw_type === 'money') ? 'tarik_uang' : 'tarik_emas';
-                $stmt = $conn->prepare("INSERT INTO tarik_saldo (no, id_transaksi, jenis_saldo, jumlah_tarik) VALUES (NULL, ?, ?, ?)");
-                $stmt->bind_param("ssi", $id, $jenis_saldo, $jumlah_tarik);
-                $stmt->execute();
+                    // Insert into tarik_saldo table
+                    $jenis_saldo = 'tarik_uang';
+                    $stmt = $conn->prepare("INSERT INTO tarik_saldo (no, id_transaksi, jenis_saldo, jumlah_tarik) VALUES (NULL, ?, ?, ?)");
+                    $stmt->bind_param("ssi", $id, $jenis_saldo, $jumlah_tarik);
+                    $stmt->execute();
 
-                // Update user's balance
-                if ($withdraw_type === 'money') {
-                    $update_saldo_query = "UPDATE dompet SET uang = uang - ? WHERE id_user = ?";
-                } else {
-                    $update_saldo_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
+                    // Update user's balance
+                    $update_money_query = "UPDATE dompet SET uang = uang + ?, emas = emas - ? WHERE id_user = ?";
+                    $stmt_update = $conn->prepare($update_money_query);
+                    $stmt_update->bind_param("ddi", $jumlah_tarik, $gold_to_deduct, $id_user);
+                    $stmt_update->execute();
+
+                    // Commit transaction
+                    $conn->commit();
+
+                    // Display success message
+                    $message = "Penarikan uang berhasil! Saldo Anda telah diperbarui.";
+
+                    // Redirect to nota.php
+                    header("Location: nota.php?id_transaksi=$id");
+                    exit();
+                } catch (Exception $e) {
+                    // Rollback transaction in case of an error
+                    $conn->rollback();
+                    $message = "Terjadi kesalahan saat melakukan penarikan: " . $e->getMessage();
                 }
+            }
+        } elseif ($withdraw_type === 'gold') {
+            // Validate gold withdrawal amount
+            if ($jumlah_tarik < 0.1) {
+                $message = "Jumlah emas yang ditarik tidak boleh kurang dari 0.1 gram.";
+            } elseif ($jumlah_tarik > $user_balance['emas']) {
+                $message = "Jumlah emas yang ditarik tidak boleh melebihi saldo emas Anda.";
+            } elseif (($user_balance['emas'] - $jumlah_tarik) < 0.1) {
+                $message = "Saldo emas tidak boleh kurang dari 0.1 gram setelah penarikan.";
+            } else {
+                try {
+                    // Proceed with the transaction if the amount is valid
+                    $conn->begin_transaction();
 
-                $stmt_update = $conn->prepare($update_saldo_query);
-                $stmt_update->bind_param("di", $jumlah_tarik, $id_user);
-                $stmt_update->execute();
+                    // Insert into transaksi table
+                    $transaksi_query = "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, ?, ?, ?, ?, ?)";
+                    $stmt_transaksi = $conn->prepare($transaksi_query);
+                    $stmt_transaksi->bind_param("sssss", $id, $id_user, $jenis_transaksi, $date, $time);
+                    $stmt_transaksi->execute();
 
-                // Commit transaction
-                $conn->commit();
+                    // Insert into tarik_saldo table
+                    $jenis_saldo = 'tarik_emas';
+                    $stmt = $conn->prepare("INSERT INTO tarik_saldo (no, id_transaksi, jenis_saldo, jumlah_tarik) VALUES (NULL, ?, ?, ?)");
+                    $stmt->bind_param("ssd", $id, $jenis_saldo, $jumlah_tarik);
+                    $stmt->execute();
 
-                // Display success message
-                $message = "Penarikan " . ($withdraw_type === 'money' ? "uang" : "emas") . " berhasil! Saldo Anda telah diperbarui.";
+                    // Update user's balance
+                    $update_gold_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
+                    $stmt_update = $conn->prepare($update_gold_query);
+                    $stmt_update->bind_param("di", $jumlah_tarik, $id_user);
+                    $stmt_update->execute();
 
-                // Redirect to nota.php
-                header("Location: nota.php?id_transaksi=$id");
-                exit();
-            } catch (Exception $e) {
-                // Rollback transaction in case of an error
-                $conn->rollback();
-                $message = "Terjadi kesalahan saat melakukan penarikan: " . $e->getMessage();
+                    // Commit transaction
+                    $conn->commit();
+
+                    // Display success message
+                    $message = "Penarikan emas berhasil! Saldo Anda telah diperbarui.";
+
+                    // Redirect to nota.php
+                    header("Location: nota.php?id_transaksi=$id");
+                    exit();
+                } catch (Exception $e) {
+                    // Rollback transaction in case of an error
+                    $conn->rollback();
+                    $message = "Terjadi kesalahan: " . $e->getMessage();
+                }
             }
         }
     }
 }
 
-// Fetch user's balance
+// Fetch user's balance again if needed
 $balance_query = "SELECT uang, emas FROM dompet WHERE id_user = ?";
 $stmt_balance = $conn->prepare($balance_query);
 $stmt_balance->bind_param("i", $id_user);
@@ -112,6 +154,11 @@ $balance_result = $stmt_balance->get_result();
 $user_balance = $balance_result->fetch_assoc();
 
 ?>
+
+<!DOCTYPE html>
+<html lang="en">
+<!-- (rest of your HTML remains unchanged) -->
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -208,6 +255,7 @@ $user_balance = $balance_result->fetch_assoc();
                                             placeholder="Jumlah Uang">
                                     </div>
                                     <small class="form-text text-muted">Jumlah uang yang ingin ditarik</small>
+                                    tampilkan saldo dikurangi inputan yang ingin ditarik
                                     <p id="sisa_saldo_uang" class="text-info"></p> <!-- Remaining money balance -->
                                 </div>
 
@@ -225,6 +273,7 @@ $user_balance = $balance_result->fetch_assoc();
                                         </select>
                                     </div>
                                     <small class="form-text text-muted">Jumlah emas yang ingin ditarik</small>
+                                    tampilkan saldo dikurangi inputan yang ingin ditarik
                                     <p id="sisa_saldo_emas" class="text-info"></p> <!-- Remaining gold balance -->
                                 </div>
                             </div>
@@ -264,12 +313,12 @@ $user_balance = $balance_result->fetch_assoc();
         const goldRadio = document.querySelector('input[name="withdraw_type"][value="gold"]');
         const moneyInput = document.getElementById('money_input');
         const goldInput = document.getElementById('gold_input');
-        const jumlahUang = document.getElementById('jumlah_uang');
-        const jumlahEmas = document.getElementById('jumlah_emas');
+        const jumlahUang = document.querySelector('input[name="jumlah_uang"]');
+        const jumlahEmas = document.querySelector('select[name="jumlah_emas"]');
         const sisaSaldoUang = document.getElementById('sisa_saldo_uang');
         const sisaSaldoEmas = document.getElementById('sisa_saldo_emas');
 
-
+        // Show relevant input fields based on the selected withdrawal type
         moneyRadio.addEventListener('change', function() {
             if (moneyRadio.checked) {
                 moneyInput.style.display = 'block';
@@ -296,7 +345,7 @@ $user_balance = $balance_result->fetch_assoc();
         jumlahEmas.addEventListener('change', function() {
             const tarikEmas = parseFloat(jumlahEmas.value) || 0;
             const remainingGold = userGoldBalance - tarikEmas;
-            sisaSaldoEmas.textContent = `Sisa saldo emas: ${remainingGold.toFixed(2)} gram`;
+            sisaSaldoEmas.textContent = `Sisa saldo emas: ${remainingGold.toFixed(2)} grams`;
         });
     });
     </script>
