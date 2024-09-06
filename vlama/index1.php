@@ -12,6 +12,39 @@ $username = $_SESSION['username'];
 $data = getUserData($koneksi, $username);
 $id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
 
+// Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
+$sqlTransaksi = "
+SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, 
+       ts.jenis_saldo, ts.jumlah_tarik, 
+       ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp,
+       ps.jumlah, ps.hasil_konversi, 
+       u.id AS id_user, u.username
+FROM transaksi t
+LEFT JOIN tarik_saldo ts ON t.id = ts.id_transaksi
+LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
+LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
+LEFT JOIN user u ON t.id_user = u.id
+WHERE u.id = ?
+ORDER BY t.date DESC";
+
+
+
+// Prepare statement untuk menghindari SQL Injection
+$stmtTransaksi = $koneksi->prepare($sqlTransaksi);
+if (!$stmtTransaksi) {
+    die("Prepare statement failed: " . $koneksi->error);
+}
+
+// Bind parameter untuk id_user
+$stmtTransaksi->bind_param("i", $id_user);
+$stmtTransaksi->execute();
+$resultTransaksi = $stmtTransaksi->get_result();
+
+// Cek jika query berhasil
+if ($resultTransaksi === false) {
+    echo "Error: " . $koneksi->error;
+    exit;
+}
 
 // Query untuk mengambil data kategori dan sampah
 $sql = "SELECT ks.name AS kategori, s.jenis, s.harga 
@@ -27,7 +60,7 @@ if ($result === false) {
 
 // Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
 $sqlTransaksi = "
-SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, t.time, 
+SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, 
        ts.jenis_saldo, ts.jumlah_tarik, 
        ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp,
        ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
@@ -38,7 +71,7 @@ LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
 LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
 LEFT JOIN user u ON t.id_user = u.id
 WHERE u.id = ?
-ORDER BY t.time DESC";
+ORDER BY t.date DESC";
 
 
 // Prepare statement untuk menghindari SQL Injection
@@ -130,21 +163,6 @@ $stmt->close();
             padding: 20px;
             background-color: #fff;
         }
-
-        .transaction-list {
-            max-height: 520px;
-            overflow-y: auto;
-            border: 1px solid #ddd;
-            padding: 10px;
-            background-color: #fff;
-            border-radius: 5px;
-        }
-
-        .transaction-item {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
     </style>
 </head>
 
@@ -199,23 +217,26 @@ $stmt->close();
                                 echo "<div class='transaction-item'>";
                                 echo "<div class='transaction-header'>";
                                 echo "<span class='transaction-type'>" . ucfirst($row['jenis_transaksi']) . "</span>";
-                                echo "<span class='transaction-date'>" . date('d M Y', strtotime($row['date'])) . " | " . date('H:i:s', strtotime($row['time'])) . "</span>";
+                                echo "<span class='transaction-date'>" . date('d M Y', strtotime($row['date'])) . "</span>";
                                 echo "</div>";
 
+                                // Cek jenis transaksi dan tampilkan detailnya
                                 if ($row['jenis_transaksi'] == 'tarik_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jenis Saldo: " . ucfirst($row['jenis_saldo']) . "</span>";
-                                    echo "<span class='transaction-amount' style='color: red;'>" . number_format($row['jumlah_tarik'], 2, ',', '.') . "</span>";
+                                    echo "<span class='transaction-amount'>- Rp. " . number_format($row['jumlah_tarik'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 } elseif ($row['jenis_transaksi'] == 'setor_sampah') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Sampah: " . ucfirst($row['id_sampah']) . " (" . $row['jumlah_kg'] . " Kg)</span>";
-                                    echo "<span class='transaction-amount' style='color: #28a745;'>+ Rp. " . number_format($row['jumlah_rp'], 2, ',', '.') . "</span>";
+                                    echo "<span class='transaction-amount'>+ Rp. " . number_format($row['jumlah_rp'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 } elseif ($row['jenis_transaksi'] == 'pindah_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jumlah: Rp. " . number_format($row['jumlah'], 2, ',', '.') . "</span>";
-                                    echo "<span class='transaction-amount' style='color: #1E90FF;'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " | " . $row['jenis_konversi'] . "</span>";
+
+
+                                    echo "<span class='transaction-amount'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " "  . "</span>";
                                     echo "</div>";
                                 }
 

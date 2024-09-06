@@ -14,19 +14,20 @@ $id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
 
 // Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
 $sqlTransaksi = "
-SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, 
+SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, t.time, 
        ts.jenis_saldo, ts.jumlah_tarik, 
        ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp,
-       ps.jumlah, ps.hasil_konversi, 
+       js.id_sampah AS id_jual_sampah, js.jumlah_kg AS jumlah_jual_kg, js.jumlah_rp AS total_penjualan,
+       ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
        u.id AS id_user, u.username
 FROM transaksi t
 LEFT JOIN tarik_saldo ts ON t.id = ts.id_transaksi
 LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
+LEFT JOIN jual_sampah js ON t.id = js.id_transaksi
 LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
 LEFT JOIN user u ON t.id_user = u.id
 WHERE u.id = ?
-ORDER BY t.date DESC";
-
+ORDER BY t.time DESC";
 
 
 // Prepare statement untuk menghindari SQL Injection
@@ -58,32 +59,35 @@ if ($result === false) {
     exit;
 }
 
-// Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
-$sqlTransaksi = "
-SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, 
-       ts.jenis_saldo, ts.jumlah_tarik, 
-       ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp,
-       ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
-       u.id AS id_user, u.username
-FROM transaksi t
-LEFT JOIN tarik_saldo ts ON t.id = ts.id_transaksi
-LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
-LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
-LEFT JOIN user u ON t.id_user = u.id
-WHERE u.id = ?
-ORDER BY t.date DESC";
+// // Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
+// $sqlTransaksi = "
+// SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, t.time, 
+//        ts.jenis_saldo, ts.jumlah_tarik, 
+//        ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp AS setor_rp,
+//        js.id_sampah AS id_jual_sampah, js.jumlah_kg AS jumlah_jual_kg, js.jumlah_rp AS total_penjualan, js.harga_nasabah,
+//        ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
+//        u.id AS id_user, u.username
+// FROM transaksi t
+// LEFT JOIN tarik_saldo ts ON t.id = ts.id_transaksi
+// LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
+// LEFT JOIN jual_sampah js ON t.id = js.id_transaksi
+// LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
+// LEFT JOIN user u ON t.id_user = u.id
+// WHERE u.id = ?
+// ORDER BY t.time DESC";
 
 
-// Prepare statement untuk menghindari SQL Injection
-$stmtTransaksi = $koneksi->prepare($sqlTransaksi);
-if (!$stmtTransaksi) {
-    die("Prepare statement failed: " . $koneksi->error);
-}
 
-// Bind parameter untuk id_user
-$stmtTransaksi->bind_param("i", $id_user);
-$stmtTransaksi->execute();
-$resultTransaksi = $stmtTransaksi->get_result();
+// // Prepare statement untuk menghindari SQL Injection
+// $stmtTransaksi = $koneksi->prepare($sqlTransaksi);
+// if (!$stmtTransaksi) {
+//     die("Prepare statement failed: " . $koneksi->error);
+// }
+
+// // Bind parameter untuk id_user
+// $stmtTransaksi->bind_param("i", $id_user);
+// $stmtTransaksi->execute();
+// $resultTransaksi = $stmtTransaksi->get_result();
 
 // Query to get the sum of waste deposits (in kg and Rp) per month for the logged-in user
 $sqlMonthlySetorSampah = "
@@ -183,25 +187,6 @@ $stmt->close();
                 </div>
             </div>
 
-            <!-- <div class="dashboard-cards">
-                <div class="card">
-                    <span>Kertas</span>
-                    <span>0.0 Kg</span>
-                </div>
-                <div class="card">
-                    <span>Logam</span>
-                    <span>0.0 Kg</span>
-                </div>
-                <div class="card">
-                    <span>Plastik</span>
-                    <span>0.0 Kg</span>
-                </div>
-                <div class="card">
-                    <span>Lain-Lain</span>
-                    <span>0.0 Kg</span>
-                </div>
-            </div> -->
-
             <div class="dashboard-content">
                 <div class="grafik-penyetoran">
                     <h3>Grafik Setor Sampah Bulanan</h3>
@@ -220,7 +205,6 @@ $stmt->close();
                                 echo "<span class='transaction-date'>" . date('d M Y', strtotime($row['date'])) . "</span>";
                                 echo "</div>";
 
-                                // Cek jenis transaksi dan tampilkan detailnya
                                 if ($row['jenis_transaksi'] == 'tarik_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jenis Saldo: " . ucfirst($row['jenis_saldo']) . "</span>";
@@ -234,11 +218,15 @@ $stmt->close();
                                 } elseif ($row['jenis_transaksi'] == 'pindah_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jumlah: Rp. " . number_format($row['jumlah'], 2, ',', '.') . "</span>";
-
-
-                                    echo "<span class='transaction-amount'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " "  . "</span>";
+                                    echo "<span class='transaction-amount'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " " . "</span>";
+                                    echo "</div>";
+                                } elseif ($row['jenis_transaksi'] == 'jual_sampah') {
+                                    echo "<div class='transaction-body'>";
+                                    echo "<span class='transaction-detail'>Jual Sampah: " . ucfirst($row['id_jual_sampah']) . " (" . $row['jumlah_jual_kg'] . " Kg)</span>";
+                                    echo "<span class='transaction-amount'> Rp. " . number_format($row['total_penjualan'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 }
+
 
                                 echo "</div>";
                             }
@@ -249,67 +237,67 @@ $stmt->close();
                     </div>
                 </div>
 
-
-
-
             </div>
 
-            <div class="additional-info">
-                <div class="user-card">
-                    <div class="user-card-header">
-                        <span class="wifi-icon"><i class="fas fa-wifi"></i></span>
-                        <span class="account-number"><?php echo $data['nik']; ?></span>
-                    </div>
-                    <div class="user-details">
-                        <p>Username: <?php echo $data['username']; ?></p>
-                    </div>
-
-                    <div class="user-balance">
-                        <div class="balance-card">
-                            <span>Tunai</span>
-                            <span>Rp <?php echo number_format($data['uang'], 2, ',', '.'); ?></span>
+            <?php if ($data['role'] == 'nasabah') : ?>
+                <!-- Hanya ditampilkan jika pengguna adalah nasabah -->
+                <div class="additional-info">
+                    <div class="user-card">
+                        <div class="user-card-header">
+                            <span class="wifi-icon"><i class="fas fa-wifi"></i></span>
+                            <span class="account-number"><?php echo $data['nik']; ?></span>
                         </div>
-                        <div class="balance-card">
-                            <span>Emas</span>
-                            <span><?php echo number_format($data['emas'], 4, ',', '.'); ?> g</span>
+                        <div class="user-details">
+                            <p>Username: <?php echo $data['username']; ?></p>
+                        </div>
+
+                        <div class="user-balance">
+                            <div class="balance-card">
+                                <span>Tunai</span>
+                                <span>Rp <?php echo number_format($data['uang'], 2, ',', '.'); ?></span>
+                            </div>
+                            <div class="balance-card">
+                                <span>Emas</span>
+                                <span><?php echo number_format($data['emas'], 4, ',', '.'); ?> g</span>
+                            </div>
                         </div>
                     </div>
-
                 </div>
-            </div>
 
-            <div class="table-container">
-                <h3>Jenis-jenis Sampah</h3>
-                <p>*harga dapat berubah sewaktu-waktu</p>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Kategori</th>
-                            <th>Jenis</th>
-                            <th>Harga</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php
-                        if ($result->num_rows > 0) {
-                            $no = 1;
-                            while ($row = $result->fetch_assoc()) {
-                                echo "<tr>";
-                                echo "<td>" . $no++ . "</td>";
-                                echo "<td>" . $row['kategori'] . "</td>";
-                                echo "<td>" . $row['jenis'] . "</td>";
-                                echo "<td>Rp. " . number_format($row['harga'], 0, ',', '.') . "</td>";
-                                echo "</tr>";
+                <div class="table-container">
+                    <h3>Jenis-jenis Sampah</h3>
+                    <p>*harga dapat berubah sewaktu-waktu</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Kategori</th>
+                                <th>Jenis</th>
+                                <th>Harga</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            if ($result->num_rows > 0) {
+                                $no = 1;
+                                while ($row = $result->fetch_assoc()) {
+                                    echo "<tr>";
+                                    echo "<td>" . $no++ . "</td>";
+                                    echo "<td>" . $row['kategori'] . "</td>";
+                                    echo "<td>" . $row['jenis'] . "</td>";
+                                    echo "<td>Rp. " . number_format($row['harga'], 0, ',', '.') . "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='4'>Tidak ada data</td></tr>";
                             }
-                        } else {
-                            echo "<tr><td colspan='4'>Tidak ada data</td></tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
-            </div>
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            <?php endif; ?>
         </div>
+
     </div>
     <script>
         var ctx = document.getElementById('setorSampahChart').getContext('2d');
