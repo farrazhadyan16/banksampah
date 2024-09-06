@@ -1,11 +1,10 @@
 <?php
 include 'header.php';
 include 'fungsi.php';
+include 'koneksi.php'; // Use the existing mysqli connection
 
 // Dapatkan jumlah data per halaman dari dropdown, default 10
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-
-// Dapatkan halaman saat ini dari URL, default halaman 1
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $offset = ($page - 1) * $limit;
 
@@ -14,27 +13,61 @@ $search_nik = isset($_GET['search_nik']) ? $_GET['search_nik'] : null;
 $query_all = getNasabah($search_nik);
 
 // Hitung total data untuk pagination
-$total_query = "SELECT COUNT(*) AS total FROM user WHERE role = 'nasabah'";
+$total_query = "SELECT COUNT(*) AS total FROM user WHERE role = 'nasabah' AND status = 0";
 if ($search_nik) {
     $total_query .= " AND nik LIKE '%$search_nik%'";
 }
-$total_result = query($total_query);
-$total_rows = $total_result[0]['total'];
+$total_result = mysqli_query($koneksi, $total_query);
+$total_rows = mysqli_fetch_assoc($total_result)['total'];
 $total_pages = ceil($total_rows / $limit);
 
-// Modifikasi query untuk pagination
+// Query untuk menampilkan nasabah yang tidak terhapus (status = 0)
 $query = "
     SELECT * FROM user
-    WHERE role = 'nasabah'
+    WHERE role = 'nasabah' AND status = 0
 ";
 if ($search_nik) {
     $query .= " AND nik LIKE '%$search_nik%'";
 }
 $query .= " ORDER BY LENGTH(id), CAST(id AS UNSIGNED) LIMIT $limit OFFSET $offset";
+$nasabah_result = mysqli_query($koneksi, $query);
 
-// Eksekusi query
-$nasabah_result = query($query);
+// Handle soft delete
+if (isset($_GET['delete_id'])) {
+    $delete_id = $_GET['delete_id'];
+    $delete_query = "UPDATE user SET status = 1 WHERE id = ?";
+
+    // Prepare the statement
+    $stmt = mysqli_prepare($koneksi, $delete_query);
+    mysqli_stmt_bind_param($stmt, "i", $delete_id);
+    mysqli_stmt_execute($stmt);
+
+    $_SESSION['message'] = "Data berhasil dihapus!";
+    header("Location: nasabah.php");
+    exit();
+}
+
+// Handle restore
+if (isset($_GET['restore_id'])) {
+    $restore_id = $_GET['restore_id'];
+    $restore_query = "UPDATE user SET status = 0 WHERE id = ?";
+
+    // Prepare the statement
+    $stmt = mysqli_prepare($koneksi, $restore_query);
+    mysqli_stmt_bind_param($stmt, "i", $restore_id);
+    mysqli_stmt_execute($stmt);
+
+    $_SESSION['message'] = "Data berhasil dikembalikan!";
+    header("Location: nasabah.php");
+    exit();
+}
+
+// Query to get all soft-deleted users (status = 1)
+$deleted_users_query = "SELECT * FROM user WHERE role = 'nasabah' AND status = 1";
+$deleted_users = mysqli_query($koneksi, $deleted_users_query);
 ?>
+<!-- HTML content continues as before -->
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -45,24 +78,18 @@ $nasabah_result = query($query);
     <title>Bank Sampah | Nasabah</title>
     <link rel="stylesheet" href="./css/style.css">
     <link rel="icon" href="./img/PM.ico">
-    <!-- Font Awesome Cdn link -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-    <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
 <body>
     <div id="wrapper">
-
-        <!-- Ini Sidebar -->
+        <!-- Sidebar -->
         <?php include("sidebar.php") ?>
-        <!-- Batas Akhir Sidebar -->
 
-        <!-- Ini Main-Content -->
+        <!-- Main Content -->
         <div class="main--content">
-
             <div class="main--content--monitoring">
-
                 <div class="header--wrapper">
                     <div class="header--title">
                         <span>Halaman</span>
@@ -70,13 +97,11 @@ $nasabah_result = query($query);
                     </div>
                 </div>
 
-                <!-- Ini Tabel -->
+                <!-- Tabel Nasabah Aktif -->
                 <div class="tabular--wrapper">
                     <div class="search--wrapper">
                         <form method="GET" action="">
-                            <input type="text" name="search_nik" placeholder="Cari NIK nasabah..."
-                                value="<?= htmlspecialchars($search_nik) ?>" pattern="\d{16}" maxlength="16"
-                                title="NIK harus terdiri dari 16 digit angka">
+                            <input type="text" name="search_nik" placeholder="Cari NIK nasabah..." value="<?= htmlspecialchars($search_nik) ?>" pattern="\d{16}" maxlength="16" title="NIK harus terdiri dari 16 digit angka">
                             <button type="submit" class="inputbtn">Cari</button>
 
                             <div class="form-group">
@@ -141,7 +166,7 @@ $nasabah_result = query($query);
                                             <td><?= htmlspecialchars($row["kelamin"]); ?></td>
                                             <td>
                                                 <a href="edit_nasabah.php?id=<?= htmlspecialchars($row["id"]); ?>" class="inputbtn6">Ubah</a>
-                                                <a href="nasabah.php?id=<?= htmlspecialchars($row["id"]); ?>" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
+                                                <a href="nasabah.php?delete_id=<?= htmlspecialchars($row["id"]); ?>" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -152,22 +177,67 @@ $nasabah_result = query($query);
                             <div class="pagination-wrapper">
                                 <ul class="pagination">
                                     <?php if ($page > 1): ?>
-                                        <li class="page-item"><a href="?page=<?php echo $page - 1; ?>&limit=<?php echo $limit; ?>&search_nik=<?php echo urlencode($search_nik); ?>" class="page-link">Previous</a></li>
+                                        <li class="page-item"><a href="?page=<?= $page - 1; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>" class="page-link">Previous</a></li>
                                     <?php endif; ?>
 
                                     <?php for ($i = 1; $i <= $total_pages; $i++): ?>
                                         <li class="page-item <?php if ($page == $i) echo 'active'; ?>">
-                                            <a href="?page=<?php echo $i; ?>&limit=<?php echo $limit; ?>&search_nik=<?php echo urlencode($search_nik); ?>" class="page-link"><?php echo $i; ?></a>
+                                            <a href="?page=<?= $i; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>" class="page-link"><?= $i; ?></a>
                                         </li>
                                     <?php endfor; ?>
 
                                     <?php if ($page < $total_pages): ?>
-                                        <li class="page-item"><a href="?page=<?php echo $page + 1; ?>&limit=<?php echo $limit; ?>&search_nik=<?php echo urlencode($search_nik); ?>" class="page-link">Next</a></li>
+                                        <li class="page-item"><a href="?page=<?= $page + 1; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>" class="page-link">Next</a></li>
                                     <?php endif; ?>
                                 </ul>
                             </div>
                         <?php endif; ?>
                     </div>
+                </div>
+
+                <!-- Tabel Nasabah Terhapus -->
+                <h3 class="main--title mt-5">Nasabah Terhapus</h3>
+                <div class="table-container">
+                    <?php if (empty($deleted_users)): ?>
+                        <div class="alert alert-warning">
+                            <strong>Tidak ada nasabah yang terhapus!</strong>
+                        </div>
+                    <?php else: ?>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Username</th>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>No Telp</th>
+                                    <th>NIK</th>
+                                    <th>Alamat</th>
+                                    <th>Tanggal Lahir</th>
+                                    <th>Jenis Kelamin</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($deleted_users as $row): ?>
+                                    <tr>
+                                        <td><?= htmlspecialchars($row["id"]); ?></td>
+                                        <td><?= htmlspecialchars($row["username"]); ?></td>
+                                        <td><?= htmlspecialchars($row["nama"]); ?></td>
+                                        <td><?= htmlspecialchars($row["email"]); ?></td>
+                                        <td><?= htmlspecialchars($row["notelp"]); ?></td>
+                                        <td><?= htmlspecialchars($row["nik"]); ?></td>
+                                        <td><?= htmlspecialchars($row["alamat"]); ?></td>
+                                        <td><?= htmlspecialchars($row["tgl_lahir"]); ?></td>
+                                        <td><?= htmlspecialchars($row["kelamin"]); ?></td>
+                                        <td>
+                                            <a href="nasabah.php?restore_id=<?= htmlspecialchars($row["id"]); ?>" class="btn btn-success" onclick="return confirm('Yakin ingin mengembalikan data ini?')">Kembalikan</a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -177,12 +247,6 @@ $nasabah_result = query($query);
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script>
-        // Event listener untuk mengirim form secara otomatis ketika dropdown limit berubah
-        document.getElementById('limit').addEventListener('change', function() {
-            this.form.submit();
-        });
-    </script>
 </body>
 
 </html>
