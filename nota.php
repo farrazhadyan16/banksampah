@@ -33,7 +33,7 @@ if ($id_transaksi) {
         if ($transaksi) {
             // Fetch details for items
             if ($transaksi['jenis_transaksi'] == 'setor_sampah') {
-                $items_query = "SELECT s.jenis as barang_name, ks.name as kategori_name, ss.jumlah_kg, ss.jumlah_rp
+                $items_query = "SELECT s.jenis as barang_name, ks.name as kategori_name, ss.jumlah_kg, ss.jumlah_rp, ss.jumlah_emas
                                 FROM setor_sampah ss
                                 JOIN sampah s ON ss.id_sampah = s.id
                                 JOIN kategori_sampah ks ON s.id_kategori = ks.id
@@ -104,7 +104,7 @@ if ($id_transaksi) {
                     $juals[] = $jual;
                 }
             } else {
-                echo "Error preparing statement for tarik_saldo: " . $conn->error;
+                echo "Error preparing statement for jual_saldo: " . $conn->error;
             }
         }
 
@@ -224,8 +224,14 @@ if ($id_transaksi) {
             </tbody>
             <tfoot>
                 <tr>
-                    <th colspan="3" class="text-end">Total</th>
+                    <th colspan="3" class="text-end">Total Rupiah</th>
                     <th><?php echo 'Rp ' . number_format(array_sum(array_column($items, 'jumlah_rp')), 0, ',', '.'); ?>
+                    </th>
+                </tr>
+                <tr>
+                    <th colspan="3" class="text-end">Total Emas</th>
+                    <th><?php echo number_format($item['jumlah_emas'], 4, '.', '.'); ?> gr
+
                     </th>
                 </tr>
             </tfoot>
