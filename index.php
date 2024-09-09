@@ -16,8 +16,8 @@ $id_user = $data['id']; // Mendapatkan id_user dari data user yang sedang login
 $sqlTransaksi = "
 SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, t.time, 
        ts.jenis_saldo, ts.jumlah_tarik, 
-       ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp,
-       js.id_sampah AS id_jual_sampah, js.jumlah_kg AS jumlah_jual_kg, js.jumlah_rp AS total_penjualan,
+       ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp, s.jenis AS jenis_sampah, 
+       js.id_sampah AS id_jual_sampah, js.jumlah_kg AS jumlah_jual_kg, js.jumlah_rp AS total_penjualan, s.jenis AS jenis_jual_sampah,
        ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
        u.id AS id_user, u.username
 FROM transaksi t
@@ -26,17 +26,12 @@ LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
 LEFT JOIN jual_sampah js ON t.id = js.id_transaksi
 LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
 LEFT JOIN user u ON t.id_user = u.id
+LEFT JOIN sampah s ON ss.id_sampah = s.id OR js.id_sampah = s.id
 WHERE u.id = ?
 ORDER BY t.time DESC";
 
 
-// Prepare statement untuk menghindari SQL Injection
 $stmtTransaksi = $koneksi->prepare($sqlTransaksi);
-if (!$stmtTransaksi) {
-    die("Prepare statement failed: " . $koneksi->error);
-}
-
-// Bind parameter untuk id_user
 $stmtTransaksi->bind_param("i", $id_user);
 $stmtTransaksi->execute();
 $resultTransaksi = $stmtTransaksi->get_result();
@@ -53,44 +48,32 @@ $sql = "SELECT ks.name AS kategori, s.jenis, s.harga
         JOIN kategori_sampah ks ON s.id_kategori = ks.id";
 $result = $koneksi->query($sql);
 
-// Cek jika query berhasil
 if ($result === false) {
     echo "Error: " . $koneksi->error;
     exit;
 }
 
-// // Query untuk mengambil data transaksi, detail transaksi, dan informasi pengguna untuk user yang sedang login
-// $sqlTransaksi = "
-// SELECT t.id AS id_transaksi, t.jenis_transaksi, t.date, t.time, 
-//        ts.jenis_saldo, ts.jumlah_tarik, 
-//        ss.id_sampah, ss.jumlah_kg, ss.jumlah_rp AS setor_rp,
-//        js.id_sampah AS id_jual_sampah, js.jumlah_kg AS jumlah_jual_kg, js.jumlah_rp AS total_penjualan, js.harga_nasabah,
-//        ps.jumlah, ps.hasil_konversi, ps.jenis_konversi, 
-//        u.id AS id_user, u.username
-// FROM transaksi t
-// LEFT JOIN tarik_saldo ts ON t.id = ts.id_transaksi
-// LEFT JOIN setor_sampah ss ON t.id = ss.id_transaksi
-// LEFT JOIN jual_sampah js ON t.id = js.id_transaksi
-// LEFT JOIN pindah_saldo ps ON t.id = ps.id_transaksi 
-// LEFT JOIN user u ON t.id_user = u.id
-// WHERE u.id = ?
-// ORDER BY t.time DESC";
-
-
-
-// // Prepare statement untuk menghindari SQL Injection
-// $stmtTransaksi = $koneksi->prepare($sqlTransaksi);
-// if (!$stmtTransaksi) {
-//     die("Prepare statement failed: " . $koneksi->error);
-// }
-
-// // Bind parameter untuk id_user
-// $stmtTransaksi->bind_param("i", $id_user);
-// $stmtTransaksi->execute();
-// $resultTransaksi = $stmtTransaksi->get_result();
-
-// Query to get the sum of waste deposits (in kg and Rp) per month for the logged-in user
-$sqlMonthlySetorSampah = "
+// Buat query grafik berdasarkan role pengguna
+if ($data['role'] == 'admin') {
+    // Jika admin, tampilkan grafik jual sampah
+    $sqlChart = "
+    SELECT 
+        DATE_FORMAT(t.date, '%Y-%m') AS month,
+        SUM(js.jumlah_kg) AS total_kg,
+        SUM(js.jumlah_rp) AS total_rp
+    FROM 
+        transaksi t
+    JOIN 
+        jual_sampah js ON t.id = js.id_transaksi
+    WHERE 
+        t.jenis_transaksi = 'jual_sampah'
+    GROUP BY 
+        month
+    ORDER BY 
+        month ASC";
+} else {
+    // Jika nasabah, tampilkan grafik setor sampah
+    $sqlChart = "
     SELECT 
         DATE_FORMAT(t.date, '%Y-%m') AS month,
         SUM(ss.jumlah_kg) AS total_kg,
@@ -105,21 +88,22 @@ $sqlMonthlySetorSampah = "
         month
     ORDER BY 
         month ASC";
+}
 
-// Prepare and execute the query
-$stmt = $koneksi->prepare($sqlMonthlySetorSampah);
-$stmt->bind_param("i", $id_user); // Bind the user ID to the query
+$stmt = $koneksi->prepare($sqlChart);
+if ($data['role'] != 'admin') {
+    $stmt->bind_param("i", $id_user); // Bind jika nasabah
+}
 $stmt->execute();
-$resultMonthlySetorSampah = $stmt->get_result();
+$resultChart = $stmt->get_result();
 
 // Initialize arrays to hold the data
 $months = [];
 $totalKg = [];
 $totalRp = [];
 
-// Fetch the data and populate the arrays
-if ($resultMonthlySetorSampah->num_rows > 0) {
-    while ($row = $resultMonthlySetorSampah->fetch_assoc()) {
+if ($resultChart->num_rows > 0) {
+    while ($row = $resultChart->fetch_assoc()) {
         $months[] = $row['month'];
         $totalKg[] = $row['total_kg'];
         $totalRp[] = $row['total_rp'];
@@ -166,6 +150,22 @@ $stmt->close();
             width: 100%;
             padding: 20px;
             background-color: #fff;
+
+        }
+
+        .transaction-list {
+            max-height: 520px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        .transaction-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
         }
     </style>
 </head>
@@ -189,7 +189,11 @@ $stmt->close();
 
             <div class="dashboard-content">
                 <div class="grafik-penyetoran">
-                    <h3>Grafik Setor Sampah Bulanan</h3>
+                    <?php if ($data['role'] == 'nasabah'): ?>
+                        <h3>Grafik Setor Sampah Bulanan</h3>
+                    <?php else: ?>
+                        <h3>Grafik Jual Sampah Bulanan</h3>
+                    <?php endif; ?>
                     <canvas id="setorSampahChart"></canvas>
                 </div>
 
@@ -202,27 +206,28 @@ $stmt->close();
                                 echo "<div class='transaction-item'>";
                                 echo "<div class='transaction-header'>";
                                 echo "<span class='transaction-type'>" . ucfirst($row['jenis_transaksi']) . "</span>";
-                                echo "<span class='transaction-date'>" . date('d M Y', strtotime($row['date'])) . "</span>";
+                                echo "<span class='transaction-date'>" . date('d M Y', strtotime($row['date'])) . " | " . date('H:i:s', strtotime($row['time'])) . "</span>";
                                 echo "</div>";
+
 
                                 if ($row['jenis_transaksi'] == 'tarik_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jenis Saldo: " . ucfirst($row['jenis_saldo']) . "</span>";
-                                    echo "<span class='transaction-amount'>- Rp. " . number_format($row['jumlah_tarik'], 2, ',', '.') . "</span>";
+                                    echo "<span class='transaction-amount' style='color: red;'>" . number_format($row['jumlah_tarik'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 } elseif ($row['jenis_transaksi'] == 'setor_sampah') {
                                     echo "<div class='transaction-body'>";
-                                    echo "<span class='transaction-detail'>Sampah: " . ucfirst($row['id_sampah']) . " (" . $row['jumlah_kg'] . " Kg)</span>";
-                                    echo "<span class='transaction-amount'>+ Rp. " . number_format($row['jumlah_rp'], 2, ',', '.') . "</span>";
+                                    echo "<span class='transaction-detail'>Sampah: " . ucfirst($row['jenis_sampah']) . " (" . $row['jumlah_kg'] . " Kg)</span>";
+                                    echo "<span class='transaction-amount' style='color: #28a745;'>+ Rp. " . number_format($row['jumlah_rp'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 } elseif ($row['jenis_transaksi'] == 'pindah_saldo') {
                                     echo "<div class='transaction-body'>";
                                     echo "<span class='transaction-detail'>Jumlah: Rp. " . number_format($row['jumlah'], 2, ',', '.') . "</span>";
-                                    echo "<span class='transaction-amount'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " " . "</span>";
+                                    echo "<span class='transaction-amount' style='color: #1E90FF;'>" . number_format($row['hasil_konversi'], 4, ',', '.') . " | " . $row['jenis_konversi'] . "</span>";
                                     echo "</div>";
                                 } elseif ($row['jenis_transaksi'] == 'jual_sampah') {
                                     echo "<div class='transaction-body'>";
-                                    echo "<span class='transaction-detail'>Jual Sampah: " . ucfirst($row['id_jual_sampah']) . " (" . $row['jumlah_jual_kg'] . " Kg)</span>";
+                                    echo "<span class='transaction-detail'>Jual Sampah: " . ucfirst($row['jenis_jual_sampah']) . " (" . $row['jumlah_jual_kg'] . " Kg)</span>";
                                     echo "<span class='transaction-amount'> Rp. " . number_format($row['total_penjualan'], 2, ',', '.') . "</span>";
                                     echo "</div>";
                                 }
@@ -300,34 +305,39 @@ $stmt->close();
 
     </div>
     <script>
-        var ctx = document.getElementById('setorSampahChart').getContext('2d');
-        var setorSampahChart = new Chart(ctx, {
-            type: 'bar', // or 'line', 'pie', etc.
-            data: {
-                labels: <?php echo json_encode($months); ?>,
-                datasets: [{
-                        label: 'Total Kg',
-                        data: <?php echo json_encode($totalKg); ?>,
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Total Rp',
-                        data: <?php echo json_encode($totalRp); ?>,
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true
-                    }
+        // Data untuk grafik setor/jual sampah
+        const ctx = document.getElementById('setorSampahChart').getContext('2d');
+        const chartData = {
+            labels: <?php echo json_encode($months); ?>,
+            datasets: [{
+                    label: 'Jumlah KG',
+                    data: <?php echo json_encode($totalKg); ?>,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Jumlah RP',
+                    data: <?php echo json_encode($totalRp); ?>,
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }
+            ]
+        };
+
+        const chartOptions = {
+            scales: {
+                y: {
+                    beginAtZero: true
                 }
             }
+        };
+
+        const setorSampahChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: chartOptions
         });
     </script>
 </body>
