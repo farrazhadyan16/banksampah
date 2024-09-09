@@ -231,8 +231,8 @@ if ($jenis_result->num_rows > 0) {
                     <div class="user--info">
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
                                 Sampah</button></a>
-                        <a href="Konversi.php"><button type="button" name="button" class="inputbtn">Konversi
-                                Saldo</button></a>
+                        <!-- <a href="Konversi.php"><button type="button" name="button" class="inputbtn">Konversi
+                                Saldo</button></a> -->
                         <a href="tarik.php"><button type="button" name="button" class="inputbtn">Tarik
                                 Saldo</button></a>
                         <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual

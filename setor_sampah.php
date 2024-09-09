@@ -21,6 +21,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['search'])) {
 
         if ($user_result->num_rows > 0) {
             $user_data = $user_result->fetch_assoc();
+
+            // Ambil harga emas terkini
+            $current_gold_price_sell = getCurrentGoldPricesell();
+
+             // Hitung jumlah emas yang setara dengan saldo uang
+             $gold_equivalent = $user_data['emas'] * $current_gold_price_sell;
+             
         } else {
             $message = "User dengan role 'Nasabah' tidak ditemukan.";
         }
@@ -283,8 +290,8 @@ if ($jenis_result->num_rows > 0) {
                     <div class="user--info">
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
                                 Sampah</button></a>
-                        <a href="Konversi.php"><button type="button" name="button" class="inputbtn">Konversi
-                                Saldo</button></a>
+                        <!-- <a href="Konversi.php"><button type="button" name="button" class="inputbtn">Konversi
+                                Saldo</button></a> -->
                         <a href="tarik.php"><button type="button" name="button" class="inputbtn">Tarik
                                 Saldo</button></a>
                         <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual
@@ -312,17 +319,20 @@ if ($jenis_result->num_rows > 0) {
                     <?php if (isset($user_data)) { ?>
                     <div class="row mb-4">
                         <div class="col-md-5">
-                            <p><strong>id</strong> : <?php echo $user_data['id']; ?></p>
+                            <p><strong>ID</strong> : <?php echo $user_data['id']; ?></p>
                             <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
-                            <p><strong>email</strong> : <?php echo $user_data['email']; ?></p>
-                            <p><strong>username</strong> : <?php echo $user_data['username']; ?></p>
+                            <p><strong>Email</strong> : <?php echo $user_data['email']; ?></p>
                         </div>
                         <div class="col-md-5">
-                            <p><strong>nama lengkap</strong> : <?php echo $user_data['nama']; ?></p>
-                            <p><strong>Saldo Uang</strong> : Rp.
-                                <?php echo number_format($user_data['uang'], 2, ',', '.'); ?></p>
-                            <p><strong>Saldo Emas</strong> :
-                                <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p>
+                            <p><strong>Username</strong> : <?php echo $user_data['username']; ?></p>
+
+                            <p><strong>Nama Lengkap</strong> : <?php echo $user_data['nama']; ?></p>
+                            <p><strong>Saldo</strong> :
+                                <?php echo number_format($user_data['emas'], 4, '.', '.'); ?> g =
+                                Rp. <?php echo round($gold_equivalent, 2); ?>
+                            </p>
+                            <!-- <p><strong>Saldo Emas</strong> :
+            <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p> -->
                         </div>
                     </div>
                     <?php } else { ?>

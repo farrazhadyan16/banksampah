@@ -32,8 +32,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     $date = date('Y-m-d'); // Get the current date
     $time = date('H:i:s'); // Get the current time
 
-    // Fetch user's balance
-    $balance_query = "SELECT uang, emas FROM dompet WHERE id_user = ?";
+    // Fetch user's gold balance
+    $balance_query = "SELECT emas FROM dompet WHERE id_user = ?";
     $stmt_balance = $conn->prepare($balance_query);
     $stmt_balance->bind_param("i", $id_user);
     $stmt_balance->execute();
@@ -50,8 +50,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
         if (empty($jumlah_tarik) || !is_numeric($jumlah_tarik)) {
             $message = "Jumlah yang ditarik harus diisi dan berupa angka.";
         } elseif ($withdraw_type === 'money') {
-            // Calculate how much gold needs to be deducted
-            $gold_to_deduct = $jumlah_tarik / $current_gold_price_sell; // Convert money to gold amount
+            // Calculate how much gold needs to be deducted for money withdrawal
+            $gold_to_deduct = $jumlah_tarik / $current_gold_price_sell; // Convert money to equivalent gold amount
             if ($gold_to_deduct > $user_balance['emas']) {
                 $message = "Jumlah yang ditarik tidak boleh melebihi saldo emas Anda.";
             } elseif (($user_balance['emas'] - $gold_to_deduct) < 0.1) {
@@ -74,17 +74,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                     $stmt->bind_param("ssi", $id, $jenis_saldo, $jumlah_tarik);
                     $stmt->execute();
 
-                    // Update user's balance
-                    $update_money_query = "UPDATE dompet SET uang = uang + ?, emas = emas - ? WHERE id_user = ?";
-                    $stmt_update = $conn->prepare($update_money_query);
-                    $stmt_update->bind_param("ddi", $jumlah_tarik, $gold_to_deduct, $id_user);
+                    // Update user's gold balance
+                    $update_gold_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
+                    $stmt_update = $conn->prepare($update_gold_query);
+                    $stmt_update->bind_param("di", $gold_to_deduct, $id_user);
                     $stmt_update->execute();
 
                     // Commit transaction
                     $conn->commit();
 
                     // Display success message
-                    $message = "Penarikan uang berhasil! Saldo Anda telah diperbarui.";
+                    $message = "Penarikan uang berhasil! Saldo emas Anda telah diperbarui.";
 
                     // Redirect to nota.php
                     header("Location: nota.php?id_transaksi=$id");
@@ -120,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                     $stmt->bind_param("ssd", $id, $jenis_saldo, $jumlah_tarik);
                     $stmt->execute();
 
-                    // Update user's balance
+                    // Update user's gold balance
                     $update_gold_query = "UPDATE dompet SET emas = emas - ? WHERE id_user = ?";
                     $stmt_update = $conn->prepare($update_gold_query);
                     $stmt_update->bind_param("di", $jumlah_tarik, $id_user);
@@ -130,7 +130,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
                     $conn->commit();
 
                     // Display success message
-                    $message = "Penarikan emas berhasil! Saldo Anda telah diperbarui.";
+                    $message = "Penarikan emas berhasil! Saldo emas Anda telah diperbarui.";
 
                     // Redirect to nota.php
                     header("Location: nota.php?id_transaksi=$id");
@@ -145,13 +145,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['withdraw'])) {
     }
 }
 
-// Fetch user's balance again if needed
-$balance_query = "SELECT uang, emas FROM dompet WHERE id_user = ?";
+// Fetch user's gold balance again if needed
+$balance_query = "SELECT emas FROM dompet WHERE id_user = ?";
 $stmt_balance = $conn->prepare($balance_query);
 $stmt_balance->bind_param("i", $id_user);
 $stmt_balance->execute();
 $balance_result = $stmt_balance->get_result();
 $user_balance = $balance_result->fetch_assoc();
+
+
+// Ensure user_balance is set
+$emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
+?>
+
+<!-- Include the value in a hidden field for use in JavaScript -->
+<input type="hidden" id="current_balance_emas" value="<?php echo htmlspecialchars($emas_balance); ?>">
 
 ?>
 
@@ -192,8 +200,8 @@ $user_balance = $balance_result->fetch_assoc();
                     <div class="user--info">
                         <a href="setor_sampah.php"><button type="button" name="button" class="inputbtn">Setor
                                 Sampah</button></a>
-                        <a href="konversi.php"><button type="button" name="button" class="inputbtn">Konversi
-                                Saldo</button></a>
+                        <!-- <a href="konversi.php"><button type="button" name="button" class="inputbtn">Konversi
+                                Saldo</button></a> -->
                         <a href="tarik.php"><button type="button" name="button" class="inputbtn">Tarik
                                 Saldo</button></a>
                         <a href="jual_sampah.php"><button type="button" name="button" class="inputbtn">Jual
@@ -251,11 +259,13 @@ $user_balance = $balance_result->fetch_assoc();
                                         <div class="input-group-prepend">
                                             <span class="input-group-text"><i class="fas fa-money-bill-wave"></i></span>
                                         </div>
-                                        <input type="text" name="jumlah_uang" class="form-control"
-                                            placeholder="Jumlah Uang">
+                                        <input type="number" step="0.01" name="jumlah_uang" id="jumlah_uang"
+                                            class="form-control" placeholder="Jumlah Uang">
+
                                     </div>
                                     <small class="form-text text-muted">Jumlah uang yang ingin ditarik</small>
                                     tampilkan saldo dikurangi inputan yang ingin ditarik
+
                                     <p id="sisa_saldo_uang" class="text-info"></p> <!-- Remaining money balance -->
                                 </div>
 
@@ -265,16 +275,26 @@ $user_balance = $balance_result->fetch_assoc();
                                             <span class="input-group-text"><i class="fas fa-coins"></i></span>
                                         </div>
                                         <!-- <label for="jumlah_emas">Jumlah Emas (gram)</label> -->
-                                        <select name="jumlah_emas" class="form-control">
+                                        <select name="jumlah_emas" id="jumlah_emas" class="form-control">
                                             <option value="0.5">0.5 gram</option>
+                                            <option value="0.01">0.01 gram</option>
+
                                             <option value="1">1 gram</option>
                                             <option value="2">2 gram</option>
                                             <option value="5">5 gram</option>
                                         </select>
                                     </div>
                                     <small class="form-text text-muted">Jumlah emas yang ingin ditarik</small>
-                                    tampilkan saldo dikurangi inputan yang ingin ditarik
-                                    <p id="sisa_saldo_emas" class="text-info"></p> <!-- Remaining gold balance -->
+                                    <p id="sisa_saldo_emas" class="text-info" style="display: none;"></p>
+                                    <input type="hidden" id="current_balance_emas"
+                                        value="<?php echo $user_balance['emas']; ?>">
+                                    <!-- Remaining gold balance -->
+
+                                    <input type="hidden" id="current_balance_uang"
+                                        value="<?php echo $user_balance['uang']; ?>">
+                                    <input type="hidden" id="current_balance_emas"
+                                        value="<?php echo $user_balance['emas']; ?>">
+
                                 </div>
                             </div>
                         </div>
@@ -307,48 +327,74 @@ $user_balance = $balance_result->fetch_assoc();
     </div>
 
     <!-- Script for Dynamic Input Display -->
+    <!-- Add the user's balance data to the page for JavaScript to use -->
+    <!-- Script for Dynamic Input Display -->
     <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const moneyRadio = document.querySelector('input[name="withdraw_type"][value="money"]');
-        const goldRadio = document.querySelector('input[name="withdraw_type"][value="gold"]');
-        const moneyInput = document.getElementById('money_input');
-        const goldInput = document.getElementById('gold_input');
-        const jumlahUang = document.querySelector('input[name="jumlah_uang"]');
-        const jumlahEmas = document.querySelector('select[name="jumlah_emas"]');
-        const sisaSaldoUang = document.getElementById('sisa_saldo_uang');
-        const sisaSaldoEmas = document.getElementById('sisa_saldo_emas');
+    // Show/hide input fields based on withdrawal type
+    const withdrawTypeRadios = document.querySelectorAll('input[name="withdraw_type"]');
+    const moneyInput = document.getElementById('money_input');
+    const goldInput = document.getElementById('gold_input');
+    const sisaSaldoUang = document.getElementById('sisa_saldo_uang'); // Display remaining money balance
+    const sisaSaldoEmas = document.getElementById('sisa_saldo_emas'); // Display remaining gold balance
+    const jumlahEmasSelect = document.getElementById('jumlah_emas');
+    const jumlahUangInput = document.getElementById('jumlah_uang');
 
-        // Show relevant input fields based on the selected withdrawal type
-        moneyRadio.addEventListener('change', function() {
-            if (moneyRadio.checked) {
+    // Saldo yang diambil dari input hidden
+    const currentBalanceEmas = parseFloat(document.getElementById('current_balance_emas').value);
+    const currentGoldPriceSell = parseFloat(<?php echo $current_gold_price_sell; ?>); // Gold price for selling
+
+    // Function to show/hide the correct input field based on the selected withdrawal type
+    withdrawTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'money') {
                 moneyInput.style.display = 'block';
                 goldInput.style.display = 'none';
-            }
-        });
-
-        goldRadio.addEventListener('change', function() {
-            if (goldRadio.checked) {
-                goldInput.style.display = 'block';
+                sisaSaldoEmas.style.display = 'none';
+                sisaSaldoUang.style.display = 'block';
+            } else if (this.value === 'gold') {
                 moneyInput.style.display = 'none';
+                goldInput.style.display = 'block';
+                sisaSaldoUang.style.display = 'none';
+                sisaSaldoEmas.style.display = 'block';
             }
-        });
-
-        // Update remaining balance for money
-        jumlahUang.addEventListener('input', function() {
-            const tarikUang = parseFloat(jumlahUang.value) || 0;
-            const remainingMoney = userMoneyBalance - tarikUang;
-            sisaSaldoUang.textContent =
-                `Sisa saldo uang: ${remainingMoney.toLocaleString('id-ID')} units`;
-        });
-
-        // Update remaining balance for gold
-        jumlahEmas.addEventListener('change', function() {
-            const tarikEmas = parseFloat(jumlahEmas.value) || 0;
-            const remainingGold = userGoldBalance - tarikEmas;
-            sisaSaldoEmas.textContent = `Sisa saldo emas: ${remainingGold.toFixed(2)} grams`;
         });
     });
+
+    // Update remaining gold balance when the user selects an amount of gold
+    jumlahEmasSelect.addEventListener('change', function() {
+        const selectedAmount = parseFloat(this.value);
+        const remainingBalance = currentBalanceEmas - selectedAmount;
+        if (remainingBalance < 0.1) {
+            sisaSaldoEmas.textContent =
+                `Sisa emas setelah penarikan3: ${remainingBalance.toFixed(3)} gram (tidak boleh kurang dari 0.1 gram!)`;
+            sisaSaldoEmas.classList.add('text-danger');
+        } else {
+            sisaSaldoEmas.textContent = `Sisa emas setelah penarikan1: ${remainingBalance.toFixed(3)} gram`;
+            sisaSaldoEmas.classList.remove('text-danger');
+            sisaSaldoEmas.classList.add('text-info');
+        }
+    });
+
+    // Update remaining balance when the user inputs money to withdraw
+    jumlahUangInput.addEventListener('input', function() {
+        const jumlahUang = parseFloat(this.value);
+        const emasToDeduct = jumlahUang / currentGoldPriceSell; // Convert money to gold
+        const remainingEmas = currentBalanceEmas - emasToDeduct;
+
+        if (remainingEmas < 0.1) {
+            sisaSaldoUang.textContent =
+                `Sisa emas setelah penarikan4: ${remainingEmas.toFixed(3)} gram (tidak boleh kurang dari 0.1 gram!)`;
+            sisaSaldoUang.classList.add('text-danger');
+        } else {
+            sisaSaldoUang.textContent = `Sisa emas setelah penarikan2: ${remainingEmas.toFixed(3)} gram`;
+            sisaSaldoUang.classList.remove('text-danger');
+            sisaSaldoUang.classList.add('text-info');
+        }
+    });
     </script>
+
+
+
 </body>
 
 </html>

@@ -191,7 +191,7 @@ if ($id_transaksi) {
         <hr>
         <p><strong>Jenis Saldo :</strong> <?php echo htmlspecialchars($tarik_saldo['jenis_saldo']); ?></p>
         <p><strong>Jumlah Tarik Saldo:</strong>
-            <?php echo 'Rp ' . number_format($tarik_saldo['jumlah_tarik'], 0, ',', '.'); ?></p>
+            <?php echo 'Rp ' . number_format($tarik_saldo['jumlah_tarik'], 2, '.', '.'); ?></p>
         <hr>
         <?php endif; ?>
 
