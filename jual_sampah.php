@@ -55,7 +55,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
 
     // Insert into transaksi table
     $transaksi_query = mysqli_query($conn, "INSERT INTO transaksi (no, id, id_user, jenis_transaksi, date, time) VALUES (NULL, '$id_transaksi', '$id_user','$jenis_transaksi', '$date', '$time')");
-    
+
     if ($transaksi_query) {
         // Loop untuk setiap kategori dan jenis sampah
         for ($i = 0; $i < count($id_kategoris); $i++) {
@@ -69,7 +69,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
             // Insert ke tabel jual_sampah
             $jual_sampah_query = "INSERT INTO jual_sampah (no, id_transaksi, id_sampah, jumlah_kg, harga_nasabah, jumlah_rp) 
                                   VALUES (NULL, '$id_transaksi', '$id_jenis', '$jumlah_kg', '$harga_nasabah', '$jumlah_rp')";
-            
+
             if ($conn->query($jual_sampah_query) === FALSE) {
                 $message = "Error: " . $conn->error;
                 break;
@@ -84,8 +84,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit'])) {
         }
         // if (empty($message)) {
         //     $message = "Transaction successful!";
-            //Uncomment this line when ready to redirect
-            header("Location: nota.php?id_transaksi=$id_transaksi");
+        //Uncomment this line when ready to redirect
+        header("Location: nota.php?id_transaksi=$id_transaksi");
     } else {
         $message = "Error inserting into transaksi: " . $conn->error;
     }
@@ -96,7 +96,7 @@ $kategori_query = "SELECT id, name FROM kategori_sampah";
 $kategori_result = $conn->query($kategori_query);
 
 // Fetch data jenis dan harga
-$jenis_query = "SELECT id, jenis, harga, id_kategori, harga_pusat FROM sampah";
+$jenis_query = "SELECT id, jenis, harga, id_kategori, harga_pusat, jumlah FROM sampah";
 $jenis_result = $conn->query($jenis_query);
 
 // Simpan data jenis sampah ke dalam array
@@ -107,7 +107,8 @@ if ($jenis_result->num_rows > 0) {
             'jenis' => $row['jenis'],
             'harga' => $row['harga'],
             'harga_pusat' => $row['harga_pusat'],
-            'id_kategori' => $row['id_kategori']
+            'id_kategori' => $row['id_kategori'],
+            'jumlah' => $row['jumlah']
         ];
     }
 }
@@ -127,57 +128,57 @@ if ($jenis_result->num_rows > 0) {
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <script>
-    var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
+        var jenisSampah = <?php echo json_encode($jenis_sampah); ?>;
 
-    function updateHarga(index) {
-        var idjenis = document.getElementById('id_jenis_' + index).value;
-        var jumlah = document.getElementById('jumlah_' + index).value;
-        var harga_nasabah = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
-        var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga_pusat : 0;
-        var total_Harga_nasabah = jumlah * harga_nasabah;
-        var totalHarga = jumlah * harga;
+        function updateHarga(index) {
+            var idjenis = document.getElementById('id_jenis_' + index).value;
+            var jumlah = document.getElementById('jumlah_' + index).value;
+            var harga_nasabah = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
+            var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga_pusat : 0;
+            var total_Harga_nasabah = jumlah * harga_nasabah;
+            var totalHarga = jumlah * harga;
 
-        document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-        updateTotalHarga();
-    }
-
-    function updateTotalHarga() {
-        var totalHarga = 0;
-        var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
-
-        hargaInputs.forEach(function(hargaInput) {
-            var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
-            totalHarga += harga;
-        });
-
-        document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
-    }
-
-    function updateJenis(index) {
-        var kategoriSelect = document.getElementById('id_kategori_' + index);
-        var jenisSelect = document.getElementById('id_jenis_' + index);
-        var selectedKategori = kategoriSelect.value;
-
-        jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
-        for (var id in jenisSampah) {
-            if (jenisSampah[id].id_kategori == selectedKategori) {
-                var option = document.createElement('option');
-                option.value = id;
-                option.text = jenisSampah[id].jenis;
-                jenisSelect.add(option);
-            }
+            document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+            updateTotalHarga();
         }
-        jenisSelect.value = "";
-        updateHarga(index);
-    }
 
-    function addRow() {
-        var tbody = document.querySelector('#transaksiTable tbody');
-        var rowCount = tbody.rows.length + 1; // Adjust row count to account for existing rows in tbody
-        var row = tbody.insertRow(); // Add row to tbody instead of the table directly
+        function updateTotalHarga() {
+            var totalHarga = 0;
+            var hargaInputs = document.querySelectorAll('input[name="harga[]"]');
+
+            hargaInputs.forEach(function(hargaInput) {
+                var harga = parseInt(hargaInput.value.replace(/[Rp.,\s]/g, '')) || 0;
+                totalHarga += harga;
+            });
+
+            document.getElementById('totalHarga').innerText = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+        }
+
+        function updateJenis(index) {
+            var kategoriSelect = document.getElementById('id_kategori_' + index);
+            var jenisSelect = document.getElementById('id_jenis_' + index);
+            var selectedKategori = kategoriSelect.value;
+
+            jenisSelect.innerHTML = '<option value="">-- jenis sampah --</option>';
+            for (var id in jenisSampah) {
+                if (jenisSampah[id].id_kategori == selectedKategori) {
+                    var option = document.createElement('option');
+                    option.value = id;
+                    option.text = jenisSampah[id].jenis;
+                    jenisSelect.add(option);
+                }
+            }
+            jenisSelect.value = "";
+            updateHarga(index);
+        }
+
+        function addRow() {
+            var tbody = document.querySelector('#transaksiTable tbody');
+            var rowCount = tbody.rows.length + 1; // Adjust row count to account for existing rows in tbody
+            var row = tbody.insertRow(); // Add row to tbody instead of the table directly
 
 
-        row.innerHTML = `
+            row.innerHTML = `
                 <td><button class="btn btn-danger" onclick="removeRow(this)">&times;</button></td>
                 <td>${rowCount}</td>
                 <td>
@@ -204,13 +205,33 @@ if ($jenis_result->num_rows > 0) {
                     <input type="text" name="harga[]" id="harga_${rowCount}" class="form-control" readonly>
                 </td>
             `;
-    }
+        }
 
-    function removeRow(button) {
-        var row = button.parentNode.parentNode;
-        row.parentNode.removeChild(row);
-        updateTotalHarga();
-    }
+        function removeRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            updateTotalHarga();
+        }
+
+        function updateHarga(index) {
+            var idjenis = document.getElementById('id_jenis_' + index).value;
+            var jumlah = parseInt(document.getElementById('jumlah_' + index).value); // Konversi jumlah ke integer
+            var harga_nasabah = jenisSampah[idjenis] ? jenisSampah[idjenis].harga : 0;
+            var harga = jenisSampah[idjenis] ? jenisSampah[idjenis].harga_pusat : 0;
+            var total_Harga_nasabah = jumlah * harga_nasabah;
+            var totalHarga = jumlah * harga;
+
+            // Cek stok, konversi stok menjadi integer
+            var stok = jenisSampah[idjenis] ? parseInt(jenisSampah[idjenis].jumlah) : 0;
+            if (jumlah > stok) {
+                alert('Jumlah sampah yang diinput melebihi stok yang tersedia! Stok tersedia: ' + stok + ' KG');
+                document.getElementById('jumlah_' + index).value = stok; // Set input jumlah ke stok maksimum
+                jumlah = stok; // Sesuaikan variabel jumlah agar perhitungan tetap benar
+            }
+
+            document.getElementById('harga_' + index).value = 'Rp. ' + totalHarga.toLocaleString('id-ID');
+            updateTotalHarga();
+        }
     </script>
 </head>
 
@@ -297,11 +318,11 @@ if ($jenis_result->num_rows > 0) {
                         <button type="submit" name="submit" class="btn btn-primary mb-3">SUBMIT</button>
                         <!-- Success/Error Message -->
                         <?php if (!empty($message)) { ?>
-                        <div class="row mb-4">
-                            <div class="col-md-12">
-                                <p class="text-success"><?php echo $message; ?></p>
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <p class="text-success"><?php echo $message; ?></p>
+                                </div>
                             </div>
-                        </div>
                         <?php } ?>
                     </form>
                 </div>
