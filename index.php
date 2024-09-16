@@ -183,7 +183,7 @@ $stmt->close();
                     <h2>Dashboard</h2>
                 </div>
                 <div class="user--info">
-                    <img src="./img/logoPM.png" alt="logo">
+                    <!-- <img src="./img/logoM.png"> -->
                 </div>
             </div>
 
