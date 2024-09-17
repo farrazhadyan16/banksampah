@@ -166,10 +166,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <label for="alamat">Alamat</label>
                                 <textarea name="alamat" id="alamat" class="form-control" required><?= htmlspecialchars($alamat); ?></textarea>
                             </div>
-                            <div class="form-group">
+                            <!-- <div class="form-group">
                                 <label for="tgl_lahir">Tanggal Lahir</label>
                                 <input type="date" name="tgl_lahir" id="tgl_lahir" class="form-control" value="<?= htmlspecialchars($tgl_lahir); ?>" required>
-                            </div>
+                            </div> -->
                             <div class="form-group">
                                 <label for="kelamin">Jenis Kelamin</label>
                                 <select name="kelamin" id="kelamin" class="form-control" required>

@@ -257,10 +257,10 @@ $stmt->close();
                         </div>
 
                         <div class="user-balance">
-                            <div class="balance-card">
+                            <!-- <div class="balance-card">
                                 <span>Tunai</span>
                                 <span>Rp <?php echo number_format($data['uang'], 2, ',', '.'); ?></span>
-                            </div>
+                            </div> -->
                             <div class="balance-card">
                                 <span>Emas</span>
                                 <span><?php echo number_format($data['emas'], 4, ',', '.'); ?> g</span>

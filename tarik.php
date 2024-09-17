@@ -415,8 +415,8 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
                                                 class="form-control" placeholder="Jumlah Uang">
 
                                         </div>
-                                        <small class="form-text text-muted">Jumlah uang yang ingin ditarik</small>
-                                        tampilkan saldo dikurangi inputan yang ingin ditarik
+                                        <!-- <small class="form-text text-muted">Jumlah uang yang ingin ditarik</small>
+                                        tampilkan saldo dikurangi inputan yang ingin ditarik -->
 
                                         <p id="sisa_saldo_uang" class="text-info"></p> <!-- Remaining money balance -->
                                     </div>
@@ -528,21 +528,21 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
         });
 
         // Update remaining balance when the user inputs money to withdraw
-        jumlahUangInput.addEventListener('input', function() {
-            const jumlahUang = parseFloat(this.value);
-            const emasToDeduct = jumlahUang / currentGoldPriceSell; // Convert money to gold
-            const remainingEmas = currentBalanceEmas - emasToDeduct;
+        // jumlahUangInput.addEventListener('input', function() {
+        //     const jumlahUang = parseFloat(this.value);
+        //     const emasToDeduct = jumlahUang / currentGoldPriceSell; // Convert money to gold
+        //     const remainingEmas = currentBalanceEmas - emasToDeduct;
 
-            if (remainingEmas < 0.1) {
-                sisaSaldoUang.textContent =
-                    `Sisa emas setelah penarikan4: ${remainingEmas.toFixed(3)} gram (tidak boleh kurang dari 0.1 gram!)`;
-                sisaSaldoUang.classList.add('text-danger');
-            } else {
-                sisaSaldoUang.textContent = `Sisa emas setelah penarikan2: ${remainingEmas.toFixed(3)} gram`;
-                sisaSaldoUang.classList.remove('text-danger');
-                sisaSaldoUang.classList.add('text-info');
-            }
-        });
+        //     if (remainingEmas < 0.1) {
+        //         sisaSaldoUang.textContent =
+        //             `Sisa emas setelah penarikan4: ${remainingEmas.toFixed(3)} gram (tidak boleh kurang dari 0.1 gram!)`;
+        //         sisaSaldoUang.classList.add('text-danger');
+        //     } else {
+        //         sisaSaldoUang.textContent = `Sisa emas setelah penarikan2: ${remainingEmas.toFixed(3)} gram`;
+        //         sisaSaldoUang.classList.remove('text-danger');
+        //         sisaSaldoUang.classList.add('text-info');
+        //     }
+        // });
     </script>
 
 
