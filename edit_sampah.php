@@ -85,22 +85,26 @@ if (isset($_POST["submit"])) {
 
                         <label for="keuntungan_percent">Persentase Keuntungan</label>
                         <div class="input-group">
-                            <input type="number" class="form-control" id="keuntungan_percent" placeholder="Masukkan Persentase Keuntungan" name="keuntungan_percent" required aria-describedby="persentaseHelp">
+                            <input type="number" class="form-control" id="keuntungan_percent"
+                                placeholder="Masukkan Persentase Keuntungan" name="keuntungan_percent" required
+                                aria-describedby="persentaseHelp">
                             <div class="input-group-append">
                                 <span class="input-group-text">%</span>
                             </div>
                         </div>
-                        <small id="persentaseHelp" class="form-text text-muted">Masukkan persentase keuntungan dari harga pengepul.</small> <br>
+                        <small id="persentaseHelp" class="form-text text-muted">Masukkan persentase keuntungan dari
+                            harga pengepul.</small> <br>
 
                         <label for="keuntungan">Keuntungan (Hasil)</label><br>
                         <input type="text" id="keuntungan" placeholder="Keuntungan" readonly><br><br>
 
                         <label for="harga_nasabah">Harga Nasabah (Hasil)</label><br>
-                        <input type="text" id="harga_nasabah" placeholder="Harga Nasabah" name="harga" value="<?= $sampah["harga"] ?>" readonly><br><br>
+                        <input type="text" id="harga_nasabah" placeholder="Harga Nasabah" name="harga"
+                            value="<?= $sampah["harga"] ?>" readonly><br><br>
 
                         <label for="jumlah">Jumlah</label><br>
-                        <input type="text" placeholder="Masukkan Jumlah" name="jumlah"
-                            value="<?= $sampah["jumlah"] ?>" required><br><br>
+                        <input type="text" placeholder="Masukkan Jumlah" name="jumlah" value="<?= $sampah["jumlah"] ?>"
+                            required><br><br>
 
                         <hr>
 
@@ -118,32 +122,32 @@ if (isset($_POST["submit"])) {
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-        // Menghitung harga nasabah dan keuntungan dari harga pengepul dan persentase keuntungan
-        document.getElementById('keuntungan_percent').addEventListener('input', function() {
-            var hargaPengepul = parseFloat(document.getElementById('harga_pengepul').value) || 0;
-            var persenKeuntungan = parseFloat(this.value) || 0;
+    // Menghitung harga nasabah dan keuntungan dari harga pengepul dan persentase keuntungan
+    document.getElementById('keuntungan_percent').addEventListener('input', function() {
+        var hargaPengepul = parseFloat(document.getElementById('harga_pengepul').value) || 0;
+        var persenKeuntungan = parseFloat(this.value) || 0;
 
-            // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
-            var keuntungan = hargaPengepul * persenKeuntungan / 100;
-            document.getElementById('keuntungan').value = keuntungan.toFixed(2);
+        // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
+        var keuntungan = hargaPengepul * persenKeuntungan / 100;
+        document.getElementById('keuntungan').value = keuntungan.toFixed(2);
 
-            // Hitung harga nasabah: harga_pengepul + keuntungan
-            var hargaNasabah = hargaPengepul + keuntungan;
-            document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
-        });
+        // Hitung harga nasabah: harga_pengepul + keuntungan
+        var hargaNasabah = hargaPengepul - keuntungan;
+        document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
+    });
 
-        document.getElementById('harga_pengepul').addEventListener('input', function() {
-            var persenKeuntungan = parseFloat(document.getElementById('keuntungan_percent').value) || 0;
-            var hargaPengepul = parseFloat(this.value) || 0;
+    document.getElementById('harga_pengepul').addEventListener('input', function() {
+        var persenKeuntungan = parseFloat(document.getElementById('keuntungan_percent').value) || 0;
+        var hargaPengepul = parseFloat(this.value) || 0;
 
-            // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
-            var keuntungan = hargaPengepul * persenKeuntungan / 100;
-            document.getElementById('keuntungan').value = keuntungan.toFixed(2);
+        // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
+        var keuntungan = hargaPengepul * persenKeuntungan / 100;
+        document.getElementById('keuntungan').value = keuntungan.toFixed(2);
 
-            // Hitung harga nasabah setiap kali harga pengepul diubah
-            var hargaNasabah = hargaPengepul + keuntungan;
-            document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
-        });
+        // Hitung harga nasabah setiap kali harga pengepul diubah
+        var hargaNasabah = hargaPengepul + keuntungan;
+        document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
+    });
     </script>
 </body>
 
