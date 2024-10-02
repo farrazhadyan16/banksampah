@@ -153,7 +153,8 @@ if ($id_transaksi) {
 
     <div class="container mt-5">
         <div class="d-flex justify-content-start no-print">
-            <!-- <button class="btn btn-success" onclick="window.history.back()">Kembali</button> -->
+
+            <button class="btn btn-success" onclick="window.history.back()">Kembali</button>
             <button class="btn btn-info print-button" onclick="window.print()">Print</button>
         </div>
 

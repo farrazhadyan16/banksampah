@@ -56,17 +56,18 @@ if (isset($_POST["submit"])) {
                         <input type="text" id="harga_pengepul" placeholder="Masukkan Harga Pengepul"
                             name="harga_pengepul" required><br><br>
 
-                        <label for="keuntungan_percent">Persentase Keuntungan</label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="keuntungan_percent"
-                                placeholder="Masukkan Persentase Keuntungan" name="keuntungan_percent" required
-                                aria-describedby="persentaseHelp">
+                        <!-- Persentase Keuntungan dengan Button di Samping -->
+                        <label for="keuntungan_percent">Persentase Keuntungan (Default: 20%)</label><br>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="keuntungan_percent" name="keuntungan_percent"
+                                value="20" readonly>
                             <div class="input-group-append">
-                                <span class="input-group-text">%</span>
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#ubahPersentaseModal">
+                                    Ubah Persentase Keuntungan
+                                </button>
                             </div>
                         </div>
-                        <small id="persentaseHelp" class="form-text text-muted">Masukkan persentase keuntungan dari
-                            harga pengepul.</small> <br>
+                        <br>
 
                         <!-- Tambahkan label untuk menampilkan keuntungan -->
                         <label for="keuntungan">Keuntungan (Hasil)</label><br>
@@ -80,7 +81,7 @@ if (isset($_POST["submit"])) {
                         <select class="form-control" id="kategori" name="kategori" required>
                             <option value=''>Pilih</option>
                             <?php foreach ($categories as $category): ?>
-                            <option value="<?= $category['id']; ?>"><?= $category['name']; ?></option>
+                                <option value="<?= $category['id']; ?>"><?= $category['name']; ?></option>
                             <?php endforeach; ?>
                         </select><br><br>
 
@@ -95,37 +96,67 @@ if (isset($_POST["submit"])) {
     </div>
     <!-- Batas Akhir Main-Content -->
 
+    <!-- Modal untuk mengubah persentase keuntungan -->
+    <div class="modal fade" id="ubahPersentaseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Ubah Persentase Keuntungan</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label for="modal_keuntungan_percent">Masukkan Persentase Keuntungan</label>
+                    <input type="number" class="form-control" id="modal_keuntungan_percent" placeholder="Persentase Keuntungan Baru">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="saveKeuntungan">Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS dan dependencies -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
-    // Menghitung harga nasabah dan keuntungan dari harga pengepul dan persentase keuntungan
-    document.getElementById('keuntungan_percent').addEventListener('input', function() {
-        var hargaPengepul = parseFloat(document.getElementById('harga_pengepul').value) || 0;
-        var persenKeuntungan = parseFloat(this.value) || 0;
+        // Mengatur persentase keuntungan default
+        var persenKeuntungan = 20;
 
-        // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
-        var keuntungan = hargaPengepul * persenKeuntungan / 100;
-        document.getElementById('keuntungan').value = keuntungan.toFixed(2);
+        // Fungsi untuk menghitung harga nasabah dan keuntungan
+        function hitungKeuntungan() {
+            var hargaPengepul = parseFloat(document.getElementById('harga_pengepul').value) || 0;
 
-        // Hitung harga nasabah: harga_pengepul + keuntungan
-        var hargaNasabah = hargaPengepul - keuntungan;
-        document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
-    });
+            // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
+            var keuntungan = hargaPengepul * persenKeuntungan / 100;
+            document.getElementById('keuntungan').value = keuntungan.toFixed(2);
 
-    document.getElementById('harga_pengepul').addEventListener('input', function() {
-        var persenKeuntungan = parseFloat(document.getElementById('keuntungan_percent').value) || 0;
-        var hargaPengepul = parseFloat(this.value) || 0;
+            // Hitung harga nasabah: harga_pengepul - keuntungan
+            var hargaNasabah = hargaPengepul - keuntungan;
+            document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
+        }
 
-        // Hitung keuntungan: harga_pengepul * persenKeuntungan / 100
-        var keuntungan = hargaPengepul * persenKeuntungan / 100;
-        document.getElementById('keuntungan').value = keuntungan.toFixed(2);
+        // Event listener untuk input harga pengepul
+        document.getElementById('harga_pengepul').addEventListener('input', hitungKeuntungan);
 
-        // Hitung harga nasabah setiap kali harga pengepul diubah
-        var hargaNasabah = hargaPengepul + keuntungan;
-        document.getElementById('harga_nasabah').value = hargaNasabah.toFixed(2);
-    });
+        // Event listener untuk tombol Simpan pada modal
+        document.getElementById('saveKeuntungan').addEventListener('click', function() {
+            var inputPersen = parseFloat(document.getElementById('modal_keuntungan_percent').value) || 0;
+
+            // Validasi input: Persentase keuntungan harus lebih besar dari 0
+            if (inputPersen > 0) {
+                persenKeuntungan = inputPersen;
+                document.getElementById('keuntungan_percent').value = persenKeuntungan;
+                alert('Persentase keuntungan berhasil diubah menjadi ' + persenKeuntungan + '%');
+                $('#ubahPersentaseModal').modal('hide');
+            } else {
+                alert('Persentase keuntungan harus lebih besar dari 0!');
+            }
+            hitungKeuntungan();
+        });
     </script>
 </body>
 

@@ -326,7 +326,7 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
                         <div class="row mb-4">
                             <div class="col-md-4">
                                 <input type="text" name="search_value" id="search_value" class="form-control"
-                                    placeholder="Search by NIK or Name" maxlength="16" oninput="getSuggestions()" required>
+                                    placeholder="Search by NIK or Name" maxlength="16" oninput="getSuggestions()" required autocomplete="off">
                                 <div id="suggestions" style="display: none; position: absolute; z-index: 1000; background: #fff; border: 1px solid #ccc;">
                                     <!-- Suggestions will be displayed here -->
                                 </div>
@@ -342,6 +342,7 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
                     <?php if (isset($user_data)) { ?>
                         <div class="row mb-4">
                             <div class="col-md-5">
+
                                 <p><strong>ID</strong> : <?php echo $user_data['id']; ?></p>
                                 <p><strong>NIK</strong> : <?php echo $user_data['nik']; ?></p>
                                 <p><strong>Email</strong> : <?php echo $user_data['email']; ?></p>
@@ -354,8 +355,7 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
                                     <?php echo number_format($user_data['emas'], 4, '.', '.'); ?> g =
                                     Rp. <?php echo round($gold_equivalent, 2); ?>
                                 </p>
-                                <!-- <p><strong>Saldo Emas</strong> :
-            <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p> -->
+                                <!-- <p><strong>Saldo Emas</strong> : <?php echo number_format($user_data['emas'], 4, ',', '.'); ?> g</p> -->
                             </div>
                         </div>
                     <?php } else { ?>
@@ -364,7 +364,8 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
                                 <p class="text-danger"><?php echo $message; ?></p>
                             </div>
                         </div>
-                    <?php } ?>
+                    <?php }
+                    ?>
 
                     <div class="row mb-4">
                         <div class="col-md-4">
@@ -458,6 +459,7 @@ $emas_balance = isset($user_balance['emas']) ? $user_balance['emas'] : 0;
                             <div class="row">
                                 <div class="col-md-8">
                                     <button type="submit" name="withdraw" class="btn btn-success">Tarik</button>
+                                    <!-- <a type="submit" name="withdraw" class="btn btn-success" href="nota.php" target="_blank">Tarik</a> -->
                                 </div>
                             </div>
                         </form>
