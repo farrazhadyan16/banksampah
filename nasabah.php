@@ -11,8 +11,8 @@ $offset = ($page - 1) * $limit;
 // Cek apakah form pencarian telah disubmit
 $search_nik = isset($_GET['search_nik']) ? $_GET['search_nik'] : null;
 
-// Query untuk menghitung jumlah total data nasabah yang tidak terhapus
-$total_query = "SELECT COUNT(*) AS total FROM user WHERE role = 'nasabah' AND status = 0";
+// Query untuk menghitung jumlah total data nasabah yang aktif (status = 1)
+$total_query = "SELECT COUNT(*) AS total FROM user WHERE role = 'nasabah' AND status = 1";
 if ($search_nik) {
     $total_query .= " AND nik LIKE '%$search_nik%'";
 }
@@ -30,10 +30,10 @@ if ($end_page - $start_page < $pagination_limit - 1) {
     $start_page = max(1, $end_page - $pagination_limit + 1);
 }
 
-// Query untuk menampilkan nasabah yang tidak terhapus (status = 0)
+// Query untuk menampilkan nasabah yang aktif (status = 1)
 $query = "
     SELECT id, username, nama, email, notelp, nik, no_rek FROM user
-    WHERE role = 'nasabah' AND status = 0
+    WHERE role = 'nasabah' AND status = 1
 ";
 if ($search_nik) {
     $query .= " AND nik LIKE '%$search_nik%'";
@@ -44,7 +44,7 @@ $nasabah_result = mysqli_query($koneksi, $query);
 // Handle soft delete
 if (isset($_GET['delete_id'])) {
     $delete_id = $_GET['delete_id'];
-    $delete_query = "UPDATE user SET status = 1 WHERE id = ?";
+    $delete_query = "UPDATE user SET status = 0 WHERE id = ?"; // Ubah status menjadi 0 untuk menandai terhapus
 
     // Prepare the statement
     $stmt = mysqli_prepare($koneksi, $delete_query);
@@ -56,10 +56,21 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
-// Query untuk menampilkan nasabah yang sudah dihapus (status = 1)
-$deleted_users_query = "SELECT id, username, nama, email, notelp, nik, no_rek FROM user WHERE role = 'nasabah' AND status = 1";
+// Query untuk menampilkan nasabah yang sudah dihapus (status = 0)
+$deleted_users_query = "SELECT id, username, nama, email, notelp, nik, no_rek FROM user WHERE role = 'nasabah' AND status = 0";
 $deleted_users = mysqli_query($koneksi, $deleted_users_query);
+
+// Handle restore all
+if (isset($_GET['restore_all'])) {
+    $restore_all_query = "UPDATE user SET status = 1 WHERE role = 'nasabah' AND status = 0";
+    mysqli_query($koneksi, $restore_all_query);
+
+    $_SESSION['message'] = "Semua data berhasil dikembalikan!";
+    header("Location: nasabah.php");
+    exit();
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -191,6 +202,7 @@ $deleted_users = mysqli_query($koneksi, $deleted_users_query);
 
                 <!-- Tabel Nasabah Terhapus -->
                 <!-- <h1>Data Nasabah Terhapus</h1> -->
+
                 <?php if (mysqli_num_rows($deleted_users) === 0): ?>
                     <div class="alert alert-warning">
                         <strong>Tidak ada nasabah yang dihapus!</strong>
@@ -222,6 +234,8 @@ $deleted_users = mysqli_query($koneksi, $deleted_users_query);
                             <?php endforeach; ?>
                         </tbody>
                     </table>
+
+
                 <?php endif; ?>
             </div>
         </div>

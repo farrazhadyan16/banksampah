@@ -4,10 +4,10 @@ include 'fungsi.php';
 include 'koneksi.php'; // Gunakan koneksi mysqli yang sudah ada
 
 // Dapatkan ID nasabah dari URL
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 
 // Query untuk mendapatkan data nasabah berdasarkan ID
-$query = "SELECT * FROM user WHERE id = ? AND role = 'nasabah' AND status = 0";
+$query = "SELECT * FROM user WHERE id = ? AND role = 'nasabah' AND status = 1";
 $stmt = mysqli_prepare($koneksi, $query);
 mysqli_stmt_bind_param($stmt, "i", $id);
 mysqli_stmt_execute($stmt);
