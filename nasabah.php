@@ -56,9 +56,26 @@ if (isset($_GET['delete_id'])) {
     exit();
 }
 
+
+
 // Query untuk menampilkan nasabah yang sudah dihapus (status = 0)
 $deleted_users_query = "SELECT id, username, nama, email, notelp, nik, no_rek FROM user WHERE role = 'nasabah' AND status = 0";
 $deleted_users = mysqli_query($koneksi, $deleted_users_query);
+
+// Handle individual restore
+if (isset($_GET['recover_id'])) {
+    $recover_id = $_GET['recover_id'];
+    $recover_query = "UPDATE user SET status = 1 WHERE id = ?";
+
+    // Prepare the statement
+    $stmt = mysqli_prepare($koneksi, $recover_query);
+    mysqli_stmt_bind_param($stmt, "i", $recover_id);
+    mysqli_stmt_execute($stmt);
+
+    $_SESSION['message'] = "Data berhasil dikembalikan!";
+    header("Location: nasabah.php");
+    exit();
+}
 
 // Handle restore all
 if (isset($_GET['restore_all'])) {
@@ -104,7 +121,9 @@ if (isset($_GET['restore_all'])) {
                 <div class="tabular--wrapper">
                     <div class="search--wrapper">
                         <form method="GET" action="">
-                            <input type="text" name="search_nik" placeholder="Cari NIK nasabah..." value="<?= htmlspecialchars($search_nik) ?>" pattern="\d{16}" maxlength="16" title="NIK harus terdiri dari 16 digit angka">
+                            <input type="text" name="search_nik" placeholder="Cari NIK nasabah..."
+                                value="<?= htmlspecialchars($search_nik) ?>" pattern="\d{16}" maxlength="16"
+                                title="NIK harus terdiri dari 16 digit angka">
                             <button type="submit" class="inputbtn">Cari</button>
 
                             <div class="form-group">
@@ -129,99 +148,33 @@ if (isset($_GET['restore_all'])) {
                     </div>
 
                     <?php if (isset($_SESSION['message'])): ?>
-                        <div class="alert alert-info">
-                            <?= htmlspecialchars($_SESSION['message']); ?>
-                        </div>
-                        <?php unset($_SESSION['message']); ?>
+                    <div class="alert alert-info">
+                        <?= htmlspecialchars($_SESSION['message']); ?>
+                    </div>
+                    <?php unset($_SESSION['message']); ?>
                     <?php endif; ?>
 
                     <div class="table-container">
                         <?php if (empty($nasabah_result)): ?>
-                            <div class="alert alert-warning">
-                                <strong>Nasabah tidak ditemukan!</strong> Silakan coba NIK yang lain.
-                            </div>
+                        <div class="alert alert-warning">
+                            <strong>Nasabah tidak ditemukan!</strong> Silakan coba NIK yang lain.
+                        </div>
                         <?php else: ?>
-                            <table class="table table-bordered">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Username</th>
-                                        <th>Nama</th>
-                                        <th>Email</th>
-                                        <th>No Telp</th>
-                                        <th>NIK</th>
-                                        <th>No Rek</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php foreach ($nasabah_result as $row): ?>
-                                        <tr>
-                                            <td><?= htmlspecialchars($row["id"]); ?></td>
-                                            <td><?= htmlspecialchars($row["username"]); ?></td>
-                                            <td><?= htmlspecialchars($row["nama"]); ?></td>
-                                            <td><?= htmlspecialchars($row["email"]); ?></td>
-                                            <td><?= htmlspecialchars($row["notelp"]); ?></td>
-                                            <td><?= htmlspecialchars($row["nik"]); ?></td>
-                                            <td><?= htmlspecialchars($row["no_rek"]); ?></td>
-                                            <td>
-                                                <a href="detail_nasabah.php?id=<?= htmlspecialchars($row["id"]); ?>" class="inputbtn6">Detail</a>
-                                                <a href="edit_nasabah.php?id=<?= htmlspecialchars($row["id"]); ?>" class="btn btn-warning">Ubah</a>
-                                                <a href="nasabah.php?delete_id=<?= htmlspecialchars($row["id"]); ?>" class="btn btn-danger" onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
-                                            </td>
-                                        </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
-
-                            <!-- Pagination -->
-                            <div class="pagination-wrapper">
-                                <ul class="pagination">
-                                    <?php if ($page > 1): ?>
-                                        <li class="page-item">
-                                            <a href="?page=<?= $page - 1; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>" class="page-link">Previous</a>
-                                        </li>
-                                    <?php endif; ?>
-
-                                    <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
-                                        <li class="page-item <?php if ($page == $i) echo 'active'; ?>">
-                                            <a href="?page=<?= $i; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>" class="page-link"><?= $i; ?></a>
-                                        </li>
-                                    <?php endfor; ?>
-
-                                    <?php if ($end_page < $total_pages): ?>
-                                        <li class="page-item">
-                                            <a href="?page=<?= $end_page + 1; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>" class="page-link">Next</a>
-                                        </li>
-                                    <?php endif; ?>
-                                </ul>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- Tabel Nasabah Terhapus -->
-                <!-- <h1>Data Nasabah Terhapus</h1> -->
-
-                <?php if (mysqli_num_rows($deleted_users) === 0): ?>
-                    <div class="alert alert-warning">
-                        <strong>Tidak ada nasabah yang dihapus!</strong>
-                    </div>
-                <?php else: ?>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Username</th>
-                                <th>Nama</th>
-                                <th>Email</th>
-                                <th>No Telp</th>
-                                <th>NIK</th>
-                                <th>No Rek</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($deleted_users as $row): ?>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Username</th>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>No Telp</th>
+                                    <th>NIK</th>
+                                    <th>No Rek</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($nasabah_result as $row): ?>
                                 <tr>
                                     <td><?= htmlspecialchars($row["id"]); ?></td>
                                     <td><?= htmlspecialchars($row["username"]); ?></td>
@@ -230,10 +183,88 @@ if (isset($_GET['restore_all'])) {
                                     <td><?= htmlspecialchars($row["notelp"]); ?></td>
                                     <td><?= htmlspecialchars($row["nik"]); ?></td>
                                     <td><?= htmlspecialchars($row["no_rek"]); ?></td>
+                                    <td>
+                                        <a href="detail_nasabah.php?id=<?= htmlspecialchars($row["id"]); ?>"
+                                            class="inputbtn6">Detail</a>
+                                        <a href="edit_nasabah.php?id=<?= htmlspecialchars($row["id"]); ?>"
+                                            class="btn btn-warning">Ubah</a>
+                                        <a href="nasabah.php?delete_id=<?= htmlspecialchars($row["id"]); ?>"
+                                            class="btn btn-danger"
+                                            onclick="return confirm('Yakin ingin menghapus data ini?')">Hapus</a>
+                                    </td>
                                 </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+
+                        <!-- Pagination -->
+                        <div class="pagination-wrapper">
+                            <ul class="pagination">
+                                <?php if ($page > 1): ?>
+                                <li class="page-item">
+                                    <a href="?page=<?= $page - 1; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>"
+                                        class="page-link">Previous</a>
+                                </li>
+                                <?php endif; ?>
+
+                                <?php for ($i = $start_page; $i <= $end_page; $i++): ?>
+                                <li class="page-item <?php if ($page == $i) echo 'active'; ?>">
+                                    <a href="?page=<?= $i; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>"
+                                        class="page-link"><?= $i; ?></a>
+                                </li>
+                                <?php endfor; ?>
+
+                                <?php if ($end_page < $total_pages): ?>
+                                <li class="page-item">
+                                    <a href="?page=<?= $end_page + 1; ?>&limit=<?= $limit; ?>&search_nik=<?= urlencode($search_nik); ?>"
+                                        class="page-link">Next</a>
+                                </li>
+                                <?php endif; ?>
+                            </ul>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <!-- Tabel Nasabah Terhapus -->
+                <!-- <h1>Data Nasabah Terhapus</h1> -->
+
+                <?php if (mysqli_num_rows($deleted_users) === 0): ?>
+                <div class="alert alert-warning">
+                    <strong>Tidak ada nasabah yang dihapus!</strong>
+                </div>
+                <?php else: ?>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Nama</th>
+                            <th>Email</th>
+                            <th>No Telp</th>
+                            <th>NIK</th>
+                            <th>No Rek</th>
+                            <th>Aksi</th>
+
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($deleted_users as $row): ?>
+                        <tr>
+                            <td><?= htmlspecialchars($row["id"]); ?></td>
+                            <td><?= htmlspecialchars($row["username"]); ?></td>
+                            <td><?= htmlspecialchars($row["nama"]); ?></td>
+                            <td><?= htmlspecialchars($row["email"]); ?></td>
+                            <td><?= htmlspecialchars($row["notelp"]); ?></td>
+                            <td><?= htmlspecialchars($row["nik"]); ?></td>
+                            <td><?= htmlspecialchars($row["no_rek"]); ?></td>
+                            <th> <a href="nasabah.php?recover_id=<?= htmlspecialchars($row["id"]); ?>"
+                                    class="btn btn-danger"
+                                    onclick="return confirm('Yakin ingin mengembalikan data ini?')">Kembalikan</a></th>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
 
 
                 <?php endif; ?>
